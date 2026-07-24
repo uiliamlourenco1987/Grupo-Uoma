@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Controle de Acessos</title>
+<style>
+  :root{--navy:#12294C;--navy-d:#0C1C38;--navy-dd:#08132A;--gold:#C4972E;--gold-l:#E7C876;--gold-soft:#D9B24A;
+    --bg:#F1EFE9;--ink:#1B2430;--mut:#6b7280;--line:#EAE7DE;--serif:Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);color:var(--ink);background:var(--bg);max-width:440px;margin:0 auto;min-height:100vh}
+  .top{background:radial-gradient(120% 120% at 85% -20%,#1c3a63 0%,transparent 55%),linear-gradient(160deg,var(--navy),var(--navy-d) 70%,var(--navy-dd));color:#fff;padding:15px 18px 16px;border-radius:0 0 22px 22px;position:relative}
+  .top::after{content:"";position:absolute;left:18px;right:18px;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.6}
+  .top .back{font-size:13px;color:var(--gold-l);font-weight:700;margin-bottom:10px;display:inline-block;text-decoration:none}
+  .top h1{font-size:20px;font-weight:700;font-family:var(--serif);letter-spacing:.02em}
+  .top .sub{font-size:11.5px;color:#cdd6e4;margin-top:3px;font-weight:600;letter-spacing:.02em}
+  .tabs{display:flex;gap:6px;background:rgba(255,255,255,.10);border-radius:12px;padding:4px;margin-top:14px}
+  .tabs button{flex:1;border:0;background:transparent;padding:10px 4px;border-radius:9px;font-weight:700;font-size:13px;color:#b9c4d6;cursor:pointer;font-family:inherit}
+  .tabs button.on{background:#fff;color:var(--navy)}
+  .wrap{padding:15px 16px 30px}
+  .pane{display:none}.pane.on{display:block}
+  /* busca + novo */
+  .toolbar{display:flex;gap:8px;margin-bottom:14px}
+  .search{flex:1;padding:11px 13px;border:1.5px solid var(--line);border-radius:11px;font-size:14px;background:#fff;font-family:inherit}
+  .novo{border:0;background:linear-gradient(135deg,var(--navy),var(--navy-d));color:#fff;font-weight:700;font-size:13px;padding:0 15px;border-radius:11px;cursor:pointer;white-space:nowrap;font-family:inherit}
+  /* usuário */
+  .urow{display:flex;align-items:center;gap:11px;background:#fff;border-radius:14px;padding:11px 13px;margin-bottom:9px;box-shadow:0 1px 3px rgba(8,19,42,.05),0 8px 18px rgba(8,19,42,.05)}
+  .urow.off{opacity:.55}
+  .ini{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--navy-d));color:var(--gold-l);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:0 0 auto}
+  .uinfo{flex:1;min-width:0}
+  .uinfo b{font-size:14px;font-weight:700;display:block}
+  .uinfo .em{font-size:11px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .uinfo .ch{margin-top:6px;display:flex;gap:5px;flex-wrap:wrap}
+  .chip{font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;letter-spacing:.02em}
+  .chip.role{background:var(--navy);color:#fff}
+  .chip.emp{background:#F3EAD3;color:#8a6b1f}
+  .chip.pin{background:#EAE6DB;color:#7a7360}
+  .sw{width:40px;height:23px;border-radius:999px;background:#D8D3C6;position:relative;cursor:pointer;transition:.2s;flex:0 0 auto}
+  .sw.on{background:var(--gold)}
+  .sw::after{content:"";position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+  .sw.on::after{left:19px}
+  /* permissões */
+  .hintbar{background:#fff;border-left:4px solid var(--gold);border-radius:12px;padding:12px 14px;font-size:12.5px;color:var(--mut);line-height:1.5;margin-bottom:14px}
+  .plabel{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a927e;margin:4px 4px 9px}
+  .pchips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+  .pchip{padding:8px 13px;border-radius:999px;border:1.5px solid var(--line);background:#fff;font-weight:700;font-size:12.5px;cursor:pointer;color:#6b7280}
+  .pchip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .rcardbox{background:#fff;border-radius:16px;padding:6px 15px;box-shadow:0 1px 3px rgba(8,19,42,.05),0 10px 22px rgba(8,19,42,.06)}
+  .rrow{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .rrow:last-child{border-bottom:0}
+  .rrow .rn{flex:1;font-size:14px;font-weight:600}
+  .rrow .esc{font-size:10px;font-weight:700;color:#8a6b1f;background:#F3EAD3;padding:3px 8px;border-radius:999px}
+  .rrow.off .rn{color:#aab0b8}
+</style></head>
+<body>
+  <div class="top">
+    <a class="back" href="index.html">← Início</a>
+    <h1>Controle de Acessos</h1>
+    <div class="sub">🔒 Administração · RH e Diretoria</div>
+    <div class="tabs"><button class="on" data-t="users">Usuários</button><button data-t="perms">Permissões</button></div>
+  </div>
+
+  <div class="wrap">
+    <!-- ===== USUÁRIOS ===== -->
+    <div class="pane on" id="p-users">
+      <div class="toolbar"><input class="search" placeholder="Buscar colaborador…"><button class="novo">＋ Novo acesso</button></div>
+
+      <div class="urow"><div class="ini">AC</div><div class="uinfo"><b>Antônio Costa</b><div class="em">antonio@grupouoma.com.br</div><div class="ch"><span class="chip role">Vendedor</span><span class="chip emp">Loja do Sorveteiro</span></div></div><div class="sw on"></div></div>
+
+      <div class="urow"><div class="ini">MS</div><div class="uinfo"><b>Márcia Silva</b><div class="em">marcia@grupouoma.com.br</div><div class="ch"><span class="chip role">Supervisor</span><span class="chip emp">Padoquinha</span></div></div><div class="sw on"></div></div>
+
+      <div class="urow"><div class="ini">JR</div><div class="uinfo"><b>João Ramos</b><div class="em">rh@grupouoma.com.br</div><div class="ch"><span class="chip role">RH</span><span class="chip emp">Grupo</span></div></div><div class="sw on"></div></div>
+
+      <div class="urow"><div class="ini">CD</div><div class="uinfo"><b>Carla Dias</b><div class="em">diretoria@grupouoma.com.br</div><div class="ch"><span class="chip role">Diretoria</span><span class="chip emp">Grupo</span></div></div><div class="sw on"></div></div>
+
+      <div class="urow"><div class="ini">PL</div><div class="uinfo"><b>Pedro Lima</b><div class="em">Acesso por PIN</div><div class="ch"><span class="chip pin">Colaborador · PIN</span><span class="chip emp">Merenda Certa</span></div></div><div class="sw on"></div></div>
+
+      <div class="urow off"><div class="ini">RT</div><div class="uinfo"><b>Rita Teixeira</b><div class="em">rita@grupouoma.com.br</div><div class="ch"><span class="chip role">Vendedor</span><span class="chip emp">Loja do Sorveteiro</span></div></div><div class="sw"></div></div>
+    </div>
+
+    <!-- ===== PERMISSÕES ===== -->
+    <div class="pane" id="p-perms">
+      <div class="hintbar">Escolha um <b>perfil</b> e ligue/desligue o que ele pode ver. Vale para todos daquele perfil — e o bloqueio também vale no banco, não é só esconder o botão.</div>
+      <div class="plabel">Perfil</div>
+      <div class="pchips"><span class="pchip on">Vendedor</span><span class="pchip">Supervisor</span><span class="pchip">Financeiro</span><span class="pchip">RH</span><span class="pchip">Gerencial</span><span class="pchip">Diretoria</span></div>
+
+      <div class="plabel">Recursos do perfil Vendedor</div>
+      <div class="rcardbox">
+        <div class="rrow"><div class="rn">Mural &amp; avisos</div><span class="esc">grupo</span><div class="sw on"></div></div>
+        <div class="rrow"><div class="rn">Manual da empresa</div><span class="esc">empresa</span><div class="sw on"></div></div>
+        <div class="rrow"><div class="rn">Código de conduta</div><span class="esc">ler</span><div class="sw on"></div></div>
+        <div class="rrow"><div class="rn">Minha avaliação</div><span class="esc">próprio</span><div class="sw on"></div></div>
+        <div class="rrow"><div class="rn">Minhas faltas</div><span class="esc">próprio</span><div class="sw on"></div></div>
+        <div class="rrow"><div class="rn">Minhas metas</div><span class="esc">próprio</span><div class="sw on"></div></div>
+        <div class="rrow"><div class="rn">Separações</div><span class="esc">próprio</span><div class="sw on"></div></div>
+        <div class="rrow"><div class="rn">Campanhas</div><span class="esc">empresa</span><div class="sw on"></div></div>
+        <div class="rrow"><div class="rn">Rankings</div><span class="esc">—</span><div class="sw on"></div></div>
+        <div class="rrow off"><div class="rn">Faltas / avaliações da equipe</div><span class="esc">equipe</span><div class="sw"></div></div>
+        <div class="rrow off"><div class="rn">Financeiro</div><span class="esc">—</span><div class="sw"></div></div>
+        <div class="rrow off"><div class="rn">Folha / salários</div><span class="esc">—</span><div class="sw"></div></div>
+        <div class="rrow off"><div class="rn">Painel de Controle de Acessos</div><span class="esc">admin</span><div class="sw"></div></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){
+    document.querySelectorAll('.tabs button').forEach(function(x){x.classList.remove('on');});b.classList.add('on');
+    document.querySelectorAll('.pane').forEach(function(p){p.classList.remove('on');});
+    document.getElementById('p-'+b.getAttribute('data-t')).classList.add('on');
+  };});
+  document.querySelectorAll('.sw').forEach(function(s){s.onclick=function(){s.classList.toggle('on');
+    var row=s.closest('.rrow');if(row)row.classList.toggle('off',!s.classList.contains('on'));
+    var ur=s.closest('.urow');if(ur)ur.classList.toggle('off',!s.classList.contains('on'));};});
+  document.querySelectorAll('.pchip').forEach(function(c){c.onclick=function(){
+    document.querySelectorAll('.pchip').forEach(function(x){x.classList.remove('on');});c.classList.add('on');
+    document.querySelector('.plabel:nth-of-type(2)');};});
+</script>
+</body></html>
