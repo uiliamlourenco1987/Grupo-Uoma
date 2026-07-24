@@ -111,6 +111,28 @@
   .tile h4{font-size:14px;font-weight:700;margin-bottom:2px}
   .tile p{font-size:11.5px;color:var(--mut);line-height:1.35}
   .hfoot{text-align:center;padding:22px 16px 8px;font-size:11px;color:#a7a291;font-weight:600}
+  .eval{background:#fff;border-radius:18px;padding:17px 16px;box-shadow:0 1px 3px rgba(8,19,42,.06),0 12px 28px rgba(8,19,42,.07)}
+  .eval .head{display:flex;align-items:center;gap:14px;margin-bottom:15px}
+  .eval .score{width:66px;height:66px;border-radius:18px;background:linear-gradient(135deg,var(--navy),var(--navy-d));display:flex;flex-direction:column;align-items:center;justify-content:center;flex:0 0 auto;position:relative;overflow:hidden}
+  .eval .score::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+  .eval .score b{font-family:var(--serif);font-size:27px;font-weight:700;color:var(--gold-l);line-height:1}
+  .eval .score small{font-size:8px;color:#b9c4d6;letter-spacing:.12em;margin-top:2px}
+  .eval .t b{font-size:16px;font-weight:700}
+  .eval .t span{display:block;font-size:12px;color:var(--mut);margin-top:3px;line-height:1.4}
+  .eval .t .tag{display:inline-block;margin-top:6px;font-size:10px;font-weight:700;color:var(--gold);background:#FBF3DF;padding:3px 8px;border-radius:999px}
+  .quesito{margin-top:12px}
+  .quesito .l{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;margin-bottom:5px}
+  .quesito .l span{font-weight:600;color:#57606c}
+  .quesito .l b{font-family:var(--serif);font-weight:700;font-size:14px;color:var(--navy)}
+  .qbar{height:7px;background:#EEE9DD;border-radius:999px;overflow:hidden}
+  .qbar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-l));border-radius:999px}
+  .ranks{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+  .rcard{background:linear-gradient(150deg,var(--navy),var(--navy-d));color:#fff;border-radius:15px;padding:14px 8px;text-align:center;position:relative;overflow:hidden}
+  .rcard::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+  .rcard .ic{font-size:17px}
+  .rcard .p{font-family:var(--serif);font-size:26px;font-weight:700;color:var(--gold-l);line-height:1;margin:5px 0 3px}
+  .rcard .n{font-size:10.5px;font-weight:800;color:#e7edf6;letter-spacing:.02em}
+  .rcard .sc{font-size:9px;color:#9fb0c8;margin-top:2px}
   .demo{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:rgba(12,28,56,.9);color:#E7C876;font-size:11px;font-weight:700;padding:7px 14px;border-radius:999px;z-index:40;letter-spacing:.02em;pointer-events:none}
 </style>
 </head>
@@ -193,8 +215,25 @@
       <div class="aviso"><div class="em">📋</div><div><h4>Código de conduta atualizado</h4><p>Nova versão disponível para leitura.</p><div class="date">Há 3 dias · RH</div></div></div>
       <a class="vertodos" href="#">Ver todos os avisos →</a>
 
-      <div class="sec"><h2>Meu desempenho</h2></div>
-      <div class="rank"><div class="pos">3º</div><div class="lbl"><b>Seu ranking em vendas</b><span>Loja do Sorveteiro · julho</span></div><div class="arrow">→</div></div>
+      <div class="sec"><h2>Minha avaliação</h2><span class="by">Colegas + RH</span></div>
+      <div class="eval">
+        <div class="head">
+          <div class="score"><b>8.7</b><small>MÉDIA</small></div>
+          <div class="t"><b>Sua nota média</b><span>Como você foi avaliado neste ciclo.</span><span class="tag">🔄 Avaliação 360° — colegas e RH</span></div>
+        </div>
+        <div class="quesito"><div class="l"><span>Atendimento</span><b>9.0</b></div><div class="qbar"><i style="width:90%"></i></div></div>
+        <div class="quesito"><div class="l"><span>Trabalho em equipe</span><b>8.8</b></div><div class="qbar"><i style="width:88%"></i></div></div>
+        <div class="quesito"><div class="l"><span>Pontualidade</span><b>9.2</b></div><div class="qbar"><i style="width:92%"></i></div></div>
+        <div class="quesito"><div class="l"><span>Proatividade</span><b>8.1</b></div><div class="qbar"><i style="width:81%"></i></div></div>
+        <div class="quesito"><div class="l"><span>Organização</span><b>8.4</b></div><div class="qbar"><i style="width:84%"></i></div></div>
+      </div>
+
+      <div class="sec"><h2>Meus rankings</h2></div>
+      <div class="ranks">
+        <div class="rcard"><div class="ic">🎯</div><div class="p">3º</div><div class="n">Vendas</div><div class="sc">na sua loja</div></div>
+        <div class="rcard"><div class="ic">🏢</div><div class="p">5º</div><div class="n">Empresa</div><div class="sc">Loja do Sorveteiro</div></div>
+        <div class="rcard"><div class="ic">🌐</div><div class="p">12º</div><div class="n">Grupo</div><div class="sc">Grupo Uoma</div></div>
+      </div>
 
       <div class="sec"><h2>Minha área</h2></div>
       <div class="grid">
