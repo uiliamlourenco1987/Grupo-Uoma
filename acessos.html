@@ -50,6 +50,23 @@
   .rrow .rn{flex:1;font-size:14px;font-weight:600}
   .rrow .esc{font-size:10px;font-weight:700;color:#8a6b1f;background:#F3EAD3;padding:3px 8px;border-radius:999px}
   .rrow.off .rn{color:#aab0b8}
+  .overlay{position:fixed;inset:0;background:rgba(8,19,42,.5);display:none;align-items:flex-end;justify-content:center;z-index:50}
+  .overlay.on{display:flex}
+  .sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:440px;padding:20px 18px 26px;animation:up .25s ease both;max-height:94vh;overflow:auto}
+  @keyframes up{from{transform:translateY(30px);opacity:.6}to{transform:none;opacity:1}}
+  .shhead{display:flex;align-items:center;margin-bottom:6px}
+  .shhead b{font-size:18px;font-weight:700;font-family:var(--serif)}
+  .shhead .x{margin-left:auto;border:0;background:#F1F0EA;width:32px;height:32px;border-radius:50%;font-size:14px;cursor:pointer;color:#6b7280}
+  .flabel{display:block;font-size:12px;font-weight:700;color:#57606c;margin:15px 2px 7px;letter-spacing:.02em}
+  .input2{width:100%;padding:13px;border:1.5px solid var(--line);border-radius:11px;font-size:15px;background:#FBFCFD;font-family:inherit;color:var(--ink)}
+  .input2:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 4px rgba(196,151,46,.18)}
+  .seg{display:flex;gap:6px;background:#F1F0EA;border-radius:11px;padding:4px}
+  .seg button{flex:1;border:0;background:transparent;padding:10px;border-radius:8px;font-weight:700;font-size:13px;color:#8a8778;cursor:pointer;font-family:inherit}
+  .seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(8,19,42,.12)}
+  .empchips{display:flex;gap:7px;flex-wrap:wrap}
+  .empchip{padding:9px 13px;border-radius:999px;border:1.5px solid var(--line);background:#fff;font-weight:700;font-size:12.5px;cursor:pointer;color:#6b7280}
+  .empchip.on{background:#F3EAD3;border-color:var(--gold);color:#8a6b1f}
+  .btncriar{width:100%;border:0;border-radius:12px;padding:15px;font-size:15px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--navy),var(--navy-d));cursor:pointer;font-family:inherit;margin-top:22px}
 </style></head>
 <body>
   <div class="top">
@@ -62,7 +79,7 @@
   <div class="wrap">
     <!-- ===== USUÁRIOS ===== -->
     <div class="pane on" id="p-users">
-      <div class="toolbar"><input class="search" placeholder="Buscar colaborador…"><button class="novo">＋ Novo acesso</button></div>
+      <div class="toolbar"><input class="search" placeholder="Buscar colaborador…"><button class="novo" onclick="openNovo()">＋ Novo acesso</button></div>
 
       <div class="urow"><div class="ini">AC</div><div class="uinfo"><b>Antônio Costa</b><div class="em">antonio@grupouoma.com.br</div><div class="ch"><span class="chip role">Vendedor</span><span class="chip emp">Loja do Sorveteiro</span></div></div><div class="sw on"></div></div>
 
@@ -102,6 +119,22 @@
     </div>
   </div>
 
+  <div class="overlay" id="ov">
+    <div class="sheet">
+      <div class="shhead"><b>Novo acesso</b><button class="x" onclick="closeNovo()">✕</button></div>
+      <label class="flabel">Nome completo</label>
+      <input class="input2" placeholder="Ex.: Antônio Costa">
+      <label class="flabel">Como vai entrar?</label>
+      <div class="seg" id="segEntrada"><button class="on" data-m="senha">E-mail e senha</button><button data-m="pin">Só PIN</button></div>
+      <div id="campoEmail"><label class="flabel">E-mail</label><input class="input2" type="email" placeholder="voce@grupouoma.com.br"></div>
+      <div id="campoPin" style="display:none"><label class="flabel">PIN (4 a 6 dígitos)</label><input class="input2" inputmode="numeric" placeholder="••••"></div>
+      <label class="flabel">Empresa do colaborador</label>
+      <div class="empchips" id="empchips"><span class="empchip on">Loja do Sorveteiro</span><span class="empchip">Padoquinha</span><span class="empchip">Merenda Certa</span><span class="empchip">Grupo (todas)</span></div>
+      <label class="flabel">Perfil</label>
+      <select class="input2"><option>Vendedor</option><option>Supervisor</option><option>Financeiro</option><option>RH</option><option>Gerencial</option><option>Diretoria</option><option>Produção (Padoquinha)</option><option>Colaborador (base)</option></select>
+      <button class="btncriar" onclick="closeNovo()">Criar acesso</button>
+    </div>
+  </div>
 <script>
   document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){
     document.querySelectorAll('.tabs button').forEach(function(x){x.classList.remove('on');});b.classList.add('on');
@@ -114,5 +147,11 @@
   document.querySelectorAll('.pchip').forEach(function(c){c.onclick=function(){
     document.querySelectorAll('.pchip').forEach(function(x){x.classList.remove('on');});c.classList.add('on');
     document.querySelector('.plabel:nth-of-type(2)');};});
+
+  function openNovo(){document.getElementById('ov').classList.add('on');}
+  function closeNovo(){document.getElementById('ov').classList.remove('on');}
+  document.querySelectorAll('#empchips .empchip').forEach(function(c){c.onclick=function(){document.querySelectorAll('#empchips .empchip').forEach(function(x){x.classList.remove('on');});c.classList.add('on');};});
+  document.querySelectorAll('#segEntrada button').forEach(function(bt){bt.onclick=function(){document.querySelectorAll('#segEntrada button').forEach(function(x){x.classList.remove('on');});bt.classList.add('on');var pin=bt.getAttribute('data-m')==='pin';document.getElementById('campoEmail').style.display=pin?'none':'block';document.getElementById('campoPin').style.display=pin?'block':'none';};});
+  document.getElementById('ov').addEventListener('click',function(e){if(e.target.id==='ov')closeNovo();});
 </script>
 </body></html>
