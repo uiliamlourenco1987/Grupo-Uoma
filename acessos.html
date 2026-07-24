@@ -43,6 +43,7 @@
   .pchips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
   .pchip{padding:8px 13px;border-radius:999px;border:1.5px solid var(--line);background:#fff;font-weight:700;font-size:12.5px;cursor:pointer;color:#6b7280}
   .pchip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .pchip.novo{border-style:dashed;border-color:var(--gold);color:#a8791f;background:#fff}
   .rcardbox{background:#fff;border-radius:16px;padding:6px 15px;box-shadow:0 1px 3px rgba(8,19,42,.05),0 10px 22px rgba(8,19,42,.06)}
   .rrow{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
   .rrow:last-child{border-bottom:0}
@@ -78,9 +79,9 @@
 
     <!-- ===== PERMISSÕES ===== -->
     <div class="pane" id="p-perms">
-      <div class="hintbar">Escolha um <b>perfil</b> e ligue/desligue o que ele pode ver. Vale para todos daquele perfil — e o bloqueio também vale no banco, não é só esconder o botão.</div>
+      <div class="hintbar">Escolha um <b>perfil</b> e ligue/desligue o que ele pode ver — ou <b>crie um novo perfil</b> (ex.: um operacional de uma empresa, como <b>Produção</b> da Padoquinha). O bloqueio também vale no banco (RLS), não é só esconder o botão.</div>
       <div class="plabel">Perfil</div>
-      <div class="pchips"><span class="pchip on">Vendedor</span><span class="pchip">Supervisor</span><span class="pchip">Financeiro</span><span class="pchip">RH</span><span class="pchip">Gerencial</span><span class="pchip">Diretoria</span></div>
+      <div class="pchips"><span class="pchip on">Vendedor</span><span class="pchip">Supervisor</span><span class="pchip">Financeiro</span><span class="pchip">RH</span><span class="pchip">Gerencial</span><span class="pchip">Diretoria</span><span class="pchip">Produção · Padoquinha</span><span class="pchip novo">＋ Novo perfil</span></div>
 
       <div class="plabel">Recursos do perfil Vendedor</div>
       <div class="rcardbox">
