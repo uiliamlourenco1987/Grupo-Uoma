@@ -3,28 +3,38 @@
 <meta name="theme-color" content="#0C1C38"><title>Portal Uoma — Demonstração</title>
 <style>
   :root{--navy:#12294C;--navy-d:#0C1C38;--navy-dd:#08132A;--gold:#C4972E;--gold-l:#E7C876;--gold-soft:#D9B24A;
-    --bg:#F1EFE9;--ink:#1B2430;--mut:#6b7280;--line:#EAE7DE;
+    --bg:#F1EFE9;--ink:#1B2430;--mut:#6b7280;--line:#EAE7DE;--amber:#B45309;
     --serif:Georgia,"Times New Roman",serif;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:var(--sans);color:var(--ink);background:var(--bg);max-width:440px;margin:0 auto;min-height:100vh}
-  .top{background:radial-gradient(130% 110% at 50% -10%,#1c3a63 0%,transparent 55%),linear-gradient(160deg,var(--navy),var(--navy-d) 60%,var(--navy-dd));color:#fff;padding:32px 22px 28px;text-align:center;border-radius:0 0 26px 26px;position:relative}
+  .top{background:radial-gradient(130% 110% at 50% -10%,#1c3a63 0%,transparent 55%),linear-gradient(160deg,var(--navy),var(--navy-d) 60%,var(--navy-dd));color:#fff;padding:30px 22px 26px;text-align:center;border-radius:0 0 26px 26px;position:relative}
   .top::after{content:"";position:absolute;left:22px;right:22px;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.7}
-  .top img{height:74px;width:auto;display:block;margin:0 auto 11px;filter:drop-shadow(0 4px 14px rgba(0,0,0,.4))}
-  .top .wm{font-family:var(--serif);font-size:22px;letter-spacing:.16em;font-weight:600}
-  .top .sub{font-size:12px;color:#cdd6e4;margin-top:8px;font-weight:500}
-  .top .demo{display:inline-block;margin-top:13px;font-size:10.5px;font-weight:800;letter-spacing:.12em;color:var(--gold-l);background:rgba(231,200,118,.14);border:1px solid rgba(231,200,118,.25);padding:5px 12px;border-radius:999px;text-transform:uppercase}
-  .wrap{padding:18px 16px 34px}
+  .top img{height:70px;width:auto;display:block;margin:0 auto 10px;filter:drop-shadow(0 4px 14px rgba(0,0,0,.4))}
+  .top .wm{font-family:var(--serif);font-size:21px;letter-spacing:.16em;font-weight:600}
+  .top .sub{font-size:12px;color:#cdd6e4;margin-top:7px;font-weight:500}
+  .top .demo{display:inline-block;margin-top:12px;font-size:10.5px;font-weight:800;letter-spacing:.12em;color:var(--gold-l);background:rgba(231,200,118,.14);border:1px solid rgba(231,200,118,.25);padding:5px 12px;border-radius:999px;text-transform:uppercase}
+  .wrap{padding:16px 16px 34px}
   .lbl{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a927e;margin:16px 4px 11px;display:flex;align-items:center;gap:8px}
-  .lbl:first-child{margin-top:4px}
+  .lbl:first-child{margin-top:2px}
   .lbl .ln{flex:1;height:1px;background:var(--line)}
-  a.pcard{display:flex;align-items:center;gap:13px;background:#fff;border-radius:15px;padding:13px 15px;margin-bottom:10px;box-shadow:0 1px 3px rgba(8,19,42,.05),0 8px 18px rgba(8,19,42,.05);text-decoration:none;color:inherit;transition:transform .12s ease}
+  .pcard{display:flex;align-items:center;gap:13px;background:#fff;border-radius:15px;padding:13px 15px;margin-bottom:10px;box-shadow:0 1px 3px rgba(8,19,42,.05),0 8px 18px rgba(8,19,42,.05);text-decoration:none;color:inherit;transition:transform .12s ease;position:relative}
   a.pcard:active{transform:scale(.98)}
-  a.pcard .ic{width:48px;height:48px;border-radius:13px;background:linear-gradient(135deg,var(--navy),var(--navy-d));display:flex;align-items:center;justify-content:center;font-size:23px;flex:0 0 auto}
-  a.pcard .ic.g{background:linear-gradient(135deg,#FBF6EA,#F4E9CE)}
-  a.pcard .tx{flex:1;min-width:0}
-  a.pcard .tx b{font-size:15px;font-weight:700;font-family:var(--serif);display:block}
-  a.pcard .tx span{font-size:11.5px;color:var(--mut);line-height:1.3;display:block;margin-top:2px}
-  a.pcard .go{color:var(--gold);font-size:19px;font-weight:700}
+  .pcard .ic{width:48px;height:48px;border-radius:13px;background:linear-gradient(135deg,var(--navy),var(--navy-d));display:flex;align-items:center;justify-content:center;font-size:23px;flex:0 0 auto}
+  .pcard .ic.g{background:linear-gradient(135deg,#FBF6EA,#F4E9CE)}
+  .pcard .tx{flex:1;min-width:0}
+  .pcard .tx b{font-size:15px;font-weight:700;font-family:var(--serif);display:block}
+  .pcard .tx span{font-size:11.5px;color:var(--mut);line-height:1.3;display:block;margin-top:2px}
+  .pcard .go{color:var(--gold);font-size:19px;font-weight:700}
+  /* travado */
+  .pcard.locked{opacity:.52;pointer-events:none;background:#F6F4EE;box-shadow:none;border:1px dashed var(--line)}
+  .pcard.locked .ic{filter:grayscale(.6)}
+  .pcard .st{font-size:9.5px;font-weight:800;letter-spacing:.03em;padding:4px 9px;border-radius:999px;white-space:nowrap}
+  .pcard .st.ajuste{background:#FBF0E0;color:var(--amber)}
+  .pcard .st.breve{background:#EAE6DB;color:#7a7360}
+  .legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:2px 0 4px;font-size:11px;color:var(--mut);font-weight:600}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .legend i{width:9px;height:9px;border-radius:50%}
+  .legend .on{background:var(--gold)}.legend .aj{background:var(--amber)}.legend .br{background:#9a927e}
   .flowbox{background:#fff;border-left:4px solid var(--gold);border-radius:12px;padding:12px 14px;margin-top:16px;font-size:12px;color:var(--mut);line-height:1.55}
   .flowbox b{color:var(--ink)}
   .foot{text-align:center;padding:20px 16px 8px;font-size:11px;color:#a7a291;font-weight:600}
@@ -37,22 +47,49 @@
     <div class="demo">🖐️ Modo demonstração</div>
   </div>
   <div class="wrap">
-
-    <div class="lbl">Perfis do portal <span class="ln"></span></div>
-    <a class="pcard" href="portal-login.html"><div class="ic g">🧑‍💼</div><div class="tx"><b>Vendedor</b><span>Tela de login → home do colaborador (metas, avaliação, rankings)</span></div><span class="go">→</span></a>
-    <a class="pcard" href="faturista.html"><div class="ic g">🧾</div><div class="tx"><b>Faturista</b><span>Home + acesso ao Faturamento (login único)</span></div><span class="go">→</span></a>
-    <a class="pcard" href="rh.html"><div class="ic">🛡️</div><div class="tx"><b>Recursos Humanos</b><span>Home + Controle de Acessos (usuários e permissões)</span></div><span class="go">→</span></a>
-    <a class="pcard" href="financeiro.html"><div class="ic g">💰</div><div class="tx"><b>Financeiro</b><span>Home + painel financeiro consolidado das 3 empresas</span></div><span class="go">→</span></a>
-    <a class="pcard" href="diretoria.html"><div class="ic g">🏛️</div><div class="tx"><b>Diretoria</b><span>Home + acesso total ao grupo</span></div><span class="go">→</span></a>
-
-    <div class="lbl">Sistema de Faturamento (telas) <span class="ln"></span></div>
-    <a class="pcard" href="painel-sep.html"><div class="ic g">📊</div><div class="tx"><b>Painel de Separação</b><span>Cartões, status e o quadro (kanban)</span></div><span class="go">→</span></a>
-    <a class="pcard" href="separacao.html"><div class="ic g">📦</div><div class="tx"><b>Separação</b><span>Conferência: tem tudo / parcial / não tem</span></div><span class="go">→</span></a>
-    <a class="pcard" href="campanhas.html"><div class="ic g">🏆</div><div class="tx"><b>Campanhas</b><span>Encarte da campanha, pódio e ranking</span></div><span class="go">→</span></a>
-    <a class="pcard" href="metas-vend.html"><div class="ic g">🎯</div><div class="tx"><b>Metas do Vendedor</b><span>Faturamento, mix, positivação, inadimplência</span></div><span class="go">→</span></a>
-    <a class="pcard" href="fornecedor.html"><div class="ic g">🔗</div><div class="tx"><b>Portal do Fornecedor</b><span>O que a fábrica vê pelo link da campanha</span></div><span class="go">→</span></a>
-
-    <div class="flowbox"><b>Como navegar:</b> toque em qualquer item para abrir. Dentro de cada tela, use o link <b>"←"</b> no topo para voltar aqui.</div>
+    <div class="legend"><span><i class="on"></i>liberado</span><span><i class="aj"></i>em ajuste</span><span><i class="br"></i>em breve</span></div>
+    <div id="root"></div>
+    <div class="flowbox"><b>Liberação por etapas:</b> os itens em <b>cinza</b> ainda não abrem — estão em ajuste ou em breve. Conforme cada parte fica pronta e aprovada, ela é <b>liberada</b> e passa a ser clicável.</div>
     <div class="foot">Grupo Uoma · Macapá · Amapá · Brasil · protótipo navegável</div>
   </div>
+
+<script>
+  /* ===================================================================
+     PAINEL DE LIBERAÇÃO — mude 'status' de cada item:
+        'ativo'  = liberado (clicável)
+        'ajuste' = em ajuste (travado, transparente)
+        'breve'  = em breve (travado, transparente)
+     =================================================================== */
+  var SECOES=[
+    {titulo:'Perfis do portal', itens:[
+      {emoji:'🧑‍💼',g:true,label:'Vendedor',desc:'Tela de login → home do colaborador',href:'portal-login.html',status:'ativo'},
+      {emoji:'🧾',g:true,label:'Faturista',desc:'Home + acesso ao Faturamento (login único)',href:'faturista.html',status:'ativo'},
+      {emoji:'🛡️',g:false,label:'Recursos Humanos',desc:'Home + Controle de Acessos',href:'rh.html',status:'ativo'},
+      {emoji:'💰',g:true,label:'Financeiro',desc:'Painel financeiro das 3 empresas',href:'financeiro.html',status:'ajuste'},
+      {emoji:'🏛️',g:true,label:'Diretoria',desc:'Acesso total ao grupo',href:'diretoria.html',status:'ajuste'}
+    ]},
+    {titulo:'Sistema de Faturamento (telas)', itens:[
+      {emoji:'📊',g:true,label:'Painel de Separação',desc:'Cartões, status e o quadro (kanban)',href:'painel-sep.html',status:'ativo'},
+      {emoji:'📦',g:true,label:'Separação',desc:'Conferência: tem tudo / parcial / não tem',href:'separacao.html',status:'ativo'},
+      {emoji:'🏆',g:true,label:'Campanhas',desc:'Encarte, multi-critério, marcos',href:'campanhas.html',status:'ajuste'},
+      {emoji:'🎯',g:true,label:'Metas do Vendedor',desc:'Faturamento, mix, positivação, inadimplência',href:'metas-vend.html',status:'ajuste'},
+      {emoji:'🔗',g:true,label:'Portal do Fornecedor',desc:'O que a fábrica vê pelo link da campanha',href:'fornecedor.html',status:'breve'}
+    ]}
+  ];
+
+  var STLBL={ajuste:'🔧 em ajuste',breve:'🔒 em breve'};
+  var root=document.getElementById('root');
+  SECOES.forEach(function(sec){
+    var h=document.createElement('div');h.className='lbl';h.innerHTML=sec.titulo+' <span class="ln"></span>';root.appendChild(h);
+    sec.itens.forEach(function(it){
+      var ativo=it.status==='ativo';
+      var el=document.createElement(ativo?'a':'div');
+      el.className='pcard'+(ativo?'':' locked');
+      if(ativo)el.href=it.href;
+      var right=ativo?'<span class="go">→</span>':'<span class="st '+it.status+'">'+STLBL[it.status]+'</span>';
+      el.innerHTML='<div class="ic'+(it.g?' g':'')+'">'+it.emoji+'</div><div class="tx"><b>'+it.label+'</b><span>'+it.desc+'</span></div>'+right;
+      root.appendChild(el);
+    });
+  });
+</script>
 </body></html>
