@@ -79,11 +79,14 @@
 
 <script>
   /* ===== VERSÃO ATUAL — bump a cada evolução ===== */
-  var VERSAO='0.4';
+  var VERSAO='0.5';
   var VERDATA='25/07/2026';
 
   /* ===== HISTÓRICO DE EVOLUÇÕES (o mais novo em cima) ===== */
   var CHANGELOG=[
+    {v:'0.5',data:'25/07/2026',itens:[
+      'Campanhas ATIVADAS no portal: o card abre direto o módulo real (login → cai direto nas campanhas)',
+      'Faturamento v6 no ar: identidade Uoma, multi-critério, meta individual por vendedor (com filtro por equipe), prêmio por meta e marcos']},
     {v:'0.4',data:'25/07/2026',itens:[
       'Campanhas evoluídas: modelo por empresa, multi-critério (+ Produtos e Positivação), premiação por marcos e apresentação (PDF / imagem / link)',
       'Controle de liberação por etapas (itens travados/liberados) e versionamento']},
@@ -109,7 +112,7 @@
     {titulo:'Sistema de Faturamento (telas)', itens:[
       {emoji:'📊',g:true,label:'Painel de Separação',desc:'Cartões, status e o quadro (kanban)',href:'painel-sep.html',status:'ativo'},
       {emoji:'📦',g:true,label:'Separação',desc:'Conferência: tem tudo / parcial / não tem',href:'separacao.html',status:'ativo'},
-      {emoji:'🏆',g:true,label:'Campanhas',desc:'Encarte, multi-critério, marcos',href:'campanhas.html',status:'ajuste'},
+      {emoji:'🏆',g:true,label:'Campanhas',desc:'Multi-critério, meta por vendedor, marcos e encarte',href:'https://fatcsorveteiro.pages.dev/#campanhas',status:'ativo'},
       {emoji:'🎯',g:true,label:'Metas do Vendedor',desc:'Faturamento, mix, positivação, inadimplência',href:'metas-vend.html',status:'ajuste'},
       {emoji:'🔗',g:true,label:'Portal do Fornecedor',desc:'O que a fábrica vê pelo link da campanha',href:'fornecedor.html',status:'breve'}
     ]}
@@ -123,7 +126,7 @@
       var ativo=it.status==='ativo';
       var el=document.createElement(ativo?'a':'div');
       el.className='pcard'+(ativo?'':' locked');
-      if(ativo)el.href=it.href;
+      if(ativo){el.href=it.href;if(/^https?:/.test(it.href)){el.target='_blank';el.rel='noopener';}}
       var right=ativo?'<span class="go">→</span>':'<span class="st '+it.status+'">'+STLBL[it.status]+'</span>';
       el.innerHTML='<div class="ic'+(it.g?' g':'')+'">'+it.emoji+'</div><div class="tx"><b>'+it.label+'</b><span>'+it.desc+'</span></div>'+right;
       root.appendChild(el);
