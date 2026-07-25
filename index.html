@@ -7,27 +7,27 @@
     --serif:Georgia,"Times New Roman",serif;--sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:var(--sans);color:var(--ink);background:var(--bg);max-width:440px;margin:0 auto;min-height:100vh}
-  .top{background:radial-gradient(130% 110% at 50% -10%,#1c3a63 0%,transparent 55%),linear-gradient(160deg,var(--navy),var(--navy-d) 60%,var(--navy-dd));color:#fff;padding:34px 22px 30px;text-align:center;border-radius:0 0 26px 26px;position:relative}
+  .top{background:radial-gradient(130% 110% at 50% -10%,#1c3a63 0%,transparent 55%),linear-gradient(160deg,var(--navy),var(--navy-d) 60%,var(--navy-dd));color:#fff;padding:32px 22px 28px;text-align:center;border-radius:0 0 26px 26px;position:relative}
   .top::after{content:"";position:absolute;left:22px;right:22px;bottom:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.7}
-  .top img{height:80px;width:auto;display:block;margin:0 auto 12px;filter:drop-shadow(0 4px 14px rgba(0,0,0,.4))}
-  .top .wm{font-family:var(--serif);font-size:23px;letter-spacing:.16em;font-weight:600}
-  .top .sub{font-size:12.5px;color:#cdd6e4;margin-top:8px;font-weight:500}
-  .top .demo{display:inline-block;margin-top:14px;font-size:10.5px;font-weight:800;letter-spacing:.12em;color:var(--gold-l);background:rgba(231,200,118,.14);border:1px solid rgba(231,200,118,.25);padding:5px 12px;border-radius:999px;text-transform:uppercase}
-  .wrap{padding:20px 16px 34px}
-  .lbl{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a927e;margin:4px 4px 12px}
-  a.pcard{display:flex;align-items:center;gap:14px;background:#fff;border-radius:16px;padding:15px 16px;margin-bottom:11px;box-shadow:0 1px 3px rgba(8,19,42,.05),0 10px 22px rgba(8,19,42,.06);text-decoration:none;color:inherit;transition:transform .12s ease;border:1px solid transparent}
+  .top img{height:74px;width:auto;display:block;margin:0 auto 11px;filter:drop-shadow(0 4px 14px rgba(0,0,0,.4))}
+  .top .wm{font-family:var(--serif);font-size:22px;letter-spacing:.16em;font-weight:600}
+  .top .sub{font-size:12px;color:#cdd6e4;margin-top:8px;font-weight:500}
+  .top .demo{display:inline-block;margin-top:13px;font-size:10.5px;font-weight:800;letter-spacing:.12em;color:var(--gold-l);background:rgba(231,200,118,.14);border:1px solid rgba(231,200,118,.25);padding:5px 12px;border-radius:999px;text-transform:uppercase}
+  .wrap{padding:18px 16px 34px}
+  .lbl{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a927e;margin:16px 4px 11px;display:flex;align-items:center;gap:8px}
+  .lbl:first-child{margin-top:4px}
+  .lbl .ln{flex:1;height:1px;background:var(--line)}
+  a.pcard{display:flex;align-items:center;gap:13px;background:#fff;border-radius:15px;padding:13px 15px;margin-bottom:10px;box-shadow:0 1px 3px rgba(8,19,42,.05),0 8px 18px rgba(8,19,42,.05);text-decoration:none;color:inherit;transition:transform .12s ease}
   a.pcard:active{transform:scale(.98)}
-  a.pcard .ic{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--navy),var(--navy-d));display:flex;align-items:center;justify-content:center;font-size:25px;flex:0 0 auto}
+  a.pcard .ic{width:48px;height:48px;border-radius:13px;background:linear-gradient(135deg,var(--navy),var(--navy-d));display:flex;align-items:center;justify-content:center;font-size:23px;flex:0 0 auto}
   a.pcard .ic.g{background:linear-gradient(135deg,#FBF6EA,#F4E9CE)}
   a.pcard .tx{flex:1;min-width:0}
-  a.pcard .tx b{font-size:16px;font-weight:700;font-family:var(--serif);display:block}
-  a.pcard .tx span{font-size:12px;color:var(--mut);line-height:1.35;display:block;margin-top:2px}
-  a.pcard .go{color:var(--gold);font-size:20px;font-weight:700}
-  .soon{opacity:.55;pointer-events:none}
-  .soon .go{color:var(--mut);font-size:10px;font-weight:800;background:#EAE6DB;padding:3px 8px;border-radius:999px}
-  .flowbox{background:#fff;border-left:4px solid var(--gold);border-radius:12px;padding:13px 15px;margin-top:18px;font-size:12.5px;color:var(--mut);line-height:1.55}
+  a.pcard .tx b{font-size:15px;font-weight:700;font-family:var(--serif);display:block}
+  a.pcard .tx span{font-size:11.5px;color:var(--mut);line-height:1.3;display:block;margin-top:2px}
+  a.pcard .go{color:var(--gold);font-size:19px;font-weight:700}
+  .flowbox{background:#fff;border-left:4px solid var(--gold);border-radius:12px;padding:12px 14px;margin-top:16px;font-size:12px;color:var(--mut);line-height:1.55}
   .flowbox b{color:var(--ink)}
-  .foot{text-align:center;padding:22px 16px 8px;font-size:11px;color:#a7a291;font-weight:600}
+  .foot{text-align:center;padding:20px 16px 8px;font-size:11px;color:#a7a291;font-weight:600}
 </style></head>
 <body>
   <div class="top">
@@ -37,42 +37,22 @@
     <div class="demo">🖐️ Modo demonstração</div>
   </div>
   <div class="wrap">
-    <div class="lbl">Entre como um perfil</div>
 
-    <a class="pcard" href="portal-login.html">
-      <div class="ic g">🧑‍💼</div>
-      <div class="tx"><b>Vendedor</b><span>Começa pela tela de login → home do colaborador (metas, avaliação, rankings)</span></div>
-      <span class="go">→</span>
-    </a>
+    <div class="lbl">Perfis do portal <span class="ln"></span></div>
+    <a class="pcard" href="portal-login.html"><div class="ic g">🧑‍💼</div><div class="tx"><b>Vendedor</b><span>Tela de login → home do colaborador (metas, avaliação, rankings)</span></div><span class="go">→</span></a>
+    <a class="pcard" href="faturista.html"><div class="ic g">🧾</div><div class="tx"><b>Faturista</b><span>Home + acesso ao Faturamento (login único)</span></div><span class="go">→</span></a>
+    <a class="pcard" href="rh.html"><div class="ic">🛡️</div><div class="tx"><b>Recursos Humanos</b><span>Home + Controle de Acessos (usuários e permissões)</span></div><span class="go">→</span></a>
+    <a class="pcard" href="financeiro.html"><div class="ic g">💰</div><div class="tx"><b>Financeiro</b><span>Home + painel financeiro consolidado das 3 empresas</span></div><span class="go">→</span></a>
+    <a class="pcard" href="diretoria.html"><div class="ic g">🏛️</div><div class="tx"><b>Diretoria</b><span>Home + acesso total ao grupo</span></div><span class="go">→</span></a>
 
-    <a class="pcard" href="faturista.html">
-      <div class="ic g">🧾</div>
-      <div class="tx"><b>Faturista</b><span>Home do colaborador + acesso ao sistema de Faturamento (login único)</span></div>
-      <span class="go">→</span>
-    </a>
+    <div class="lbl">Sistema de Faturamento (telas) <span class="ln"></span></div>
+    <a class="pcard" href="painel-sep.html"><div class="ic g">📊</div><div class="tx"><b>Painel de Separação</b><span>Cartões, status e o quadro (kanban)</span></div><span class="go">→</span></a>
+    <a class="pcard" href="separacao.html"><div class="ic g">📦</div><div class="tx"><b>Separação</b><span>Conferência: tem tudo / parcial / não tem</span></div><span class="go">→</span></a>
+    <a class="pcard" href="campanhas.html"><div class="ic g">🏆</div><div class="tx"><b>Campanhas</b><span>Encarte da campanha, pódio e ranking</span></div><span class="go">→</span></a>
+    <a class="pcard" href="metas-vend.html"><div class="ic g">🎯</div><div class="tx"><b>Metas do Vendedor</b><span>Faturamento, mix, positivação, inadimplência</span></div><span class="go">→</span></a>
+    <a class="pcard" href="fornecedor.html"><div class="ic g">🔗</div><div class="tx"><b>Portal do Fornecedor</b><span>O que a fábrica vê pelo link da campanha</span></div><span class="go">→</span></a>
 
-    <a class="pcard" href="rh.html">
-      <div class="ic">🛡️</div>
-      <div class="tx"><b>Recursos Humanos</b><span>Home + Painel do RH → Controle de Acessos (usuários e permissões)</span></div>
-      <span class="go">→</span>
-    </a>
-
-    <a class="pcard soon" href="#">
-      <div class="ic g">💰</div>
-      <div class="tx"><b>Financeiro</b><span>Consolidado das 3 empresas</span></div>
-      <span class="go">em breve</span>
-    </a>
-
-    <a class="pcard soon" href="#">
-      <div class="ic g">🏛️</div>
-      <div class="tx"><b>Diretoria</b><span>Acesso total ao grupo</span></div>
-      <span class="go">em breve</span>
-    </a>
-
-    <div class="flowbox">
-      <b>Como navegar:</b> escolha um perfil acima para entrar. Dentro de cada um, toque nos cartões para abrir as telas, e use <b>"← Portal Uoma"</b> no topo para voltar aqui e testar outro perfil.
-    </div>
-
+    <div class="flowbox"><b>Como navegar:</b> toque em qualquer item para abrir. Dentro de cada tela, use o link <b>"←"</b> no topo para voltar aqui.</div>
     <div class="foot">Grupo Uoma · Macapá · Amapá · Brasil · protótipo navegável</div>
   </div>
 </body></html>
