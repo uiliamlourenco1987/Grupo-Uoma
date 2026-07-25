@@ -134,7 +134,7 @@
   }
 
   async function checkSession(){
-    try{var r=await sb.auth.getSession();if(r.data&&r.data.session&&r.data.session.user){showOk(r.data.session.user);}}catch(e){}
+    try{var r=await sb.auth.getSession();if(r.data&&r.data.session&&r.data.session.user){location.href='home.html';}}catch(e){}
   }
   checkSession();
 
@@ -147,7 +147,7 @@
     try{
       var res=await sb.auth.signInWithPassword({email:email,password:senha});
       if(res.error){showMsg('E-mail ou senha incorretos.','err');btn.disabled=false;btn.innerHTML=old;return;}
-      showOk(res.data.user);
+      location.href='home.html';
     }catch(e){
       showMsg('Não consegui conectar. Tente de novo em instantes.','err');btn.disabled=false;btn.innerHTML=old;
     }

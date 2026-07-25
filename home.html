@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<title>Portal Grupo Uoma — Início (mural)</title>
+<style>
+  :root{--navy:#12294C;--navy-d:#0C1C38;--navy-dd:#08132A;--gold:#C4972E;--gold-l:#E7C876;
+    --cream:#F1EFE9;--paper:#FBFAF7;--ink:#1B2430;--mut:#6b7280;--line:#E6E2D8;--line2:#EEEBE2;
+    --green:#2F9E62;--blue:#2b5f9e;--serif:Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--sans);color:var(--ink);background:var(--cream)}
+  .layout{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+  /* ===== SIDEBAR ===== */
+  .side{background:radial-gradient(120% 60% at 80% -10%,#1c3a63 0%,transparent 55%),linear-gradient(180deg,var(--navy),var(--navy-d) 70%,var(--navy-dd));
+    color:#fff;padding:18px 14px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+  .sbrand{display:flex;align-items:center;gap:10px;padding:2px 6px 16px}
+  .crest{width:40px;height:40px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 35% 30%,#22406c,#0C1C38);border:2px solid var(--gold)}
+  .crest span{font-family:var(--serif);font-weight:700;font-size:19px;color:var(--gold-l)}
+  .sbrand b{font-family:var(--serif);font-size:16px;font-weight:700}
+  .sbrand small{display:block;font-size:9.5px;letter-spacing:.14em;color:var(--gold-l);text-transform:uppercase;margin-top:1px}
+  .userchip{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:9px 11px;margin-bottom:14px}
+  .userchip .av{width:34px;height:34px;border-radius:50%;background:var(--gold);color:var(--navy-d);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .userchip .nm{font-size:13px;font-weight:700;line-height:1.2}
+  .userchip .rl{font-size:10.5px;color:var(--gold-l);text-transform:uppercase;letter-spacing:.06em}
+  .navlbl{font-size:10px;font-weight:800;letter-spacing:.14em;color:#8fa0bb;text-transform:uppercase;margin:6px 8px 6px}
+  .nav{display:flex;flex-direction:column;gap:2px;overflow:auto}
+  .nav a{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:10px;color:#d7deea;text-decoration:none;font-size:13.5px;font-weight:600;cursor:pointer}
+  .nav a .i{font-size:17px;width:22px;text-align:center}
+  .nav a:hover{background:rgba(255,255,255,.06)}
+  .nav a.on{background:linear-gradient(120deg,rgba(196,151,46,.22),rgba(196,151,46,.08));color:#fff;box-shadow:inset 3px 0 0 var(--gold)}
+  .side .sair{margin-top:auto;padding-top:12px}
+  .side .sair a{color:#aeb8c8;font-size:12.5px}
+  /* ===== TOPBAR (mobile) ===== */
+  .topbar{display:none;align-items:center;gap:12px;background:var(--navy);color:#fff;padding:12px 15px;position:sticky;top:0;z-index:30}
+  .topbar .burger{font-size:22px;background:none;border:none;color:#fff;cursor:pointer;line-height:1}
+  .topbar b{font-family:var(--serif);font-size:16px}
+  .backdrop{display:none;position:fixed;inset:0;background:rgba(8,19,42,.5);z-index:40}
+  /* ===== MAIN ===== */
+  .main{padding:0 0 40px}
+  .hero{background:radial-gradient(120% 120% at 90% -30%,#1c3a63 0%,transparent 55%),linear-gradient(150deg,var(--navy),var(--navy-d));color:#fff;padding:26px 26px 24px;position:relative}
+  .hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+  .hero .kick{font-size:11px;font-weight:800;letter-spacing:.16em;color:var(--gold-l);text-transform:uppercase}
+  .hero h1{font-family:var(--serif);font-size:27px;font-weight:700;margin:6px 0 5px}
+  .hero p{font-size:13px;color:#cdd6e4;max-width:60ch}
+  .feed{max-width:680px;margin:0 auto;padding:20px 18px 0}
+  .composer{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 15px;display:flex;gap:11px;align-items:flex-start;box-shadow:0 1px 3px rgba(8,19,42,.05)}
+  .composer .av{width:38px;height:38px;border-radius:50%;background:var(--navy);color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .composer .box{flex:1}
+  .composer .fake{border:1.5px solid var(--line);border-radius:11px;padding:11px 13px;color:#9a927e;font-size:13.5px;cursor:text}
+  .composer .row{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
+  .chip{font-size:11px;font-weight:700;padding:6px 11px;border-radius:999px;border:1px solid var(--line);color:var(--mut);cursor:pointer;background:#FBFAF6}
+  .composer .pub{margin-left:auto;background:linear-gradient(150deg,var(--navy),var(--navy-d));color:#fff;border:none;border-radius:999px;font-weight:800;font-size:12.5px;padding:8px 18px;cursor:pointer}
+  .seclbl{font-size:11px;font-weight:800;letter-spacing:.13em;color:#9a927e;text-transform:uppercase;margin:24px 4px 12px}
+  .post{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 16px 6px;margin-bottom:16px;box-shadow:0 1px 3px rgba(8,19,42,.05),0 10px 24px rgba(8,19,42,.04)}
+  .phd{display:flex;align-items:center;gap:11px;margin-bottom:11px}
+  .phd .av{width:40px;height:40px;border-radius:50%;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;color:#fff;flex:0 0 auto}
+  .phd .nm{font-weight:700;font-size:14px}
+  .phd .mt{font-size:11.5px;color:var(--mut)}
+  .tag{margin-left:auto;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:4px 10px;border-radius:999px}
+  .tag.aviso{background:#FDECEA;color:#B42318}.tag.novidade{background:#F3EAD3;color:#8a6b1f}.tag.noticia{background:#E5EEF7;color:#2b5f9e}
+  .post h3{font-family:var(--serif);font-size:17px;font-weight:700;margin-bottom:5px}
+  .post .body{font-size:13.5px;color:#3a4452;line-height:1.55}
+  .react{display:flex;align-items:center;gap:16px;border-top:1px solid var(--line2);margin-top:13px;padding:9px 2px}
+  .react button{background:none;border:none;font-size:12.5px;font-weight:700;color:var(--mut);cursor:pointer;display:flex;align-items:center;gap:5px}
+  .react button.liked{color:var(--navy)}
+  .comments{border-top:1px solid var(--line2);padding:11px 0 8px}
+  .cmt{display:flex;gap:9px;margin-bottom:10px}
+  .cmt .av{width:30px;height:30px;border-radius:50%;background:#e7e2d6;color:#6b6455;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .cmt .bub{background:#F5F2EA;border-radius:12px;padding:8px 12px;font-size:12.5px}
+  .cmt .bub b{font-size:12px}.cmt .bub p{color:#3a4452;margin-top:1px}
+  .cmt .bub .t{font-size:10.5px;color:var(--mut);margin-top:3px}
+  .cadd{display:flex;gap:9px;align-items:center;margin-top:4px}
+  .cadd .av{width:30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .cadd input{flex:1;border:1.5px solid var(--line);border-radius:999px;padding:9px 13px;font-size:12.5px;font-family:var(--sans)}
+  .cadd input:focus{outline:none;border-color:var(--gold)}
+  .placar{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 15px;box-shadow:0 1px 3px rgba(8,19,42,.05);margin-bottom:16px}
+  .placar .h{font-size:11px;font-weight:800;letter-spacing:.1em;color:#9a927e;text-transform:uppercase;margin-bottom:11px;display:flex;align-items:center;gap:6px}
+  .placar .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+  .tile{border:1px solid var(--line);border-radius:12px;padding:11px 6px;text-align:center;background:#FBFAF6}
+  .tile.me{background:linear-gradient(150deg,var(--navy),var(--navy-d));border-color:var(--navy-d)}
+  .tile .n{font-family:var(--serif);font-weight:700;font-size:22px;color:var(--navy)}
+  .tile.me .n{color:var(--gold-l)}
+  .tile .l{font-size:10px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:var(--mut);margin-top:3px}
+  .tile.me .l{color:#cdd6e4}
+  .tgt{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:9px;font-size:11.5px}
+  .tgt .lbl{color:var(--mut);font-weight:700}
+  .tgt .pill{font-size:11px;font-weight:700;padding:5px 11px;border-radius:999px;border:1.5px solid var(--line);color:var(--mut);background:#fff;cursor:pointer}
+  .tgt .pill.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .co{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;color:#5b6470;background:#EEF1F6;border-radius:999px;padding:2px 8px}
+  .hint{font-size:11px;color:var(--mut);margin:7px 2px 0}
+  .apres{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+  .acard{border-radius:16px;padding:15px 16px;color:#fff;position:relative;overflow:hidden}
+  .acard.grupo{background:radial-gradient(120% 120% at 85% -20%,#1c3a63,transparent 55%),linear-gradient(150deg,var(--navy),var(--navy-d))}
+  .acard.empresa{background:linear-gradient(150deg,#8a6b1f,#6f5518)}
+  .acard .al{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-l);opacity:.92}
+  .acard.empresa .al{color:#fbe7c2}
+  .acard h3{font-family:var(--serif);font-size:16px;font-weight:700;margin:5px 0 6px}
+  .acard p{font-size:12px;line-height:1.5;color:rgba(255,255,255,.86)}
+  .aval{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px 16px;box-shadow:0 1px 3px rgba(8,19,42,.05);margin-bottom:16px}
+  .aval .h{font-size:11px;font-weight:800;letter-spacing:.1em;color:#9a927e;text-transform:uppercase;margin-bottom:12px}
+  .avtop{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .avtop .score{text-align:center;background:linear-gradient(150deg,var(--navy),var(--navy-d));border-radius:14px;padding:10px 18px;min-width:94px}
+  .avtop .score .big{font-family:var(--serif);font-size:30px;font-weight:700;color:var(--gold-l);line-height:1}
+  .avtop .score .lb{font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#cdd6e4;margin-top:3px}
+  .avtop .ranks{display:flex;gap:9px;flex:1;flex-wrap:wrap}
+  .rk{flex:1;min-width:120px;border:1px solid var(--line);border-radius:12px;padding:9px 12px;background:#FBFAF6;display:flex;align-items:center;gap:9px}
+  .rk .pos{font-family:var(--serif);font-size:21px;font-weight:700;color:var(--navy)}
+  .rk .rl{font-size:11.5px;color:var(--mut);font-weight:600;line-height:1.2}
+  .perg-lbl{font-size:11px;font-weight:800;letter-spacing:.06em;color:#9a927e;text-transform:uppercase;margin-bottom:9px}
+  .perg{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12.5px}
+  .perg .q{width:118px;flex:0 0 auto;font-weight:600}
+  .perg .bar{flex:1;height:8px;background:#EEEBE2;border-radius:99px;overflow:hidden}
+  .perg .bar i{display:block;height:100%;background:linear-gradient(90deg,#D9B24A,var(--gold))}
+  .perg b{width:34px;text-align:right;color:var(--navy)}
+  .medias{border-top:1px solid var(--line2);margin-top:11px;padding-top:9px;font-size:12px;color:var(--mut)}
+  .medias b{color:var(--ink)}
+  @media(max-width:560px){.placar .grid{grid-template-columns:repeat(2,1fr)}.apres{grid-template-columns:1fr}.perg .q{width:92px}}
+  @media(max-width:820px){
+    .layout{grid-template-columns:1fr}
+    .topbar{display:flex}
+    .side{position:fixed;left:0;top:0;bottom:0;width:270px;z-index:50;transform:translateX(-100%);transition:transform .22s ease}
+    .side.open{transform:none}
+    .backdrop.show{display:block}
+    .hero{padding:20px 18px 18px}.hero h1{font-size:22px}
+  }
+</style>
+</head>
+<body>
+<div class="layout" id="layout">
+  <aside class="side" id="side">
+    <div class="sbrand"><div class="crest"><span>U</span></div><div><b>Grupo Uoma</b><small>Portal</small></div></div>
+    <div class="userchip"><div class="av" id="uav">··</div><div><div class="nm" id="unm">…</div><div class="rl" id="url">…</div></div></div>
+    <div class="navlbl">Portal</div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sair"><a id="sair">🚪 Sair</a></div>
+  </aside>
+  <div class="backdrop" id="backdrop"></div>
+
+  <div>
+    <div class="topbar"><button class="burger" id="burger">☰</button><b>Início</b></div>
+    <main class="main">
+      <div class="hero">
+        <div class="kick">Bem-vindo(a) de volta</div>
+        <h1 id="hi">Olá! 👋</h1>
+        <p>Este é o mural do Grupo Uoma — avisos, novidades e notícias da equipe. Os módulos do seu perfil ficam no menu ao lado.</p>
+      </div>
+      <div class="feed">
+        <div class="apres">
+          <div class="acard grupo"><div class="al">Grupo</div><h3>Grupo Uoma</h3><p>Três empresas, uma família — Loja do Sorveteiro, Padoquinha e Merenda Certa. Qualidade e carinho no coração de Macapá.</p></div>
+          <div class="acard empresa"><div class="al">Sua empresa</div><h3>Loja do Sorveteiro e Confeiteiro</h3><p>Distribuição de sorvetes e confeitaria, atendendo o comércio de todo o Amapá.</p></div>
+        </div>
+
+        <div class="aval">
+          <div class="h">🎯 Minha avaliação</div>
+          <div class="avtop">
+            <div class="score"><div class="big">8,7</div><div class="lb">minha nota</div></div>
+            <div class="ranks">
+              <div class="rk"><span class="pos">3º</span><span class="rl">no ranking<br>da empresa</span></div>
+              <div class="rk"><span class="pos">7º</span><span class="rl">no ranking<br>do grupo</span></div>
+            </div>
+          </div>
+          <div class="perg-lbl">Por pergunta</div>
+          <div class="perg"><span class="q">Pontualidade</span><span class="bar"><i style="width:90%"></i></span><b>9,0</b></div>
+          <div class="perg"><span class="q">Trabalho em equipe</span><span class="bar"><i style="width:85%"></i></span><b>8,5</b></div>
+          <div class="perg"><span class="q">Proatividade</span><span class="bar"><i style="width:80%"></i></span><b>8,0</b></div>
+          <div class="perg"><span class="q">Organização</span><span class="bar"><i style="width:92%"></i></span><b>9,2</b></div>
+          <div class="perg"><span class="q">Relacionamento</span><span class="bar"><i style="width:88%"></i></span><b>8,8</b></div>
+          <div class="medias">Médias da equipe — setor <b>8,2</b> · empresa <b>7,9</b> · grupo <b>8,0</b></div>
+        </div>
+
+        <div class="composer">
+          <div class="av" id="cav">··</div>
+          <div class="box">
+            <div class="fake">Escreva um comunicado para a equipe…</div>
+            <div class="tgt"><span class="lbl">Para:</span><span class="pill on">🏢 Todas</span><span class="pill">🏬 Loja</span><span class="pill">🥐 Padoquinha</span><span class="pill">🍱 Merenda</span></div>
+            <div class="row">
+              <span class="chip">📢 Aviso</span><span class="chip">✨ Novidade</span><span class="chip">📰 Notícia</span>
+              <button class="pub">Publicar</button>
+            </div>
+            <div class="hint">Só RH e Diretoria publicam. Os colaboradores leem e comentam.</div>
+          </div>
+        </div>
+
+        <div class="seclbl">Comunicados · RH e Diretoria</div>
+
+        <article class="post">
+          <div class="phd"><div class="av" style="background:#B42318">MC</div><div><div class="nm">Márcia · RH</div><div class="mt">hoje, 08:10 · <span class="co">🏢 Todas</span></div></div><span class="tag aviso">Aviso</span></div>
+          <h3>Ponto facultativo na sexta (26/07)</h3>
+          <div class="body">Pessoal, sexta será ponto facultativo. Quem for trabalhar, o expediente é até meio-dia. Boas festas juninas atrasadas a todos! 🎉</div>
+          <div class="react"><button class="liked">👍 Curtir · 12</button><button>💬 Comentar · 3</button></div>
+          <div class="comments">
+            <div class="cmt"><div class="av">JS</div><div class="bub"><b>João Silva</b><p>Show! Obrigado pelo aviso 🙌</p><div class="t">há 2h</div></div></div>
+            <div class="cmt"><div class="av">AD</div><div class="bub"><b>Adriano</b><p>Vou aproveitar pra descansar 😄</p><div class="t">há 1h</div></div></div>
+            <div class="cadd"><div class="av">UL</div><input placeholder="Escreva um comentário…"></div>
+          </div>
+        </article>
+
+        <article class="post">
+          <div class="phd"><div class="av" style="background:#12294C">UL</div><div><div class="nm">Uiliam · Diretoria</div><div class="mt">ontem, 17:42 · <span class="co">🏬 Loja</span></div></div><span class="tag novidade">Novidade</span></div>
+          <h3>Nova campanha KIBON no ar! 🏆</h3>
+          <div class="body">Vendedores, começou a campanha de Verão da KIBON — prêmios pra quem mais bater a própria meta. Detalhes no módulo <b>Campanhas</b>. Bora pra cima! 🔥</div>
+          <div class="react"><button>👍 Curtir · 24</button><button>💬 Comentar · 5</button></div>
+          <div class="comments">
+            <div class="cmt"><div class="av">SU</div><div class="bub"><b>Suzana</b><p>Já tô na frente! 😎🥇</p><div class="t">há 20h</div></div></div>
+            <div class="cadd"><div class="av">UL</div><input placeholder="Escreva um comentário…"></div>
+          </div>
+        </article>
+
+        <article class="post">
+          <div class="phd"><div class="av" style="background:#2b5f9e">TA</div><div><div class="nm">Tatiana · Faturamento</div><div class="mt">23/07, 11:00 · <span class="co">🏢 Todas</span></div></div><span class="tag noticia">Notícia</span></div>
+          <h3>Meta de julho batida com 4 dias de antecedência! 🎉</h3>
+          <div class="body">Time, fechamos a meta do mês antes do prazo. Parabéns a todos pelo empenho — o bônus tá garantido. Rumo a superar em agosto!</div>
+          <div class="react"><button>👍 Curtir · 41</button><button>💬 Comentar · 9</button></div>
+        </article>
+      </div>
+    </main>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  var SB_URL=https://gpgycgkqkzedoyilrsmw.supabase.co;
+  var SB_KEY=sb_publishable_PtttNHZXuxyuV224G5qhQw_ONYW8soj;
+  var sb=window.supabase.createClient(SB_URL,SB_KEY);
+  var MODS=[
+    {e:"🏆",l:"Campanhas",r:["diretoria","edicao","visualizacao"]},
+    {e:"🎯",l:"Metas de vendas",r:["diretoria","edicao","visualizacao"]},
+    {e:"🧾",l:"Faturamento",r:["diretoria","edicao"]},
+    {e:"📦",l:"Separação",r:["diretoria","edicao","visualizacao"]},
+    {e:"📊",l:"Estoque",r:["diretoria","edicao"]},
+    {e:"🛡️",l:"RH",r:["diretoria"]},
+    {e:"💰",l:"Folha",r:["diretoria"]},
+    {e:"💵",l:"Financeiro",r:["diretoria"]},
+    {e:"👥",l:"Acessos",r:["diretoria"]}
+  ];
+  function el(id){return document.getElementById(id);}
+  function inits(n){n=(n||"").trim();if(!n)return "··";var p=n.split(/\s+/);return ((p[0][0]||"")+(p.length>1?(p[p.length-1][0]||""):"")).toUpperCase();}
+  function primeiro(n){return (n||"").trim().split(/\s+/)[0]||"";}
+  function renderMenu(role){
+    var html="<a class=\"on\"><span class=\"i\">🏠</span> Início</a>";
+    MODS.filter(function(m){return m.r.indexOf(role)>=0;}).forEach(function(m){
+      html+="<a data-mod=\""+m.l+"\"><span class=\"i\">"+m.e+"</span> "+m.l+"</a>";
+    });
+    el("nav").innerHTML=html;
+    el("nav").querySelectorAll("a").forEach(function(a){a.onclick=function(){
+      var side=el("side"),bd=el("backdrop");side.classList.remove("open");bd.classList.remove("show");
+      if(a.dataset.mod){alert("O módulo \""+a.dataset.mod+"\" entra aqui em breve. 🚧");return;}
+      el("nav").querySelectorAll("a").forEach(function(x){x.classList.remove("on");});a.classList.add("on");
+    };});
+  }
+  async function boot(){
+    var s=await sb.auth.getSession();
+    if(!s.data||!s.data.session){location.href="entrar.html";return;}
+    var u=s.data.session.user,nome=u.email,role="visualizacao";
+    try{var r=await sb.from("usuarios").select("nome,role").eq("id",u.id).maybeSingle();if(r.data){nome=r.data.nome||u.email;role=r.data.role||"visualizacao";}}catch(e){}
+    el("unm").textContent=primeiro(nome)||nome;el("url").textContent=role;el("uav").textContent=inits(nome);
+    el("hi").textContent="Olá, "+(primeiro(nome)||"colaborador")+"! 👋";
+    if(el("cav"))el("cav").textContent=inits(nome);
+    renderMenu(role);
+  }
+  boot();
+  el("sair").onclick=async function(){try{await sb.auth.signOut();}catch(e){}location.href="entrar.html";};
+</script>
+<script>
+  var side=document.getElementById('side'),bd=document.getElementById('backdrop');
+  function openMenu(){side.classList.add('open');bd.classList.add('show');}
+  function closeMenu(){side.classList.remove('open');bd.classList.remove('show');}
+  document.getElementById('burger').onclick=openMenu;
+  bd.onclick=closeMenu;
+  side.querySelectorAll('.nav a').forEach(function(a){a.onclick=function(){side.querySelectorAll('.nav a').forEach(function(x){x.classList.remove('on');});a.classList.add('on');closeMenu();};});
+</script>
+
+</body>
+</html>
