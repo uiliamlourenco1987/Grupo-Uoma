@@ -1,5 +1,7 @@
 # 📘 Manual de Bolso — Portal Grupo Uoma
-### Estado: **v4.1** · 27/07/2026 · a fonte da verdade pra continuar daqui
+### Estado: **v4.2** · 27/07/2026 · a fonte da verdade pra continuar daqui
+
+> **Rotina de release (IMPORTANTE):** a cada versão nova, bump JUNTOS: `ver.json` (`{"v":"X.Y"}`), a constante `BUILD` no `<head>` de `home.html` **e** `entrar.html`, e `VERSIONS[0]`/`verTag`. É o que faz o portal se atualizar sozinho (auto-update lê `ver.json` e recarrega se `BUILD` estiver diferente). Sub-apps embutidos recarregam via `?v=BUILD` no `src` do iframe. Ao recopiar `faturamento/index.html`, o `?v` já força o refresh.
 
 Portal único do colaborador do **Grupo Uoma** (Loja do Sorveteiro e Confeiteiro · Padoquinha · Merenda Certa), evoluindo pra **ERP do grupo**. Login único, modular, um app.
 
@@ -169,6 +171,7 @@ with check (is_diretoria() and id <> (select id from auth.users where email='uil
 ---
 
 ## 10. Histórico de versões
+- **v4.2** — Portal se atualiza sozinho (auto-update via `ver.json` + `BUILD`; login e iframes já com `?v`) — acabou o `?v` na mão
 - **v4.1** — Acessos: desativar/reativar colaborador direto na lista de validação (`colaboradores.ativo`; toggle "mostrar inativos") — sem refazer cadastro
 - **v4.0** — Acesso unificado: permissões POR ÁREA do Faturamento no próprio portal (`permissoes.fat_app`) + login único (abre o app embutido sem PIN, via handshake postMessage mesma-origem)
 - **v3.9** — Portal vira porta única (meio-termo): "Comece por aqui" na home + Faturamento/Separação abrem a ferramenta completa embutida (iframe, padrão Estoque)

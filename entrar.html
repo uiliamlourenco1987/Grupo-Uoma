@@ -7,6 +7,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Entrar — Portal Grupo Uoma</title>
+<script>
+/* auto-update: recarrega sozinho quando há versão nova */
+(function(){try{var BUILD="4.2";window.__BUILD=BUILD;var K="uoma_reload";
+  fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+    var latest=(j&&j.v)?String(j.v):"";
+    if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
+    try{if(sessionStorage.getItem(K)===latest)return;sessionStorage.setItem(K,latest);}catch(e){}
+    location.replace(location.pathname+"?v="+encodeURIComponent(latest));
+  }).catch(function(){});
+}catch(e){}})();
+</script>
 <style>
   :root{--navy:#12294C;--navy-d:#0C1C38;--navy-dd:#08132A;--gold:#C4972E;--gold-l:#E7C876;
     --cream:#F1EFE9;--ink:#1B2430;--mut:#6b7280;--line:#E6E2D8;--green:#2F9E62;--red:#B42318;
@@ -138,7 +149,7 @@
   }
 
   async function checkSession(){
-    try{var r=await sb.auth.getSession();if(r.data&&r.data.session&&r.data.session.user){location.href='home.html';}}catch(e){}
+    try{var r=await sb.auth.getSession();if(r.data&&r.data.session&&r.data.session.user){location.href='home.html?v='+(window.__BUILD||'');}}catch(e){}
   }
   checkSession();
 
@@ -151,7 +162,7 @@
     try{
       var res=await sb.auth.signInWithPassword({email:email,password:senha});
       if(res.error){showMsg('E-mail ou senha incorretos.','err');btn.disabled=false;btn.innerHTML=old;return;}
-      location.href='home.html';
+      location.href='home.html?v='+(window.__BUILD||'');
     }catch(e){
       showMsg('Não consegui conectar. Tente de novo em instantes.','err');btn.disabled=false;btn.innerHTML=old;
     }
