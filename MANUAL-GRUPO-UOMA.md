@@ -1,5 +1,5 @@
 # 📘 Manual de Bolso — Portal Grupo Uoma
-### Estado: **v3.8** · 27/07/2026 · a fonte da verdade pra continuar daqui
+### Estado: **v3.9** · 27/07/2026 · a fonte da verdade pra continuar daqui
 
 Portal único do colaborador do **Grupo Uoma** (Loja do Sorveteiro e Confeiteiro · Padoquinha · Merenda Certa), evoluindo pra **ERP do grupo**. Login único, modular, um app.
 
@@ -169,6 +169,7 @@ with check (is_diretoria() and id <> (select id from auth.users where email='uil
 ---
 
 ## 10. Histórico de versões
+- **v3.9** — Portal vira porta única (meio-termo): "Comece por aqui" na home + Faturamento/Separação abrem a ferramenta completa embutida (iframe, padrão Estoque)
 - **v3.8** — Faturamento tela cheia (abas Vendas · Metas editáveis · Financeiro · Separações · Arquivo) + Separação lista completa com romaneio; tudo imprimível
 - **v3.7** — Portal: card "Alimentação de hoje" (diretoria) espelha a Central de Importação
 - **v3.6** — Home vira dashboard: Seus painéis por permissão + minhas metas (dados do próprio vendedor)
@@ -197,7 +198,15 @@ with check (is_diretoria() and id <> (select id from auth.users where email='uil
 
 ---
 
-### Faturamento & Separação dentro do portal (v3.8)
+### Modelo do portal: porta única / hub (v3.9 — decisão do usuário)
+O portal é o **centro que orienta e mostra resumos**; pra **operar** o pesado, ele **abre a ferramenta completa embutida** (iframe), sem sair. Padrão herdado do Estoque (`#estOvl`/`#estColetor`/`#estFrame`, `renderEstoquePainel`).
+- **"Comece por aqui"** (`renderMyPanels`, home): cards de ação por `ME.role`/`ME.permissoes`, com "o que é" em cada. Card de metas mostra a meta do próprio vendedor ao vivo.
+- **Faturamento** (`openFat`→`renderFatFull`): resumo enxuto (vendas + inadimplência) + botão **"🔧 Abrir Faturamento completo"** → `fatOpenTool()` embute `faturamento/index.html` (metas de peso, bônus, regras do RH, planejamento). Fonte única = o app; o portal **não** duplica mais isso.
+- **Separação** (`SEP`): lista de pedidos + status + botão **"🔧 Abrir Separação completa"** → `sepOpenTool()` embute a mesma ferramenta (conferência/envio ficam no app).
+- **Cópia embutida:** `faturamento/index.html` é um **snapshot** do app `fatcsorveteiro` (recopiar quando o app mudar). Iframe relativo, mesma origem; fechar/voltar resetam `src` pra `about:blank`.
+- **Fase 2 (pendente):** abrir **já logado** (pular o PIN e cair direto na tela) exige mexer no app do faturamento — deep-link (estender `wantCampanhas`, linha ~792) + identidade via querystring/postMessage/seed de `localStorage['sepdig_v1']` (hoje o boot força login, linha ~2507).
+
+### Faturamento & Separação dentro do portal (v3.8 — parcialmente ajustado na v3.9)
 Lêem o mesmo banco do faturamento (`kopuvuhmqbpvlwksypgm`) via `ensureFAT`/`FSB_URL`/`FSB_KEY` — sem cruzar bancos.
 - **Faturamento** (`fatOvl`/`renderFatFull`, tela cheia com abas): **Vendas** (KPIs + equipe ext/int meta×realizado), **Metas cadastradas** (grade objFat/objMix/positObj — editável p/ diretoria ou `permissoes.faturamento==="editar"`, grava via `pushFAT` que re-busca e faz **merge do blob inteiro**; só-leitura pros demais), **Financeiro** (inadimplência por equipe via `teamInadAggFat`, recomputa de `m.vend`), **Separações** (resumo via `SEP.summary`), **Arquivo** (navega todos os meses de `FAT.meses`). Cada aba tem 🖨️ Imprimir (`printSheet`).
 - **Separação** (`sepOvl`/módulo IIFE `SEP`): lê `pedidos`/`itens`/`conferencias`/`enviadas`/`logs`, reconstrói via `hydrate` e os helpers de status portados **verbatim** do app (`confOf/countsA/outcome/admState/isSent/workItems`), mostra lista com filtro de data + status (dep/loja conferidos, enviado, cortes), abre **romaneio** por pedido (substituir/ajustar/cortar/OK + entrega + histórico) + 🖨️ imprimir. **Conferência (marcar item) continua no coletor** — aqui é ver + imprimir.
