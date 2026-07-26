@@ -1,5 +1,5 @@
 # 📘 Manual de Bolso — Portal Grupo Uoma
-### Estado: **v3.5** · 27/07/2026 · a fonte da verdade pra continuar daqui
+### Estado: **v3.7** · 27/07/2026 · a fonte da verdade pra continuar daqui
 
 Portal único do colaborador do **Grupo Uoma** (Loja do Sorveteiro e Confeiteiro · Padoquinha · Merenda Certa), evoluindo pra **ERP do grupo**. Login único, modular, um app.
 
@@ -169,6 +169,8 @@ with check (is_diretoria() and id <> (select id from auth.users where email='uil
 ---
 
 ## 10. Histórico de versões
+- **v3.7** — Portal: card "Alimentação de hoje" (diretoria) espelha a Central de Importação
+- **v3.6** — Home vira dashboard: Seus painéis por permissão + minhas metas (dados do próprio vendedor)
 - **v3.5** — Acessos: colaboradores divididos por empresa (validar) + criar acesso pré-preenchido
 - **v3.4** — Metas, Faturamento e Separação no portal (resumos de leitura)
 - **v3.3** — Erro Zero: abrir, anotar e classificar (Novo/Análise/Resolvido)
@@ -196,6 +198,7 @@ with check (is_diretoria() and id <> (select id from auth.users where email='uil
 
 ### Fora do portal (bancos de operação)
 - **Faturamento** (app `index.html` / `fatcsorveteiro`): metas, campanhas, vendas, separação. Banco `kopuvuhmqbpvlwksypgm`.
+  - **📥 Central de Importação Diária** (botão na tela de Metas, só faturamento/diretoria): solta **todos os relatórios do Ecocentauro de uma vez** → auto-detecta cada um por marcadores de conteúdo → revisa/override → importa reusando os `import*/parse*` existentes → grava checklist do dia em `METAS.importLog[YYYY-MM-DD]` (chave, hora, nº registros). Auto-detect confirmado (5/5): LISTA DE SEPARAÇÃO→separacao · VEN430LA→prodvend(mix) · VENDAS PESO→marcapeso · BASE PARA INADIMPLÊNCIA→inadvend · REC424LA→financeiro (também: REC408LA→recebidos, (Eco)→metaseco, cadastro de produtos→catalogo). Os `import*` agora re-renderizam via `reRender()` (tela atual), pra o lote não sair da Central. **Pendente:** suporte a CSV (faltam amostras CSV — hoje todos os relatórios saem em HTML).
 - **Estoquelsc**: inventário cíclico. Mesmo banco do faturamento. Copiado pra `estoque/` no portal.
 
 _Fim do manual. Atualizar este arquivo a cada marco importante._
