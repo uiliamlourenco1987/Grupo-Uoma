@@ -1,5 +1,5 @@
 # 📘 Manual de Bolso — Portal Grupo Uoma
-### Estado: **v3.7** · 27/07/2026 · a fonte da verdade pra continuar daqui
+### Estado: **v3.8** · 27/07/2026 · a fonte da verdade pra continuar daqui
 
 Portal único do colaborador do **Grupo Uoma** (Loja do Sorveteiro e Confeiteiro · Padoquinha · Merenda Certa), evoluindo pra **ERP do grupo**. Login único, modular, um app.
 
@@ -169,6 +169,7 @@ with check (is_diretoria() and id <> (select id from auth.users where email='uil
 ---
 
 ## 10. Histórico de versões
+- **v3.8** — Faturamento tela cheia (abas Vendas · Metas editáveis · Financeiro · Separações · Arquivo) + Separação lista completa com romaneio; tudo imprimível
 - **v3.7** — Portal: card "Alimentação de hoje" (diretoria) espelha a Central de Importação
 - **v3.6** — Home vira dashboard: Seus painéis por permissão + minhas metas (dados do próprio vendedor)
 - **v3.5** — Acessos: colaboradores divididos por empresa (validar) + criar acesso pré-preenchido
@@ -195,6 +196,12 @@ with check (is_diretoria() and id <> (select id from auth.users where email='uil
 - **v1.4** — Logos por empresa + apagar publicações
 
 ---
+
+### Faturamento & Separação dentro do portal (v3.8)
+Lêem o mesmo banco do faturamento (`kopuvuhmqbpvlwksypgm`) via `ensureFAT`/`FSB_URL`/`FSB_KEY` — sem cruzar bancos.
+- **Faturamento** (`fatOvl`/`renderFatFull`, tela cheia com abas): **Vendas** (KPIs + equipe ext/int meta×realizado), **Metas cadastradas** (grade objFat/objMix/positObj — editável p/ diretoria ou `permissoes.faturamento==="editar"`, grava via `pushFAT` que re-busca e faz **merge do blob inteiro**; só-leitura pros demais), **Financeiro** (inadimplência por equipe via `teamInadAggFat`, recomputa de `m.vend`), **Separações** (resumo via `SEP.summary`), **Arquivo** (navega todos os meses de `FAT.meses`). Cada aba tem 🖨️ Imprimir (`printSheet`).
+- **Separação** (`sepOvl`/módulo IIFE `SEP`): lê `pedidos`/`itens`/`conferencias`/`enviadas`/`logs`, reconstrói via `hydrate` e os helpers de status portados **verbatim** do app (`confOf/countsA/outcome/admState/isSent/workItems`), mostra lista com filtro de data + status (dep/loja conferidos, enviado, cortes), abre **romaneio** por pedido (substituir/ajustar/cortar/OK + entrega + histórico) + 🖨️ imprimir. **Conferência (marcar item) continua no coletor** — aqui é ver + imprimir.
+- `openFat`/`openSep` foram **sobrescritos** no fim do script para abrir as telas cheias (os resumos antigos `renderFat`/`renderSep` ficaram órfãos).
 
 ### Fora do portal (bancos de operação)
 - **Faturamento** (app `index.html` / `fatcsorveteiro`): metas, campanhas, vendas, separação. Banco `kopuvuhmqbpvlwksypgm`.
