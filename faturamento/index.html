@@ -908,6 +908,9 @@ function screenVendPed(){setBar('');setW('wide');state.view='vend';mskin(false);
     ${pedidos.length?boardCore(pedidos,true):'<div class="card" style="padding:20px;text-align:center;color:var(--mut)">Voc\u00ea n\u00e3o tem pedidos no momento.</div>'}</div>`;
   $('#vsair').onclick=()=>screenAreaPick();
   $('#screen').querySelectorAll('.romlink').forEach(c=>c.onclick=()=>{state.romFrom='vend';screenRomaneio(orderByNum(c.dataset.o));});}
+function screenMinhaMeta(){setBar('');setW('wide');state.view='minhameta';mskin(false);var nome=(state.acesso&&state.acesso.nome)||state.conferente||'';
+  $('#screen').innerHTML=`<div class="wrap"><div class="whobar"><span class="lbl">Vendedor:</span><b style="color:var(--brand-d)">${esc(nome)}</b><button class="link" id="mmsair" style="margin-left:auto">menu</button></div>${myMetaHTML(nome)}</div>`;
+  var s=$('#mmsair');if(s)s.onclick=()=>screenAreaPick();}
 
 /* ================= METAS DE VENDAS ================= */
 function curMes(){return state.metaMes||METAS.mesAtual;}
@@ -2538,6 +2541,7 @@ function _portalApplyAuth(d){try{
   state.metaRole=perm.metasRole||'';
   try{state.metaMes=METAS.mesAtual;}catch(e){}
   try{persistLocal();}catch(e){}
+  if(d.screen==='vend'){screenMinhaMeta();return;}
   if(d.screen==='admin'&&perm.admin){state.area='ADMIN';screenAdmin();return;}
   if(d.screen==='metas'&&perm.metas){screenMetas();return;}
   screenAreaPick();
