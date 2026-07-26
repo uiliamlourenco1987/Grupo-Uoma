@@ -2048,7 +2048,8 @@ function sendOrder(o,area){if(!isReady(o,area))return;const resumo=countsA(o,are
   if(pedFinal(o))logOnce(o.numero,'Pedido finalizado',state.conferente);}
 function sendBatch(area){const ready=readyOrders(area);if(!ready.length)return;const resumo=ready.reduce((a,o)=>{const c=countsA(o,area);return {ok:a.ok+c.ok,par:a.par+c.par,falta:a.falta+c.falta,tot:a.tot+c.tot,pend:0,done:a.done+c.done};},{ok:0,par:0,falta:0,tot:0,pend:0,done:0});
   const pedidos=ready.map(o=>({numero:o.numero,cliente:o.cliente}));state.sent.push({tipo:'lote',area,por:state.conferente,quando:stamp(),resumo,pedidos});
-  syncPush('send',{tipo:'lote',area,numero:'',cliente:'',por:state.conferente,quando:stamp(),resumo,pedidos});
+  const lid='lote_'+area+'_'+pedidos.map(p=>p.numero).sort().join('-');
+  syncPush('send',{id:lid,tipo:'lote',area,numero:'',cliente:'',por:state.conferente,quando:stamp(),resumo,pedidos});
   ready.forEach(o=>{state.sentAreaKeys.add(sentKey(o.numero,area));logEvent(o.numero,'Parte '+areaLbl(area)+' enviada (lote)',state.conferente);if(pedFinal(o))logOnce(o.numero,'Pedido finalizado',state.conferente);});}
 function setSendBar(){const n=readyOrders(state.area).length;setBar(`<button class="btn primary" id="enviarbtn">\ud83d\udce4 Enviar ao faturamento${n?` \u00b7 ${n} pronto${n>1?'s':''}`:''}</button>`);$('#enviarbtn').onclick=()=>sendSheet();}
 function sendSheet(){const area=state.area;const ready=readyOrders(area);const rows=workRows(area);const allMarked=rows.length>0&&rows.every(r=>estate(r.o,r.it.c,r.scope).status);
@@ -2285,7 +2286,7 @@ function importSeparacao(file){if(!file)return;const rd=new FileReader();
     toast('Pedido '+o.numero+' importado \u2713');reRender();}catch(err){toast('Erro ao ler o arquivo');}};
   rd.readAsText(file,'utf-8');}
 function parseSeparacao(t){const doc=new DOMParser().parseFromString(t,'text/html');const txt=(doc.body.textContent||'').replace(/\s+/g,' ');
-  const numero=(txt.match(/LISTA DE SEPARA[\u00c7C][\u00c3A]O:\s*([0-9]+)/i)||[])[1]||('IMP'+(ORDERS.length+1));
+  const numero=(txt.match(/LISTA DE SEPARA[\u00c7C][\u00c3A]O:\s*([0-9]+)/i)||[])[1]||('IMP'+Date.now());
   const cliente=((txt.match(/Cliente:\s*([^]*?)\s*(CPF|CNPJ|Vendedor)/i)||[])[1]||'IMPORTADO').trim();
   const vendedor=((txt.match(/Vendedor:\s*([^]*?)\s*(Telefone|Condi|Cep|Data|Transport)/i)||[])[1]||'').trim();
   const data=(txt.match(/Data:\s*([0-9]{2}\/[0-9]{2}\/[0-9]{4})/i)||[])[1]||'';
@@ -2464,8 +2465,12 @@ function hydrate(d){
     if(cur.status==null&&pv.status!=null)Object.assign(cur,{status:pv.status,qtd:pv.qtd,sub:pv.sub,conferente:pv.conferente,at:pv.at,areaConf:pv.areaConf});
     if((!cur.lojaResp||cur.lojaResp.status==null)&&pv.lojaResp&&pv.lojaResp.status!=null)cur.lojaResp=pv.lojaResp;});});
   // ---- envios ----
+  const prevSent=state.sent||[];   // envios locais que podem ainda não ter chegado no servidor
   state.sent=(d.enviadas||[]).map(r=>({tipo:r.tipo,area:r.area,numero:String(r.numero||''),cliente:r.cliente,por:r.por,quando:r.quando,resumo:{ok:Number(r.ok)||0,par:Number(r.par)||0,falta:Number(r.falta)||0,tot:Number(r.tot)||0,pend:0,done:0},pedidos:safeParse(r.pedidos_json)}));
-  state.sentAreaKeys=new Set();state.sent.forEach(r=>{if(r.tipo==='lote')(r.pedidos||[]).forEach(p=>state.sentAreaKeys.add(String(p.numero)+'|'+r.area));else if(r.numero)state.sentAreaKeys.add(r.numero+'|'+r.area);});
+  const sentKeysOf=r=>{const ks=[];if(r.tipo==='lote')(r.pedidos||[]).forEach(p=>ks.push(String(p.numero)+'|'+r.area));else if(r.numero)ks.push(r.numero+'|'+r.area);return ks;};
+  state.sentAreaKeys=new Set();state.sent.forEach(r=>sentKeysOf(r).forEach(k=>state.sentAreaKeys.add(k)));
+  // preserva envio local ainda NÃO refletido no servidor (não deixar "enviado" voltar pra "pronto" e evitar reenvio)
+  prevSent.forEach(r=>{const ks=sentKeysOf(r);if(ks.length&&ks.every(k=>!state.sentAreaKeys.has(k))){state.sent.push(r);ks.forEach(k=>state.sentAreaKeys.add(k));}});
   // ---- logs ----
   state.logs={};(d.logs||[]).forEach(r=>{const n=String(r.numero);(state.logs[n]=state.logs[n]||[]).push({etapa:r.etapa,por:r.por,em:r.em});});
   // ---- cat\u00e1logo ----

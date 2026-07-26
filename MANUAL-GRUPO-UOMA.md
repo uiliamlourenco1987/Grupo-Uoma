@@ -1,5 +1,5 @@
 # 📘 Manual de Bolso — Portal Grupo Uoma
-### Estado: **v4.3** · 27/07/2026 · a fonte da verdade pra continuar daqui
+### Estado: **v4.4** · 27/07/2026 · a fonte da verdade pra continuar daqui
 
 > **Rotina de release (IMPORTANTE):** a cada versão nova, bump JUNTOS: `ver.json` (`{"v":"X.Y"}`), a constante `BUILD` no `<head>` de `home.html` **e** `entrar.html`, e `VERSIONS[0]`/`verTag`. É o que faz o portal se atualizar sozinho (auto-update lê `ver.json` e recarrega se `BUILD` estiver diferente). Sub-apps embutidos recarregam via `?v=BUILD` no `src` do iframe. Ao recopiar `faturamento/index.html`, o `?v` já força o refresh.
 
@@ -171,6 +171,7 @@ with check (is_diretoria() and id <> (select id from auth.users where email='uil
 ---
 
 ## 10. Histórico de versões
+- **v4.4** — Separação: corrige envio em lote duplicado + "enviado" que voltava pra pronto; nº de importação único. (Pendente: confirmar constraints únicas no banco — conferencias(numero,codigo,scope) e enviadas(id).)
 - **v4.3** — Corrige o 🚫 (desativar) sumindo quando o nome do colaborador é muito grande (flex `min-width:0` + wrap)
 - **v4.2** — Portal se atualiza sozinho (auto-update via `ver.json` + `BUILD`; login e iframes já com `?v`) — acabou o `?v` na mão
 - **v4.1** — Acessos: desativar/reativar colaborador direto na lista de validação (`colaboradores.ativo`; toggle "mostrar inativos") — sem refazer cadastro
