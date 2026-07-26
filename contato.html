@@ -27,6 +27,9 @@
   .fb{font-size:13px;margin-top:12px;text-align:center}
   .ok{background:#E4F3EC;color:#146c37;border-radius:11px;padding:14px;text-align:center;font-size:14px}
   .foot{text-align:center;color:rgba(255,255,255,.6);font-size:11px;margin-top:16px}
+  .emps{display:flex;flex-wrap:wrap;gap:7px}
+  .emps label{font-size:13px;padding:7px 13px;border:1.5px solid var(--line);border-radius:999px;cursor:pointer;user-select:none}
+  .emps label.on{border-color:var(--gold);background:#F3EAD3;color:#7a5c14;font-weight:700}
 </style>
 </head>
 <body>
@@ -43,6 +46,8 @@
       <input id="nome" placeholder="Como podemos te chamar?">
       <label>Telefone ou e-mail</label>
       <input id="contato" placeholder="(96) 9 9999-9999 ou seu@email.com">
+      <label>Sobre qual empresa?</label>
+      <div class="emps" id="emps"><label data-k="loja">Loja do Sorveteiro</label><label data-k="padoquinha">Padoquinha</label><label data-k="merenda">Merenda Certa</label></div>
       <label>Mensagem</label>
       <textarea id="texto" placeholder="Escreva aqui..."></textarea>
       <button class="btn" id="enviar">Enviar mensagem</button>
@@ -56,12 +61,15 @@
     var SB_KEY="sb_publishable_PtttNHZXuxyuV224G5qhQw_ONYW8soj";
     var sb=window.supabase.createClient(SB_URL,SB_KEY);
     function el(id){return document.getElementById(id);}
+    var emps=document.getElementById("emps");emps.querySelectorAll("label").forEach(function(lb){lb.onclick=function(){emps.querySelectorAll("label").forEach(function(x){x.classList.remove("on");});lb.classList.add("on");};});
     el("enviar").onclick=async function(){
       var nome=(el("nome").value||"").trim(),contato=(el("contato").value||"").trim(),texto=(el("texto").value||"").trim();
       var fb=el("fb");fb.style.color="#B42318";
+      var lb=emps.querySelector("label.on");var empresa=lb?lb.dataset.k:"";
+      if(!empresa){fb.textContent="Escolha a empresa.";return;}
       if(!nome||!texto){fb.textContent="Preencha seu nome e a mensagem.";return;}
       var b=el("enviar");b.disabled=true;b.textContent="Enviando...";
-      var r=await sb.from("mensagens").insert({autor_nome:nome,contato:contato,tipo:"cliente",texto:texto});
+      var r=await sb.from("mensagens").insert({autor_nome:nome,contato:contato,tipo:"cliente",empresa:empresa,texto:texto});
       if(r.error){b.disabled=false;b.textContent="Enviar mensagem";fb.textContent="Nao consegui enviar agora. Tente de novo.";return;}
       el("card").innerHTML="<div class=\"ok\"><b>Mensagem enviada!</b><br>Obrigado, "+nome.replace(/[<>&]/g,"")+". A diretoria vai receber e responder em breve.</div>";
     };
