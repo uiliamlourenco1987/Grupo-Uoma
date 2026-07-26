@@ -1,5 +1,5 @@
 # 📘 Manual de Bolso — Portal Grupo Uoma
-### Estado: **v3.4** · 27/07/2026 · a fonte da verdade pra continuar daqui
+### Estado: **v3.5** · 27/07/2026 · a fonte da verdade pra continuar daqui
 
 Portal único do colaborador do **Grupo Uoma** (Loja do Sorveteiro e Confeiteiro · Padoquinha · Merenda Certa), evoluindo pra **ERP do grupo**. Login único, modular, um app.
 
@@ -45,7 +45,7 @@ Uma **porta única**: cada pessoa loga uma vez e vê **só o que o perfil dela p
 |---|---|---|
 | **Mural** | Comunicados: publicar, comentar, apagar | Publica: diretoria/edição · comenta: todos |
 | **Home** | Boas-vindas, apresentação das 3 empresas, avaliação, logos por empresa | Todos |
-| **Acessos** | Perfil + empresas + permissão por módulo; **＋ Novo colaborador** (cria login) | Só diretoria |
+| **Acessos** | Perfil + empresas + permissão por módulo; **＋ Novo colaborador**; **Colaboradores por empresa** (roster do RH agrupado, com "criar acesso") | Só diretoria |
 | **Campanhas** | Ver + **criar/editar/excluir** + **encarte PDF** (grava no banco do faturamento) | Ver: liberados · Editar: diretoria ou permissão |
 | **Estoque** | Painel de inventário (`inv_ciclo`) + **coletor completo embutido** | Liberados |
 | **Metas de vendas** | Resumo: meta × realizado por vendedor (equipe ext/int) + KPIs. *Leitura* | Liberados |
@@ -169,6 +169,7 @@ with check (is_diretoria() and id <> (select id from auth.users where email='uil
 ---
 
 ## 10. Histórico de versões
+- **v3.5** — Acessos: colaboradores divididos por empresa (validar) + criar acesso pré-preenchido
 - **v3.4** — Metas, Faturamento e Separação no portal (resumos de leitura)
 - **v3.3** — Erro Zero: abrir, anotar e classificar (Novo/Análise/Resolvido)
 - **v3.2** — Setores da planilha real do RH (função segura)
