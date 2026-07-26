@@ -1,5 +1,5 @@
 # 📘 Manual de Bolso — Portal Grupo Uoma
-### Estado: **v4.8** · 26/07/2026 · a fonte da verdade pra continuar daqui
+### Estado: **v4.9** · 26/07/2026 · a fonte da verdade pra continuar daqui
 
 > **Rotina de release (IMPORTANTE):** a cada versão nova, bump JUNTOS: `ver.json` (`{"v":"X.Y"}`), a constante `BUILD` no `<head>` de `home.html` **e** `entrar.html`, e `VERSIONS[0]`/`verTag`. É o que faz o portal se atualizar sozinho (auto-update lê `ver.json` e recarrega se `BUILD` estiver diferente). Sub-apps embutidos recarregam via `?v=BUILD` no `src` do iframe. Ao recopiar `faturamento/index.html`, o `?v` já força o refresh.
 
@@ -171,6 +171,7 @@ with check (is_diretoria() and id <> (select id from auth.users where email='uil
 ---
 
 ## 10. Histórico de versões
+- **v4.9** — Resumo de Separação do portal (aba **Andamento**): esconde por padrão os pedidos **finalizados com mais de 3 dias** (helpers `daysAgoKey`/`sentWhenOf` + var `SHOWALLSENT` no módulo `SEP`); **pendentes/em conferência/parciais sempre aparecem** (só finalizado velho some). Botão **"ver todos"**. O corte não se aplica quando há filtro De/Até ativo (aí respeita as datas). KPIs continuam somando o total
 - **v4.8** — Separação (app): a aba **Enviadas** e a coluna **📤 Enviado** do quadro mostram por padrão só os **últimos 3 dias** (`daysAgoKey(2)` + `state.sentShowAll`; helper `sentWhenOf` mapeia nº→data de envio, inclusive lote), com botão **"ver todos"**. Nada é apagado — o histórico completo continua no **Arquivo do portal** (só diretoria). Ciclo de vida da separação: conferir → **Devolver ao faturamento** (envio, exige todos os itens marcados + PIN) → pedido trava como *Enviada ✓* e sai da fila; fica *finalizado* quando todas as áreas com item enviaram
 - **v4.7** — Apps operacionais (Faturamento/Separação/Estoque) abrem em **tela cheia dentro do portal** (`.appfull` no `#fatColetor`/`#sepColetor`/`#estColetor`: `position:fixed;inset:0` + barra "← Voltar ao portal"; login único intacto — handshake postMessage inalterado). Resumos `#metOvl`/`#fatOvl`/`#sepOvl` viram **página cheia** (sheet 100vw × 100dvh). Cards da Home ganham número-chave (metas %, faturamento % do mês, separações enviadas hoje) via `renderMyPanels`. App: conferência **ordenada por marca** (`byMarcaDesc`/`marcaKey` em `consolida` e `screenConf`; sem marca vai ao fim)
 - **v4.6** — PIN obrigatório no envio da separação (sem PIN cadastrado, bloqueia)

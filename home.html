@@ -9,7 +9,7 @@
 <title>Portal Grupo Uoma — Início (mural)</title>
 <script>
 /* auto-update: recarrega sozinho quando há versão nova (fim do ?v na mão) */
-(function(){try{var BUILD="4.8";window.__BUILD=BUILD;var K="uoma_reload";
+(function(){try{var BUILD="4.9";window.__BUILD=BUILD;var K="uoma_reload";
   fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var latest=(j&&j.v)?String(j.v):"";
     if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
@@ -642,6 +642,7 @@
   var APRES={loja:{n:"Loja do Sorveteiro e Confeiteiro",d:"Loja de produtos de panifica\u00e7\u00e3o, sorveteria e confeitaria. H\u00e1 mais de 30 anos no Amap\u00e1."},padoquinha:{n:"Padoquinha",d:"Primeira ind\u00fastria de salgados ultracongelados do Amap\u00e1."},merenda:{n:"Merenda Certa",d:"Alimenta\u00e7\u00e3o e merenda com qualidade e responsabilidade para o dia a dia."}};
   function renderApres(empresas){var box=el("apresEmp");if(!box)return;var keys=(empresas&&empresas.indexOf&&empresas.indexOf("todas")>=0)?["loja","padoquinha","merenda"]:((empresas&&empresas.filter)?empresas.filter(function(k){return APRES[k];}):[]);if(keys.length===1){var a=APRES[keys[0]];box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}else if(keys.length>1){box.innerHTML="<div class=\"al\">As empresas</div>"+keys.map(function(k){var a=APRES[k];return "<div style=\"margin-top:9px\"><b style=\"font-size:13.5px\">"+esc(a.n)+"</b><p style=\"margin:2px 0 0\">"+esc(a.d)+"</p></div>";}).join("");}else{var a=APRES.loja;box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}}
   var VERSIONS=[
+    {v:"v4.9",d:"26/07",desc:"Resumo de Separa\u00e7\u00e3o do portal (Andamento) tamb\u00e9m esconde finalizados com mais de 3 dias por padr\u00e3o (pendentes sempre aparecem); bot\u00e3o 'ver todos'"},
     {v:"v4.8",d:"26/07",desc:"Separa\u00e7\u00e3o: aba Enviadas e coluna Enviado mostram s\u00f3 os \u00faltimos 3 dias por padr\u00e3o (bot\u00e3o 'ver todos'); hist\u00f3rico completo no Arquivo do portal"},
     {v:"v4.7",d:"26/07",desc:"Apps abrem em tela cheia dentro do portal; resumos viram p\u00e1gina cheia; confer\u00eancia da separa\u00e7\u00e3o ordenada por marca"},
     {v:"v4.6",d:"27/07",desc:"PIN passa a ser obrigat\u00f3rio no envio da separa\u00e7\u00e3o (sem PIN, bloqueia)"},
@@ -1045,7 +1046,7 @@ var SEP=(function(){
   var ORDERS=[];
   var state={byOrder:{},sent:[],sentAreaKeys:new Set(),logs:{},dtDe:"",dtAte:""};
   var loaded=false;
-  var SEPTAB="andamento",AUDTAB="timeline",ARQQ="",AUDQ="",AUDWHO="";
+  var SEPTAB="andamento",AUDTAB="timeline",ARQQ="",AUDQ="",AUDWHO="",SHOWALLSENT=false;
   function safeParse(s){try{return typeof s==="string"?JSON.parse(s):s;}catch(e){return null;}}
   function confOf(o){return state.byOrder[o.numero];}
   function orderByNum(n){return ORDERS.filter(function(o){return o.numero===n;})[0];}
@@ -1062,6 +1063,8 @@ var SEP=(function(){
   function admState(o){if(pedFinal(o))return "final";if(isSent(o,"DEPÓSITO")||isSent(o,"LOJA"))return "parcial";var done=countsA(o,"DEPÓSITO").done+countsA(o,"LOJA").done;return done===0?"pendente":"aberto";}
   function dateKey(br){var m=(br||"").match(/(\d{2})\/(\d{2})\/(\d{4})/);return m?(m[3]+"-"+m[2]+"-"+m[1]):"";}
   function ordersInRange(){var de=state.dtDe,ate=state.dtAte;return ORDERS.filter(function(o){var k=dateKey(o.data);if(de&&k<de)return false;if(ate&&k>ate)return false;return true;});}
+  function daysAgoKey(n){var d=new Date();d.setDate(d.getDate()-n);var p=function(x){return String(x).padStart(2,"0");};return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());}
+  function sentWhenOf(numero){var N=String(numero),best="";state.sent.forEach(function(r){var match=(r.tipo==="lote")?((r.pedidos||[]).some(function(p){return String(p.numero)===N;})):(String(r.numero)===N);if(match){var k=dateKey(r.quando);if(k>best)best=k;}});return best;}
   function clienteShort(o){return (o.cliente.split(" - ")[1]||o.cliente);}
   function orderIssues(o){var c=0,s=0;o.grupos.forEach(function(g){g.itens.forEach(function(it){var r=outcome(o,it);if(r.cortado)c++;else if(r.substituido)s++;});});return {c:c,s:s,has:(c+s)>0};}
   function issueFlag(o){var q=orderIssues(o);return (q.s?("🔁 "+q.s+" troca"+(q.s>1?"s":"")):"")+(q.s&&q.c?" · ":"")+(q.c?("✂️ "+q.c+" corte"+(q.c>1?"s":"")):"");}
@@ -1096,12 +1099,15 @@ var SEP=(function(){
   function renderRomaneio(o){var box=el("sepBoard");if(!box)return;box.innerHTML='<div class="rombar"><button class="link" id="romback">← voltar</button><button class="fsprint" id="romprint" style="margin-left:auto">🖨️ Imprimir romaneio</button></div><div class="romsheet" id="romsheet">'+romaneioHTML(o)+'</div>';var bk=el("romback");if(bk)bk.onclick=function(){render();};var pr=el("romprint");if(pr)pr.onclick=function(){printSheet("Romaneio · Pedido "+o.numero,o.cliente||"",el("romsheet").innerHTML);};}
   async function open(){var ov=el("sepOvl");if(!ov)return;ov.classList.add("show");fsInjectCSS();var box=el("sepBoard");if(box)box.innerHTML='<div style="text-align:center;color:var(--mut);font-size:12.5px;padding:20px">Carregando&hellip;</div>';try{await load();render();}catch(e){if(box)box.innerHTML='<div style="text-align:center;color:var(--mut);font-size:12.5px;padding:20px">Não consegui carregar as separações.</div>';}}
   async function summary(){try{if(!loaded)await load();var cnt={pendente:0,aberto:0,parcial:0,final:0};ORDERS.forEach(function(o){cnt[admState(o)]++;});var last=state.sent.slice(-6).reverse();var lastH=last.length?('<div class="fmnote" style="margin-top:10px">Últimas enviadas</div>'+last.map(function(r){return '<div class="seprow"><div class="sc"><b>'+esc(r.cliente||("Pedido "+r.numero))+'</b><div class="sm">'+esc(r.por||"")+" · "+esc(r.area||"")+" · "+quando(r.quando)+'</div></div><div class="sepres"><span class="sepchip ok">'+(r.resumo.ok||0)+' ok</span>'+((r.resumo.par)?('<span class="sepchip par">'+r.resumo.par+' parc.</span>'):"")+((r.resumo.falta)?('<span class="sepchip falta">'+r.resumo.falta+' falta</span>'):"")+'</div></div>';}).join("")):"";return '<div class="spkpis"><div class="spk"><b>'+ORDERS.length+'</b>pedidos</div><div class="spk"><b>'+cnt.pendente+'</b>pendentes</div><div class="spk"><b>'+cnt.aberto+'</b>em conf.</div><div class="spk"><b>'+cnt.parcial+'</b>parciais</div><div class="spk"><b>'+cnt.final+'</b>finalizados</div></div>'+lastH+'<div style="margin-top:10px"><button class="btnsm" id="fatSepOpen" style="width:auto;padding:8px 14px">Abrir Separação completa →</button></div>';}catch(e){return '<div style="color:var(--mut);font-size:12.5px;padding:8px">Não consegui carregar.</div>';}}
-  function renderAndamento(host){var list=ordersInRange().slice().sort(function(a,b){var ka=dateKey(a.data)||"",kb=dateKey(b.data)||"";if(ka!==kb)return kb<ka?-1:1;return (b.numero>a.numero?1:-1);});
+  function renderAndamento(host){var hasDateFilter=!!(state.dtDe||state.dtAte);var showAll=!!SHOWALLSENT;var applyCut=!showAll&&!hasDateFilter;var cut=daysAgoKey(2);var hidden=0;
+    var list=ordersInRange().filter(function(o){if(applyCut&&admState(o)==="final"){var k=sentWhenOf(o.numero);if(k&&k<cut){hidden++;return false;}}return true;}).slice().sort(function(a,b){var ka=dateKey(a.data)||"",kb=dateKey(b.data)||"";if(ka!==kb)return kb<ka?-1:1;return (b.numero>a.numero?1:-1);});
     var cnt={pendente:0,aberto:0,parcial:0,final:0};ORDERS.forEach(function(o){cnt[admState(o)]++;});
     var bar='<button class="fatopen" id="sepOpenApp">🔧 Abrir Separação completa <span>conferir depósito/loja · enviar · coletor</span></button><div class="fmnote" style="margin:8px 2px 12px">Panorama dos pedidos. Pra conferir e enviar, abra a ferramenta completa acima.</div><div class="spfilter"><span>De <input type="date" id="spDe" value="'+esc(state.dtDe)+'"></span><span>Até <input type="date" id="spAte" value="'+esc(state.dtAte)+'"></span><button class="btnsm" id="spClear" style="width:auto;padding:6px 12px">limpar</button><button class="fsprint" id="spPrint" style="margin-left:auto">🖨️ Imprimir lista</button></div>';
     var kpis='<div class="spkpis"><div class="spk"><b>'+ORDERS.length+'</b>pedidos</div><div class="spk"><b>'+cnt.pendente+'</b>pendentes</div><div class="spk"><b>'+cnt.aberto+'</b>em conferência</div><div class="spk"><b>'+cnt.parcial+'</b>parciais</div><div class="spk"><b>'+cnt.final+'</b>finalizados</div></div>';
-    host.innerHTML=bar+kpis+'<div class="splist" id="splist">'+(list.length?list.map(rowHTML).join(""):'<div style="text-align:center;color:var(--mut);padding:20px">Nenhum pedido no período.</div>')+'</div>';
+    var toggle=showAll?'<button class="link" id="sepSentToggle" style="display:block;margin:2px 2px 10px">◂ ver só finalizados dos últimos 3 dias</button>':(hidden>0?'<button class="link" id="sepSentToggle" style="display:block;margin:2px 2px 10px">Finalizados: mostrando os últimos 3 dias · ver todos ('+hidden+') →</button>':'');
+    host.innerHTML=bar+kpis+toggle+'<div class="splist" id="splist">'+(list.length?list.map(rowHTML).join(""):'<div style="text-align:center;color:var(--mut);padding:20px">Nenhum pedido no período.</div>')+'</div>';
     var de=el("spDe");if(de)de.onchange=function(){state.dtDe=de.value;render();};var at=el("spAte");if(at)at.onchange=function(){state.dtAte=at.value;render();};var cl=el("spClear");if(cl)cl.onclick=function(){state.dtDe="";state.dtAte="";render();};
+    var tg=el("sepSentToggle");if(tg)tg.onclick=function(){SHOWALLSENT=!SHOWALLSENT;render();};
     var pr=el("spPrint");if(pr)pr.onclick=function(){printSheet("Separação · lista de pedidos","",el("splist").innerHTML);};
     var oa=el("sepOpenApp");if(oa)oa.onclick=function(){sepOpenTool();};
     host.querySelectorAll(".sprow").forEach(function(r){r.onclick=function(){var o=orderByNum(r.dataset.o);if(o)renderRomaneio(o);};});}
