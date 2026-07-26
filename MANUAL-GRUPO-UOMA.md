@@ -1,5 +1,5 @@
 # 📘 Manual de Bolso — Portal Grupo Uoma
-### Estado: **v5.7** · 26/07/2026 · a fonte da verdade pra continuar daqui
+### Estado: **v5.8** · 26/07/2026 · a fonte da verdade pra continuar daqui
 
 > **Rotina de release (IMPORTANTE):** a cada versão nova, bump JUNTOS: `ver.json` (`{"v":"X.Y"}`), a constante `BUILD` no `<head>` de `home.html` **e** `entrar.html`, e `VERSIONS[0]`/`verTag`. É o que faz o portal se atualizar sozinho (auto-update lê `ver.json` e recarrega se `BUILD` estiver diferente). Sub-apps embutidos recarregam via `?v=BUILD` no `src` do iframe. Ao recopiar `faturamento/index.html`, o `?v` já força o refresh.
 
@@ -171,6 +171,7 @@ with check (is_diretoria() and id <> (select id from auth.users where email='uil
 ---
 
 ## 10. Histórico de versões
+- **v5.8** — Painel **Supervisão** (`renderSupervisorHome`): metas de **todos os vendedores da equipe** dele (filtrada por `permissoes.fat_app.equipe` = EXTERNO/INTERNO; se vazio, mostra todos com aviso) — cada vendedor com % + "ver completo" (abre app na tela metas, que já respeita a equipe do supervisor). KPIs: faturamento da equipe + **carteira de clientes** (soma `carteira`) e **atendidos** (soma `positivados`) com %. Campanhas **ativas/encerradas** por data. Botão Separações. + pessoal (aval+folha+avaliar). **A refinar:** "separações do setor" hoje abre a Separação geral; filtrar pelos pedidos dos vendedores da equipe é um próximo passo
 - **v5.7** — "Fazer minha avaliação" abre **direto** na avaliação com o **nome pré-selecionado** (só pede o PIN). Feito **do lado do portal** (`openAvaliarColab`/`driveAvalColab`): como o iframe é same-origin, o portal clica em "Sou Colaborador", itera as empresas pra achar o nome (normalizado por `_avNorm`), seleciona empresa+nome, esconde os cards de escolha e foca o campo do PIN — **sem editar o app do RH** (o app é um blob babel escapado e frágil; o deep-link `?modo=colab` dele inclusive tem um regex `\\w` bugado, por isso a automação via DOM). Se o nome não bater, cai no formulário normal
 - **v5.6** — Painel **Faturamento** (`renderFaturamentoHome`): KPIs do mês (faturamento % + inadimplência do grupo) + ferramentas (📥 importar→`openFatScreen("metas")`, 🎯 metas→openMetas, 🧾 faturamento→openFat, 📦 separações→openSep) + pessoal (aval+folha+avaliar). Dispatcher agora usa mapa `PERS`. Apps de Avaliação/Folha **rebrandeados** de "Grupo Araguari" → **"Grupo Uoma"** (selo GA→GU) no repo `rhcsorveteiro` e nas cópias `avaliacao/`+`folha/`
 - **v5.5** — Perfil **RH** (`renderRHHome`): página pessoal (avaliação + holerite) **+ acesso ao sistema inteiro** — botões "💰 Folha" e "🛡️ Avaliações" (openFolha/openAvaliacao) + "fazer minha avaliação". `renderMenu` libera os módulos Folha/RH quando `permissoes.perfil==="rh"`. 'RH' adicionado ao seletor de perfis do Acessos
