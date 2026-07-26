@@ -92,6 +92,7 @@
   .tgt .pill.on{background:var(--navy);color:#fff;border-color:var(--navy)}
   .co{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:800;color:#5b6470;background:#EEF1F6;border-radius:999px;padding:2px 8px}
   .hint{font-size:11px;color:var(--mut);margin:7px 2px 0}
+  .chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
   .apres{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
   .acard{border-radius:16px;padding:15px 16px;color:#fff;position:relative;overflow:hidden}
   .acard.grupo{background:radial-gradient(120% 120% at 85% -20%,#1c3a63,transparent 55%),linear-gradient(150deg,var(--navy),var(--navy-d))}
@@ -172,50 +173,21 @@
           <div class="medias">Médias da equipe — setor <b>8,2</b> · empresa <b>7,9</b> · grupo <b>8,0</b></div>
         </div>
 
-        <div class="composer">
+        <div class="composer" id="composer" style="display:none">
           <div class="av" id="cav">··</div>
           <div class="box">
-            <div class="fake">Escreva um comunicado para a equipe…</div>
-            <div class="tgt"><span class="lbl">Para:</span><span class="pill on">🏢 Todas</span><span class="pill">🏬 Loja</span><span class="pill">🥐 Padoquinha</span><span class="pill">🍱 Merenda</span></div>
+            <textarea id="ctexto" placeholder="Escreva um comunicado para a equipe…" style="width:100%;min-height:58px;border:1.5px solid var(--line);border-radius:11px;padding:11px 13px;font-size:13.5px;font-family:var(--sans);resize:vertical"></textarea>
+            <div class="tgt"><span class="lbl">Para:</span><span class="pill on" data-emp="todas">🏢 Todas</span><span class="pill" data-emp="loja">🏬 Loja</span><span class="pill" data-emp="padoquinha">🥐 Padoquinha</span><span class="pill" data-emp="merenda">🍱 Merenda</span></div>
             <div class="row">
-              <span class="chip">📢 Aviso</span><span class="chip">✨ Novidade</span><span class="chip">📰 Notícia</span>
-              <button class="pub">Publicar</button>
+              <span class="chip on" data-cat="aviso">📢 Aviso</span><span class="chip" data-cat="novidade">✨ Novidade</span><span class="chip" data-cat="noticia">📰 Notícia</span>
+              <button class="pub" id="cpub">Publicar</button>
             </div>
-            <div class="hint">Só RH e Diretoria publicam. Os colaboradores leem e comentam.</div>
           </div>
         </div>
 
         <div class="seclbl">Comunicados · RH e Diretoria</div>
 
-        <article class="post">
-          <div class="phd"><div class="av" style="background:#B42318">MC</div><div><div class="nm">Márcia · RH</div><div class="mt">hoje, 08:10 · <span class="co">🏢 Todas</span></div></div><span class="tag aviso">Aviso</span></div>
-          <h3>Ponto facultativo na sexta (26/07)</h3>
-          <div class="body">Pessoal, sexta será ponto facultativo. Quem for trabalhar, o expediente é até meio-dia. Boas festas juninas atrasadas a todos! 🎉</div>
-          <div class="react"><button class="liked">👍 Curtir · 12</button><button>💬 Comentar · 3</button></div>
-          <div class="comments">
-            <div class="cmt"><div class="av">JS</div><div class="bub"><b>João Silva</b><p>Show! Obrigado pelo aviso 🙌</p><div class="t">há 2h</div></div></div>
-            <div class="cmt"><div class="av">AD</div><div class="bub"><b>Adriano</b><p>Vou aproveitar pra descansar 😄</p><div class="t">há 1h</div></div></div>
-            <div class="cadd"><div class="av">UL</div><input placeholder="Escreva um comentário…"></div>
-          </div>
-        </article>
-
-        <article class="post">
-          <div class="phd"><div class="av" style="background:#12294C">UL</div><div><div class="nm">Uiliam · Diretoria</div><div class="mt">ontem, 17:42 · <span class="co">🏬 Loja</span></div></div><span class="tag novidade">Novidade</span></div>
-          <h3>Nova campanha KIBON no ar! 🏆</h3>
-          <div class="body">Vendedores, começou a campanha de Verão da KIBON — prêmios pra quem mais bater a própria meta. Detalhes no módulo <b>Campanhas</b>. Bora pra cima! 🔥</div>
-          <div class="react"><button>👍 Curtir · 24</button><button>💬 Comentar · 5</button></div>
-          <div class="comments">
-            <div class="cmt"><div class="av">SU</div><div class="bub"><b>Suzana</b><p>Já tô na frente! 😎🥇</p><div class="t">há 20h</div></div></div>
-            <div class="cadd"><div class="av">UL</div><input placeholder="Escreva um comentário…"></div>
-          </div>
-        </article>
-
-        <article class="post">
-          <div class="phd"><div class="av" style="background:#2b5f9e">TA</div><div><div class="nm">Tatiana · Faturamento</div><div class="mt">23/07, 11:00 · <span class="co">🏢 Todas</span></div></div><span class="tag noticia">Notícia</span></div>
-          <h3>Meta de julho batida com 4 dias de antecedência! 🎉</h3>
-          <div class="body">Time, fechamos a meta do mês antes do prazo. Parabéns a todos pelo empenho — o bônus tá garantido. Rumo a superar em agosto!</div>
-          <div class="react"><button>👍 Curtir · 41</button><button>💬 Comentar · 9</button></div>
-        </article>
+        <div id="mural"><div style="text-align:center;color:var(--mut);font-size:12.5px;padding:20px">Carregando comunicados…</div></div>
       </div>
     </main>
   </div>
@@ -259,8 +231,22 @@
     el("unm").textContent=primeiro(nome)||nome;el("url").textContent=role;el("uav").textContent=inits(nome);
     el("hi").textContent="Olá, "+(primeiro(nome)||"colaborador")+"! 👋";
     if(el("cav"))el("cav").textContent=inits(nome);
-    renderMenu(role);
+    ME.id=u.id;ME.nome=nome;ME.role=role;renderMenu(role);setupComposer();loadMural();
   }
+  var ME={id:null,nome:'',role:'visualizacao',emp:'todas',cat:'aviso'};
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function quando(ts){try{var d=new Date(ts);var sc=(Date.now()-d.getTime())/1000;if(sc<90)return 'agora';if(sc<3600)return Math.round(sc/60)+' min';if(sc<86400)return Math.round(sc/3600)+'h';return d.toLocaleDateString('pt-BR');}catch(e){return '';}}
+  var EMP={todas:'🏢 Todas',loja:'🏬 Loja',padoquinha:'🥐 Padoquinha',merenda:'🍱 Merenda'};
+  var CAT={aviso:['aviso','Aviso'],novidade:['novidade','Novidade'],noticia:['noticia','Notícia']};
+  function postHTML(p,cms){
+    var cat=CAT[p.categoria]||CAT.aviso;
+    var cmtHTML=(cms||[]).map(function(c){return '<div class="cmt"><div class="av">'+inits(c.autor_nome)+'</div><div class="bub"><b>'+esc(c.autor_nome)+'</b><p>'+esc(c.texto)+'</p><div class="t">'+quando(c.created_at)+'</div></div></div>';}).join('');
+    return '<article class="post"><div class="phd"><div class="av" style="background:var(--navy)">'+inits(p.autor_nome)+'</div><div><div class="nm">'+esc(p.autor_nome||'—')+'</div><div class="mt">'+quando(p.created_at)+' · <span class="co">'+(EMP[p.empresa_alvo]||EMP.todas)+'</span></div></div><span class="tag '+cat[0]+'">'+cat[1]+'</span></div><div class="body">'+esc(p.texto)+'</div><div class="comments">'+cmtHTML+'<div class="cadd"><div class="av">'+inits(ME.nome)+'</div><input data-post="'+p.id+'" placeholder="Escreva um comentário…"></div></div></article>';
+  }
+  function wireComments(){el('mural').querySelectorAll('.cadd input').forEach(function(inp){inp.addEventListener('keydown',async function(e){if(e.key!=='Enter')return;var txt=(inp.value||'').trim();if(!txt)return;inp.disabled=true;var r=await sb.from('comentarios').insert({comunicado_id:+inp.dataset.post,autor_id:ME.id,autor_nome:ME.nome,texto:txt});if(r.error){inp.disabled=false;alert('Não consegui comentar agora.');return;}loadMural();});});}
+  async function loadMural(){var box=el('mural');if(!box)return;try{var cr=await sb.from('comunicados').select('*').order('created_at',{ascending:false}).limit(50);var coms=cr.data||[];var ct=await sb.from('comentarios').select('*').order('created_at',{ascending:true});var cmts=ct.data||[];var by={};cmts.forEach(function(c){(by[c.comunicado_id]=by[c.comunicado_id]||[]).push(c);});if(!coms.length){box.innerHTML='<div style="text-align:center;color:var(--mut);font-size:12.5px;padding:22px">Nenhum comunicado ainda.'+((ME.role==='diretoria'||ME.role==='edicao')?' Publique o primeiro acima. 👆':'')+'</div>';return;}box.innerHTML=coms.map(function(p){return postHTML(p,by[p.id]);}).join('');wireComments();}catch(e){box.innerHTML='<div style="text-align:center;color:var(--mut);font-size:12.5px;padding:22px">Não consegui carregar os comunicados agora.</div>';}}
+  function setupComposer(){var comp=el('composer');if(!comp)return;if(!(ME.role==='diretoria'||ME.role==='edicao')){comp.style.display='none';return;}comp.style.display='flex';comp.querySelectorAll('.tgt .pill').forEach(function(p){p.onclick=function(){comp.querySelectorAll('.tgt .pill').forEach(function(x){x.classList.remove('on');});p.classList.add('on');ME.emp=p.dataset.emp;};});comp.querySelectorAll('.row .chip').forEach(function(c){c.onclick=function(){comp.querySelectorAll('.row .chip').forEach(function(x){x.classList.remove('on');});c.classList.add('on');ME.cat=c.dataset.cat;};});el('cpub').onclick=async function(){var txt=(el('ctexto').value||'').trim();if(!txt){el('ctexto').focus();return;}el('cpub').disabled=true;el('cpub').textContent='Publicando…';var r=await sb.from('comunicados').insert({autor_id:ME.id,autor_nome:ME.nome,categoria:ME.cat,empresa_alvo:ME.emp,texto:txt});el('cpub').disabled=false;el('cpub').textContent='Publicar';if(r.error){alert('Não consegui publicar. Talvez seu perfil não tenha permissão.');return;}el('ctexto').value='';loadMural();};}
+
   boot();
   el("sair").onclick=async function(){try{await sb.auth.signOut();}catch(e){}location.href="entrar.html";};
 </script>
