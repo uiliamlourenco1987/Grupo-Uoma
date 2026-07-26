@@ -1,5 +1,5 @@
 # 📘 Manual de Bolso — Portal Grupo Uoma
-### Estado: **v5.4** · 26/07/2026 · a fonte da verdade pra continuar daqui
+### Estado: **v5.5** · 26/07/2026 · a fonte da verdade pra continuar daqui
 
 > **Rotina de release (IMPORTANTE):** a cada versão nova, bump JUNTOS: `ver.json` (`{"v":"X.Y"}`), a constante `BUILD` no `<head>` de `home.html` **e** `entrar.html`, e `VERSIONS[0]`/`verTag`. É o que faz o portal se atualizar sozinho (auto-update lê `ver.json` e recarrega se `BUILD` estiver diferente). Sub-apps embutidos recarregam via `?v=BUILD` no `src` do iframe. Ao recopiar `faturamento/index.html`, o `?v` já força o refresh.
 
@@ -171,6 +171,7 @@ with check (is_diretoria() and id <> (select id from auth.users where email='uil
 ---
 
 ## 10. Histórico de versões
+- **v5.5** — Perfil **RH** (`renderRHHome`): página pessoal (avaliação + holerite) **+ acesso ao sistema inteiro** — botões "💰 Folha" e "🛡️ Avaliações" (openFolha/openAvaliacao) + "fazer minha avaliação". `renderMenu` libera os módulos Folha/RH quando `permissoes.perfil==="rh"`. 'RH' adicionado ao seletor de perfis do Acessos
 - **v5.4** — **Diretoria/admin: sistemas completos de Folha e Avaliação (RH)** embutidos no portal em tela cheia. Módulos de menu **Folha**→`openFolha()` e **RH**→`openAvaliacao()` (antes "em breve"); overlays `#folhaOvl`/`#avOvl` + `.appfull`. Apps copiados do RH: `folha/index.html` e `avaliacao/index.html` (recopiar quando o RH mudar). Cards **Folha** e **Avaliações (RH)** no "Comece por aqui" (gated diretoria/perm). Os apps usam o login próprio do RH (email/senha) dentro do iframe — se a sessão do Supabase for compartilhada (mesmo projeto), entra direto
 - **v5.3** — Diagnóstico do nome nos cards vazios de avaliação/holerite
 - **v5.2** — Botão **"Fazer minha avaliação dos colegas"** (`avaliarBtnHTML`/`openAvaliacao`) em **todos os perfis** (personal panels + cartões "Comece por aqui"). Abre o app de avaliação do RH **embutido em tela cheia** (`avaliacao/index.html`, cópia de `rhcsorveteiro/avaliacao.html`) via overlay `#avOvl`/`#avColetor`/`#avFrame` + `.appfull`; usa o acesso de **colaborador** que o app do RH já tem (PIN próprio). Recopiar `avaliacao/index.html` quando o app de avaliação do RH mudar
