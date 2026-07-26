@@ -1,5 +1,5 @@
 # 📘 Manual de Bolso — Portal Grupo Uoma
-### Estado: **v5.6** · 26/07/2026 · a fonte da verdade pra continuar daqui
+### Estado: **v5.7** · 26/07/2026 · a fonte da verdade pra continuar daqui
 
 > **Rotina de release (IMPORTANTE):** a cada versão nova, bump JUNTOS: `ver.json` (`{"v":"X.Y"}`), a constante `BUILD` no `<head>` de `home.html` **e** `entrar.html`, e `VERSIONS[0]`/`verTag`. É o que faz o portal se atualizar sozinho (auto-update lê `ver.json` e recarrega se `BUILD` estiver diferente). Sub-apps embutidos recarregam via `?v=BUILD` no `src` do iframe. Ao recopiar `faturamento/index.html`, o `?v` já força o refresh.
 
@@ -171,6 +171,7 @@ with check (is_diretoria() and id <> (select id from auth.users where email='uil
 ---
 
 ## 10. Histórico de versões
+- **v5.7** — "Fazer minha avaliação" abre **direto** na avaliação com o **nome pré-selecionado** (só pede o PIN). Feito **do lado do portal** (`openAvaliarColab`/`driveAvalColab`): como o iframe é same-origin, o portal clica em "Sou Colaborador", itera as empresas pra achar o nome (normalizado por `_avNorm`), seleciona empresa+nome, esconde os cards de escolha e foca o campo do PIN — **sem editar o app do RH** (o app é um blob babel escapado e frágil; o deep-link `?modo=colab` dele inclusive tem um regex `\\w` bugado, por isso a automação via DOM). Se o nome não bater, cai no formulário normal
 - **v5.6** — Painel **Faturamento** (`renderFaturamentoHome`): KPIs do mês (faturamento % + inadimplência do grupo) + ferramentas (📥 importar→`openFatScreen("metas")`, 🎯 metas→openMetas, 🧾 faturamento→openFat, 📦 separações→openSep) + pessoal (aval+folha+avaliar). Dispatcher agora usa mapa `PERS`. Apps de Avaliação/Folha **rebrandeados** de "Grupo Araguari" → **"Grupo Uoma"** (selo GA→GU) no repo `rhcsorveteiro` e nas cópias `avaliacao/`+`folha/`
 - **v5.5** — Perfil **RH** (`renderRHHome`): página pessoal (avaliação + holerite) **+ acesso ao sistema inteiro** — botões "💰 Folha" e "🛡️ Avaliações" (openFolha/openAvaliacao) + "fazer minha avaliação". `renderMenu` libera os módulos Folha/RH quando `permissoes.perfil==="rh"`. 'RH' adicionado ao seletor de perfis do Acessos
 - **v5.4** — **Diretoria/admin: sistemas completos de Folha e Avaliação (RH)** embutidos no portal em tela cheia. Módulos de menu **Folha**→`openFolha()` e **RH**→`openAvaliacao()` (antes "em breve"); overlays `#folhaOvl`/`#avOvl` + `.appfull`. Apps copiados do RH: `folha/index.html` e `avaliacao/index.html` (recopiar quando o RH mudar). Cards **Folha** e **Avaliações (RH)** no "Comece por aqui" (gated diretoria/perm). Os apps usam o login próprio do RH (email/senha) dentro do iframe — se a sessão do Supabase for compartilhada (mesmo projeto), entra direto

@@ -9,7 +9,7 @@
 <title>Portal Grupo Uoma — Início (mural)</title>
 <script>
 /* auto-update: recarrega sozinho quando há versão nova (fim do ?v na mão) */
-(function(){try{var BUILD="5.6";window.__BUILD=BUILD;var K="uoma_reload";
+(function(){try{var BUILD="5.7";window.__BUILD=BUILD;var K="uoma_reload";
   fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var latest=(j&&j.v)?String(j.v):"";
     if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
@@ -664,6 +664,7 @@
   var APRES={loja:{n:"Loja do Sorveteiro e Confeiteiro",d:"Loja de produtos de panifica\u00e7\u00e3o, sorveteria e confeitaria. H\u00e1 mais de 30 anos no Amap\u00e1."},padoquinha:{n:"Padoquinha",d:"Primeira ind\u00fastria de salgados ultracongelados do Amap\u00e1."},merenda:{n:"Merenda Certa",d:"Alimenta\u00e7\u00e3o e merenda com qualidade e responsabilidade para o dia a dia."}};
   function renderApres(empresas){var box=el("apresEmp");if(!box)return;var keys=(empresas&&empresas.indexOf&&empresas.indexOf("todas")>=0)?["loja","padoquinha","merenda"]:((empresas&&empresas.filter)?empresas.filter(function(k){return APRES[k];}):[]);if(keys.length===1){var a=APRES[keys[0]];box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}else if(keys.length>1){box.innerHTML="<div class=\"al\">As empresas</div>"+keys.map(function(k){var a=APRES[k];return "<div style=\"margin-top:9px\"><b style=\"font-size:13.5px\">"+esc(a.n)+"</b><p style=\"margin:2px 0 0\">"+esc(a.d)+"</p></div>";}).join("");}else{var a=APRES.loja;box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}}
   var VERSIONS=[
+    {v:"v5.7",d:"26/07",desc:"Botão 'Fazer minha avaliação' abre DIRETO na avaliação, com nome pré-selecionado (só pede o PIN); o portal conduz a telinha embutida, sem mexer no app do RH."},
     {v:"v5.6",d:"26/07",desc:"Painel de Faturamento (KPIs do mês + inadimplência do grupo + ferramentas: importar, metas, faturamento, separações). Apps de Avaliação/Folha rebrandeados p/ Grupo Uoma."},
     {v:"v5.5",d:"26/07",desc:"Perfil RH: página pessoal (avaliação + holerite) + acesso ao sistema inteiro — botões Folha e Avaliações completas; menu Folha/RH liberado pro perfil RH."},
     {v:"v5.4",d:"26/07",desc:"Diretoria/admin: sistemas completos de Folha e Avaliação (RH) abrem embutidos em tela cheia (menu Folha/RH + cards). Apps: folha/ e avaliacao/."},
@@ -1142,8 +1143,26 @@ function sepOpenTool(){openFatApp("sepFrame","sepBoard","sepColetor","admin");}
     if(id==="avOvl"){var h=el("avFrame");if(h)h.src="about:blank";if(el("avColetor")){el("avColetor").style.display="none";el("avColetor").classList.remove("appfull");}}
     if(id==="folhaOvl"){var hf=el("folhaFrame");if(hf)hf.src="about:blank";if(el("folhaColetor")){el("folhaColetor").style.display="none";el("folhaColetor").classList.remove("appfull");}}});})();
 function openAvaliacao(){var ov=el("avOvl");if(!ov)return;ov.classList.add("show");var fr=el("avFrame");if(fr)fr.src="avaliacao/index.html?v="+(window.__BUILD||"");var c=el("avColetor");if(c){c.style.display="block";c.classList.add("appfull");}}
+function _avNorm(s){return String(s||"").toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g,"").trim().replace(/\s+/g," ");}
+function driveAvalColab(fr,nome){if(!nome)return;var target=_avNorm(nome);var start=Date.now();
+  var iv=setInterval(function(){var doc;try{doc=fr.contentDocument;}catch(e){clearInterval(iv);return;}
+    if(!doc){return;}if(Date.now()-start>9000){clearInterval(iv);return;}
+    var emp=doc.getElementById("c-emp");
+    if(!emp){var cb=doc.querySelector("[data-gate=colab]");if(cb)cb.click();return;}
+    var cb2=doc.querySelector("[data-gate=colab]");if(cb2&&cb2.parentElement)cb2.parentElement.style.display="none";
+    var selNome=doc.getElementById("c-nome");if(!selNome)return;
+    var empOpts=[].slice.call(emp.options).map(function(o){return o.value;}).filter(Boolean);
+    if(!empOpts.length)return;
+    var found=false;
+    for(var i=0;i<empOpts.length&&!found;i++){emp.value=empOpts[i];if(typeof emp.onchange==="function")emp.onchange();
+      var opts=[].slice.call(selNome.options);
+      for(var j=0;j<opts.length;j++){if(_avNorm(opts[j].textContent)===target){selNome.value=opts[j].value||opts[j].textContent;if(typeof selNome.onchange==="function")selNome.onchange();var sn=doc.getElementById("c-senha");if(sn)sn.focus();found=true;break;}}}
+    if(!found){emp.value="";if(typeof emp.onchange==="function")emp.onchange();}
+    clearInterval(iv);
+  },250);}
+function openAvaliarColab(){var ov=el("avOvl");if(!ov)return;ov.classList.add("show");var c=el("avColetor");if(c){c.style.display="block";c.classList.add("appfull");}var fr=el("avFrame");if(!fr)return;var nome=(ME&&ME.nome)||"";fr.onload=function(){try{driveAvalColab(fr,nome);}catch(e){}};fr.src="avaliacao/index.html?v="+(window.__BUILD||"");}
 (function(){var bk=el("avBack");if(bk)bk.onclick=function(){var fr=el("avFrame");if(fr)fr.src="about:blank";var c=el("avColetor");if(c){c.style.display="none";c.classList.remove("appfull");}var ov=el("avOvl");if(ov)ov.classList.remove("show");};
-  document.addEventListener("click",function(e){var t=e.target;if(t&&t.closest&&t.closest("#btnAvaliar"))openAvaliacao();});})();
+  document.addEventListener("click",function(e){var t=e.target;if(t&&t.closest&&t.closest("#btnAvaliar"))openAvaliarColab();});})();
 function openFolha(){var ov=el("folhaOvl");if(!ov)return;ov.classList.add("show");var fr=el("folhaFrame");if(fr)fr.src="folha/index.html?v="+(window.__BUILD||"");var c=el("folhaColetor");if(c){c.style.display="block";c.classList.add("appfull");}}
 (function(){var bk=el("folhaBack");if(bk)bk.onclick=function(){var fr=el("folhaFrame");if(fr)fr.src="about:blank";var c=el("folhaColetor");if(c){c.style.display="none";c.classList.remove("appfull");}var ov=el("folhaOvl");if(ov)ov.classList.remove("show");};})();
 
