@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1E4E79">
+<title>Inventário Cíclico — Coletor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--brand:#1E4E79;--brand-d:#12395c;--brand-l:#E9F1F8;--ok:#1E7A54;--ok-l:#E4F3EC;--par:#B45309;--par-l:#FBF0E0;--falta:#B42318;--falta-l:#FBEBE9;--ink:#1B2430;--mut:#69707E;--line:#E3E7EC;--bg:#F4F6F9;--card:#fff;--radius:14px;--shadow:0 1px 3px rgba(27,36,48,.07),0 6px 18px rgba(27,36,48,.05);}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45;font-size:16px}
+  .mono{font-family:'IBM Plex Mono','SFMono-Regular',monospace}
+  .app{max-width:560px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;padding-bottom:40px}
+  .top{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,#1B2430 0%,#1E4E79 100%);color:#fff;padding:12px 14px;box-shadow:var(--shadow)}
+  .top .row{display:flex;align-items:center;gap:10px}
+  .bb{width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto}
+  .top h1{font-size:14px;margin:0;font-weight:800}.top .sub{font-size:11px;opacity:.85;margin-top:1px}
+  .netpill{margin-left:auto;font-size:10px;font-weight:700;background:rgba(255,255,255,.16);padding:5px 8px;border-radius:999px;display:flex;align-items:center;gap:6px}
+  .dot{width:7px;height:7px;border-radius:50%;background:#5ee08a}.dot.off{background:#ffd25e}
+  .who{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:12px 0;font-size:13px}
+  .who b{font-weight:700}.who .lo{margin-left:auto;color:var(--brand);font-weight:700;cursor:pointer;font-size:12px}
+  .wrap{padding:14px}
+  .muted{color:var(--mut)}.center{text-align:center}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .btn{appearance:none;border:0;border-radius:12px;padding:13px 16px;font-size:15px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.primary{background:var(--brand);color:#fff}.btn.primary:active{background:var(--brand-d)}
+  .btn.ghost{background:#fff;color:var(--brand);border:1.5px solid var(--brand-l)}
+  .btn.ok{background:var(--ok);color:#fff}
+  .btn.sm{padding:9px 12px;font-size:13px;border-radius:10px}
+  .btn.block{width:100%}
+  .field{margin:10px 0}.field label{display:block;font-size:13px;font-weight:600;color:var(--mut);margin-bottom:6px}
+  .input{width:100%;padding:13px;border:1.5px solid var(--line);border-radius:11px;font-size:16px;background:#fff}
+  .input:focus{outline:none;border-color:var(--brand)}
+  .names{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{padding:9px 13px;border-radius:999px;border:1.5px solid var(--line);background:#fff;font-weight:600;font-size:14px;cursor:pointer}
+  .chip.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .banner{background:var(--brand-l);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--brand-d);font-weight:600;margin-bottom:12px}
+  .banner.warn{background:var(--par-l);color:#8a4d05}.banner.bad{background:var(--falta-l);color:var(--falta)}
+  /* fornecedor cards */
+  .fcard{padding:14px;margin-bottom:10px;display:block;width:100%;text-align:left;border:1px solid var(--line);cursor:pointer;background:#fff;border-radius:14px;box-shadow:var(--shadow)}
+  .fcard .h{display:flex;align-items:center;gap:8px}
+  .fcard h3{margin:0;font-size:15px;font-weight:800;flex:1}
+  .fcard .meta{font-size:12px;color:var(--mut);margin-top:3px}
+  .stbadge{font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;white-space:nowrap}
+  .st-pendente{background:#eef0f4;color:#5b6470}
+  .st-produtos_ok{background:var(--par-l);color:#8a4d05}
+  .st-contando{background:var(--brand-l);color:var(--brand-d)}
+  .st-estoque_ok{background:var(--ok-l);color:#14622f}
+  .warnpill{font-size:10px;font-weight:800;padding:3px 8px;border-radius:999px;background:var(--falta-l);color:var(--falta);margin-left:6px}
+  /* count screen */
+  .scanbox{display:flex;gap:8px;margin:12px 0}
+  .scanbox .input{flex:1;font-size:18px;font-family:'IBM Plex Mono',monospace}
+  .rounds{display:flex;gap:6px;background:#eef0f4;border-radius:12px;padding:4px;margin:10px 0}
+  .rounds button{flex:1;border:0;background:transparent;padding:10px 4px;border-radius:9px;font-weight:800;color:var(--mut);font-size:12px;cursor:pointer}
+  .rounds button.on{background:#fff;color:var(--brand);box-shadow:var(--shadow)}
+  .rounds button:disabled{opacity:.45}
+  .prog{height:8px;background:var(--line);border-radius:999px;overflow:hidden;margin:8px 0}
+  .prog>span{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand-d))}
+  .citem{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px 12px;margin-bottom:8px}
+  .citem .cod{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:12px;color:var(--brand)}
+  .citem .d{flex:1;font-size:13px;font-weight:600}
+  .citem .q{font-family:'IBM Plex Mono',monospace;font-weight:800;font-size:16px}
+  .citem.zero{opacity:.6}
+  .div-yes{color:var(--falta);font-weight:800}
+  .div-no{color:var(--ok);font-weight:800}
+  .fatorwarn{background:var(--falta);color:#fff;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px}
+  table.cmp{width:100%;border-collapse:collapse;font-size:13px}
+  table.cmp th,table.cmp td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left}
+  table.cmp td.n,table.cmp th.n{text-align:right;font-family:'IBM Plex Mono',monospace}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1B2430;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:var(--shadow);z-index:60;opacity:0;transition:.2s;pointer-events:none;max-width:90%}
+  .toast.show{opacity:1}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+  .sheet{background:#fff;border-radius:16px;padding:18px;max-width:420px;width:100%}
+  video{width:100%;border-radius:12px;background:#000;max-height:50vh}
+  /* relatório de impressão */
+  #printarea{display:none}
+  @media print{
+    body *{visibility:hidden}
+    #printarea,#printarea *{visibility:visible}
+    #printarea{display:block;position:absolute;left:0;top:0;width:100%;padding:0 8px}
+    .noprint{display:none!important}
+  }
+  #printarea{font-family:Arial,sans-serif;color:#000}
+  #printarea h2{font-size:16px;margin:0 0 2px}
+  #printarea .hd{font-size:12px;margin-bottom:8px}
+  #printarea table{width:100%;border-collapse:collapse;font-size:12px}
+  #printarea th,#printarea td{border:1px solid #888;padding:3px 6px;text-align:left}
+  #printarea td.n{text-align:right}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="row">
+      <div class="bb">📦</div>
+      <div><h1>Inventário Cíclico</h1><div class="sub" id="subttl">Coletor de contagem</div></div>
+      <div class="netpill" id="netpill"><span class="dot" id="netdot"></span><span id="nettxt">local</span></div>
+    </div>
+  </div>
+  <div class="wrap" id="screen"></div>
+</div>
+<div id="printarea"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==========================================================================
+   COLETOR DE CONTAGEM (Módulo B) — Inventário cíclico por fornecedor
+   - Login por PIN (sempre)
+   - Painel por fornecedor + portão (produtos validados -> libera contagem)
+   - Contagem CEGA por local (depósito/loja), 3 rodadas (contagem/reconf/desempate)
+     com usuários diferentes por rodada
+   - Relatório PDF/CSV (Código -> Descrição -> Quantidade) para lançar no Eco
+   Supabase = área de trabalho compartilhada (Eco continua a fonte da verdade).
+   ========================================================================== */
+
+/* ---------- Supabase (mesmo projeto/credenciais do faturamento) ---------- */
+var SB_URL='https://kopuvuhmqbpvlwksypgm.supabase.co';
+var SB_KEY='sb_publishable_flmTo5yyGUafV5OwkeYijQ_HvBbDWBr';
+function sbOn(){return !!(SB_URL&&SB_KEY);}
+function sbH(x){var h={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'};for(var k in (x||{}))h[k]=x[k];return h;}
+async function sbSel(t,qs){try{var r=await fetch(SB_URL+'/rest/v1/'+t+(qs||'?select=*'),{headers:sbH()});if(!r.ok)return null;return await r.json();}catch(e){return null;}}
+async function sbUpsert(t,rows){try{var r=await fetch(SB_URL+'/rest/v1/'+t,{method:'POST',headers:sbH({Prefer:'resolution=merge-duplicates,return=minimal'}),body:JSON.stringify(rows)});return r.ok;}catch(e){return false;}}
+
+/* ---------- estado + persistência local ---------- */
+var LS='invlsc_v1';
+var S={ view:'login', user:null, users:[], headers:[], rawrows:[], mapping:null,
+        records:[], fornKey:'fornecedor', ciclos:{}, counts:{}, curForn:null, curLocal:'deposito',
+        curRodada:1, online:navigator.onLine, catMeta:null, lastLocal:'deposito' };
+function persist(){try{localStorage.setItem(LS,JSON.stringify({users:S.users,headers:S.headers,rawrows:S.rawrows,mapping:S.mapping,fornKey:S.fornKey,ciclos:S.ciclos,counts:S.counts,catMeta:S.catMeta,lastLocal:S.lastLocal}));}catch(e){}}
+function restore(){try{var d=JSON.parse(localStorage.getItem(LS)||'{}');['users','headers','rawrows','mapping','fornKey','ciclos','counts','catMeta','lastLocal'].forEach(function(k){if(d[k]!=null)S[k]=d[k];});}catch(e){}}
+
+/* ---------- utilidades ---------- */
+function el(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function toast(m){var t=el('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},2400);}
+function normHdr(s){return String(s||'').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Z0-9]/g,'');}
+function onlyDigits(s){return String(s==null?'':s).replace(/\D/g,'');}
+function collapse(s){return String(s==null?'':s).replace(/\s+/g,' ').trim();}
+function parseBR(v){if(v==null)return NaN;var s=String(v).trim();if(!s)return NaN;s=s.replace(/\./g,'').replace(',','.');var n=parseFloat(s);return isNaN(n)?NaN:n;}
+function stamp(){var d=new Date();function p(n){return(n<10?'0':'')+n;}return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());}
+function fmtDate(iso){if(!iso)return '';var d=new Date(iso);if(isNaN(d.getTime()))return String(iso);function p(n){return(n<10?'0':'')+n;}return p(d.getDate())+'/'+p(d.getMonth()+1)+' '+p(d.getHours())+':'+p(d.getMinutes());}
+
+/* ---------- EAN-13 ---------- */
+function eanCheckDigit(d12){var s=0;for(var i=0;i<12;i++){var n=+d12[i];s+=(i%2===0)?n:n*3;}return (10-(s%10))%10;}
+function eanInfo(raw){var d=onlyDigits(raw);if(!d)return{status:'vazio'};if(d.length!==13)return{status:'tamanho',digits:d.length,clean:d};return{status:(eanCheckDigit(d.slice(0,12))===+d[12])?'ok':'dv',clean:d};}
+
+/* ---------- dicionário de colunas (inclui fornecedor/marca/comprador) ---------- */
+var FIELDS={
+  codigo:{label:'Código',aliases:['CODIGOPRODUTO','PRODUTO','CODPRODUTO','CODIGO','COD']},
+  descricao:{label:'Descrição',aliases:['DESCRICAOPRODUTO','DESCRICAO','NOMEPRODUTO']},
+  ean:{label:'EAN',aliases:['CODIGOBARRA','CODIGOBARRAS','CODBARRA','EAN','GTIN','CODIGODEBARRAS']},
+  embalagem:{label:'Embalagem',aliases:['EMBALAGEM','UNIDADE','UNID'],exactOnly:true},
+  qtdemb:{label:'Fator (QTDEEMBALAGEM)',aliases:['QTDEEMBALAGEM','QTDEMBALAGEM','FATORCONVERSAO','FATOR']},
+  estoque:{label:'Estoque',aliases:['ESTOQUEATUAL','ESTOQUE','SALDO'],exactOnly:true},
+  fornecedor:{label:'Fornecedor',aliases:['DESCRICAOFORNECEDOR','NOMEFORNECEDOR','FORNECEDOR','DESCFORNECEDOR'],exactOnly:true},
+  marca:{label:'Marca',aliases:['DESCMARCA','NOMEMARCA','MARCA'],exactOnly:true},
+  comprador:{label:'Comprador',aliases:['COMPRADOR','NOMECOMPRADOR','DESCRICAOCOMPRADOR'],exactOnly:true}
+};
+var FORDER=['codigo','descricao','ean','embalagem','qtdemb','estoque','fornecedor','marca','comprador'];
+function autoMap(headers){var norm=headers.map(normHdr),map={},used={};FORDER.forEach(function(f){var found=-1,als=FIELDS[f].aliases;for(var a=0;a<als.length&&found<0;a++)for(var i=0;i<norm.length;i++){if(!used[i]&&norm[i]===als[a]){found=i;break;}}if(found<0&&!FIELDS[f].exactOnly)for(var a2=0;a2<als.length&&found<0;a2++)for(var j=0;j<norm.length;j++){if(!used[j]&&norm[j].indexOf(als[a2])>=0){found=j;break;}}if(found>=0){map[f]=found;used[found]=true;}else map[f]=null;});return map;}
+
+/* ---------- leitura de arquivo ---------- */
+function readFile(file,cb){var fr=new FileReader();fr.onload=function(){var buf=new Uint8Array(fr.result),txt;try{txt=new TextDecoder('utf-8',{fatal:true}).decode(buf);if(/�/.test(txt))txt=new TextDecoder('iso-8859-1').decode(buf);}catch(e){txt=new TextDecoder('iso-8859-1').decode(buf);}txt=txt.replace(/^﻿/,'');cb(txt);};fr.readAsArrayBuffer(file);}
+function parseCSV(text){var lines=text.split(/\r\n|\n|\r/).filter(function(l){return l.trim().length;});if(!lines.length)return{headers:[],rows:[]};var head=lines[0],semi=(head.match(/;/g)||[]).length,comma=(head.match(/,/g)||[]).length,tab=(head.match(/\t/g)||[]).length;var delim=tab>=semi&&tab>=comma?'\t':(semi>=comma?';':',');function sp(line){var out=[],cur='',q=false;for(var i=0;i<line.length;i++){var ch=line[i];if(q){if(ch==='"'){if(line[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=ch;}else{if(ch==='"')q=true;else if(ch===delim){out.push(cur);cur='';}else cur+=ch;}}out.push(cur);return out.map(function(c){return c.trim();});}var headers=sp(lines[0]),rows=[];for(var r=1;r<lines.length;r++){var c=sp(lines[r]);if(c.length===1&&c[0]==='')continue;rows.push(c);}return{headers:headers,rows:rows};}
+function parseHTMLTable(text){var doc=new DOMParser().parseFromString(text,'text/html'),tables=[].slice.call(doc.querySelectorAll('table')),best=null,bs=-1;tables.forEach(function(tb){var rows=tb.querySelectorAll('tr');if(rows.length<2)return;var hs=[].map.call(rows[0].querySelectorAll('th,td'),function(c){return normHdr(c.textContent);}),score=0;FORDER.forEach(function(f){FIELDS[f].aliases.forEach(function(al){if(hs.indexOf(al)>=0)score+=2;});});score+=Math.min(rows.length,50)*0.1;if(score>bs){bs=score;best=tb;}});if(!best)return{headers:[],rows:[]};var trs=best.querySelectorAll('tr'),headers=[].map.call(trs[0].querySelectorAll('th,td'),function(c){return collapse(c.textContent);}),rows=[];for(var i=1;i<trs.length;i++){var c=[].map.call(trs[i].querySelectorAll('td,th'),function(x){return collapse(x.textContent);});if(c.join('').trim()==='')continue;rows.push(c);}return{headers:headers,rows:rows};}
+function ingest(text,fname){var p=/\.html?$/i.test(fname||'')||/<table[\s>]/i.test(text.slice(0,4000))?parseHTMLTable(text):parseCSV(text);if(!p.headers.length||!p.rows.length)p=parseCSV(text);if(!p.headers.length||!p.rows.length){toast('Não consegui ler linhas. Tente CSV.');return;}S.headers=p.headers;S.rawrows=p.rows;S.mapping=autoMap(p.headers);buildRecords();pushCatalog();persist();screenPainel();toast(S.records.length+' produtos carregados');}
+/* sobe o catálogo tratado pro Supabase (Compras sobe -> todos recebem) */
+function pushCatalog(){if(!sbOn())return;S.catMeta={por:S.user||'',em:new Date().toISOString()};sbUpsert('inv_catalogo',[{id:1,dados:{records:S.records,fornKey:S.fornKey},por:S.user||'',atualizado_em:S.catMeta.em}]).then(function(ok){if(ok)toast('Catálogo enviado — os aparelhos vão receber');});}
+function buildRecords(){var m=S.mapping,rows=S.rawrows;function g(c,f){var i=m[f];return(i==null||i<0)?'':(c[i]!=null?c[i]:'');}S.records=rows.map(function(c){return{codigo:collapse(g(c,'codigo')),descricao:collapse(g(c,'descricao')),ean:collapse(g(c,'ean')),embalagem:collapse(g(c,'embalagem')),qtdemb:g(c,'qtdemb'),estoque:g(c,'estoque'),fornecedor:collapse(g(c,'fornecedor')),marca:collapse(g(c,'marca')),comprador:collapse(g(c,'comprador'))};}).filter(function(r){return r.codigo||r.descricao||r.ean;});}
+
+/* ---------- agrupamento por fornecedor(chave) ---------- */
+function keyOf(r){return (r[S.fornKey]||'(sem '+S.fornKey+')');}
+function grupos(){var g={};S.records.forEach(function(r){var k=keyOf(r);(g[k]=g[k]||[]).push(r);});return g;}
+function itemsDe(chave){return S.records.filter(function(r){return keyOf(r)===chave;});}
+
+/* ---------- auditoria (motor, subconjunto) para o portão ---------- */
+function auditForn(chave){var items=itemsDe(chave),eanMap={},res={fatorHi:0,fator:0,ean:0,eanVazio:0,dup:0,itens:items.length,list:[]};var descMap={};items.forEach(function(r){var e=eanInfo(r.ean);if(e.status==='ok'||e.status==='dv')(eanMap[e.clean]=eanMap[e.clean]||new Set()).add(r.codigo);var dn=collapse(r.descricao).toUpperCase();if(dn)(descMap[dn]=descMap[dn]||new Set()).add(r.codigo);});items.forEach(function(r){var flags={},e=eanInfo(r.ean);
+    // EAN inválido/duplicado = grave; EAN vazio = apenas nota (conta-se por código)
+    if(e.status==='tamanho'||e.status==='dv'||(e.status==='ok'&&eanMap[e.clean].size>1)){flags.ean=1;res.ean++;}
+    else if(e.status==='vazio'){flags.eanVazio=1;res.eanVazio++;}
+    var f=parseBR(r.qtdemb);if(!isNaN(f)&&f!==1){var emb=normHdr(r.embalagem);flags.fator=f;flags.fatorHi=(emb==='UN'||emb==='UNID'||emb==='UNIDADE'||emb==='')&&f>1;res.fator++;if(flags.fatorHi)res.fatorHi++;}
+    var dn=collapse(r.descricao).toUpperCase();if(dn&&descMap[dn].size>1){flags.dup=1;res.dup++;}
+    if(Object.keys(flags).length)res.list.push({r:r,flags:flags});});
+  res.grave=res.fatorHi+res.ean;return res;}
+
+/* ---------- contagem: modelo ---------- */
+function cKey(chave,local,rodada,codigo){return chave+'||'+local+'||'+rodada+'||'+codigo;}
+function setCount(chave,local,rodada,r,qtd,operador){S.counts[cKey(chave,local,rodada,r.codigo)]={qtd:qtd,operador:operador,ean:r.ean,descricao:r.descricao,em:new Date().toISOString()};persist();sbUpsert('inv_contagem',[{chave:chave,codigo:r.codigo,ean:r.ean,descricao:r.descricao,local:local,rodada:rodada,qtd:qtd,operador:operador}]);}
+function getCount(chave,local,rodada,codigo){return S.counts[cKey(chave,local,rodada,codigo)];}
+function roundOps(chave,local,rodada){var ops=new Set();var pre=chave+'||'+local+'||'+rodada+'||';Object.keys(S.counts).forEach(function(k){if(k.indexOf(pre)===0){var o=S.counts[k].operador;if(o)ops.add(o);}});return ops;}
+function roundCount(chave,local,rodada){var n=0,pre=chave+'||'+local+'||'+rodada+'||';Object.keys(S.counts).forEach(function(k){if(k.indexOf(pre)===0)n++;});return n;}
+/* usuário da rodada 2/3 precisa ser diferente dos das rodadas anteriores */
+function canCount(chave,local,rodada,operador){if(rodada<=1)return{ok:true};for(var rr=1;rr<rodada;rr++){if(roundOps(chave,local,rr).has(operador))return{ok:false,rodada:rr};}return{ok:true};}
+/* quantidade final por item: r1==r2 -> vale; senão -> r3 (desempate) */
+function finalQty(chave,local,codigo){var c1=getCount(chave,local,1,codigo),c2=getCount(chave,local,2,codigo),c3=getCount(chave,local,3,codigo);var q1=c1?c1.qtd:null,q2=c2?c2.qtd:null,q3=c3?c3.qtd:null;if(q2==null)return{qtd:q1,estado:'so1',div:false};if(q1===q2)return{qtd:q1,estado:'ok',div:false};if(q3!=null)return{qtd:q3,estado:'desempate',div:true};return{qtd:null,estado:'divergente',div:true};}
+function divergentes(chave,local){return itemsDe(chave).filter(function(r){var c1=getCount(chave,local,1,r.codigo),c2=getCount(chave,local,2,r.codigo);return c1&&c2&&c1.qtd!==c2.qtd;});}
+
+/* ---------- ciclo/portão ---------- */
+function ciclo(chave){return S.ciclos[chave]||{chave:chave,status:'pendente'};}
+function setCiclo(chave,patch){var c=ciclo(chave);for(var k in patch)c[k]=patch[k];c.atualizado_em=stamp();S.ciclos[chave]=c;persist();sbUpsert('inv_ciclo',[{chave:chave,tipo:S.fornKey,status:c.status,itens:c.itens||null,prod_valid_por:c.prod_valid_por||null,est_valid_por:c.est_valid_por||null,obs:c.obs||null}]);}
+
+/* ---------- sync inicial (best effort) ---------- */
+async function pullCatalog(){if(!sbOn())return false;var cat=await sbSel('inv_catalogo','?id=eq.1&select=*');if(cat&&cat.length&&cat[0].dados&&cat[0].dados.records&&cat[0].dados.records.length){var remoto=cat[0].atualizado_em||'';var local=(S.catMeta&&S.catMeta.em)||'';if(!S.records.length||remoto>local){S.records=cat[0].dados.records;if(cat[0].dados.fornKey)S.fornKey=cat[0].dados.fornKey;S.catMeta={por:cat[0].por,em:remoto};persist();return true;}}return false;}
+async function pull(){if(!sbOn())return;await pullCatalog();var cic=await sbSel('inv_ciclo');if(cic){cic.forEach(function(c){var loc=S.ciclos[c.chave];if(!loc||true)S.ciclos[c.chave]=Object.assign(loc||{},c);});}var cont=await sbSel('inv_contagem','?select=*');if(cont){cont.forEach(function(x){var k=cKey(x.chave,x.local,x.rodada,x.codigo);if(!S.counts[k])S.counts[k]={qtd:Number(x.qtd),operador:x.operador,ean:x.ean,descricao:x.descricao,em:x.criado_em||''};});}persist();}
+async function refreshCatalogo(){toast('Buscando catálogo…');var got=await pullCatalog();net();if(got){screenPainel();toast('Catálogo atualizado ('+((S.catMeta&&S.catMeta.por)||'')+')');}else toast('Nenhum catálogo novo no servidor');}
+window.refreshCatalogo=refreshCatalogo;
+function net(){S.online=navigator.onLine;el('netdot').className='dot'+(S.online&&sbOn()?'':' off');el('nettxt').textContent=sbOn()?(S.online?'sincronizado':'offline'):'local';}
+
+/* ==================== TELAS ==================== */
+function setSub(t){el('subttl').textContent=t;}
+function whoBar(){return '<div class="who">👤 <b>'+esc(S.user)+'</b><span class="lo" onclick="logout()">sair</span></div>';}
+function logout(){S.user=null;screenLogin();}
+
+/* ----- usuários (local, editável) ----- */
+function ensureUsers(){if(!S.users||!S.users.length)S.users=[{nome:'Antonio',pin:'1111'},{nome:'Marcia',pin:'2222'},{nome:'Supervisor',pin:'0000'}];}
+function screenLogin(){ensureUsers();setSub('Coletor de contagem');S.view='login';
+  el('screen').innerHTML='<div class="banner">Entre com seu PIN. Toda contagem fica registrada em seu nome.</div>'+
+    '<div class="card" style="padding:16px">'+
+      '<div class="field"><label>Quem é você?</label><div class="names" id="unames">'+
+        S.users.map(function(u){return '<button class="chip" data-n="'+esc(u.nome)+'">'+esc(u.nome)+'</button>';}).join('')+
+      '</div></div>'+
+      '<div class="field"><label>PIN</label><input class="input mono" id="pin" type="tel" inputmode="numeric" maxlength="8" placeholder="••••"></div>'+
+      '<button class="btn primary block" id="entrar">Entrar</button>'+
+      '<button class="btn ghost block sm" id="mgru" style="margin-top:8px">Gerenciar usuários</button>'+
+    '</div>';
+  var sel=null;
+  [].forEach.call(document.querySelectorAll('#unames .chip'),function(b){b.onclick=function(){sel=b.getAttribute('data-n');[].forEach.call(document.querySelectorAll('#unames .chip'),function(x){x.classList.remove('on');});b.classList.add('on');el('pin').focus();};});
+  el('entrar').onclick=function(){var pin=el('pin').value.trim();if(!sel){toast('Escolha seu nome');return;}var u=S.users.filter(function(x){return x.nome===sel;})[0];if(!u||String(u.pin)!==pin){toast('PIN incorreto');return;}S.user=sel;S.view='painel';screenPainel();};
+  el('mgru').onclick=screenUsers;
+}
+function screenUsers(){el('screen').innerHTML='<div class="banner">Cadastre os operadores. A reconferência exige PIN de um usuário diferente.</div>'+
+  '<div class="card" style="padding:14px" id="ulist"></div>'+
+  '<div class="card" style="padding:14px;margin-top:10px"><div class="field"><label>Nome</label><input class="input" id="nn"></div><div class="field"><label>PIN</label><input class="input mono" id="np" inputmode="numeric"></div><button class="btn primary block" id="add">Adicionar</button></div>'+
+  '<button class="btn ghost block" id="volta" style="margin-top:10px">← Voltar</button>';
+  function draw(){el('ulist').innerHTML=S.users.map(function(u,i){return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)"><b>'+esc(u.nome)+'</b><span class="mono muted">PIN '+esc(u.pin)+'</span><button class="btn ghost sm" style="margin-left:auto" onclick="rmUser('+i+')">remover</button></div>';}).join('')||'<div class="muted">Nenhum</div>';}
+  window.rmUser=function(i){S.users.splice(i,1);persist();draw();};draw();
+  el('add').onclick=function(){var n=el('nn').value.trim(),p=el('np').value.trim();if(!n||!p){toast('Preencha nome e PIN');return;}S.users.push({nome:n,pin:p});persist();el('nn').value='';el('np').value='';draw();};
+  el('volta').onclick=screenLogin;
+}
+
+/* ----- painel de fornecedores ----- */
+function screenPainel(){S.view='painel';setSub('Painel de ciclos');
+  if(!S.records.length){el('screen').innerHTML=whoBar()+
+    '<div class="banner">Sem catálogo neste aparelho. <b>Compras</b> carrega o arquivo (no PC) e todos os aparelhos recebem — ou toque em "Puxar do servidor".</div>'+
+    '<div class="card" style="padding:16px">'+
+      '<button class="btn primary block" onclick="refreshCatalogo()">⬇︎ Puxar catálogo do servidor</button>'+
+      '<div style="height:8px"></div>'+
+      '<button class="btn ghost block" id="imp">📄 Carregar arquivo (Compras)</button>'+
+      '<input type="file" id="file" accept=".csv,.txt,.html,.htm" style="display:none">'+
+      '<div style="height:8px"></div>'+
+      '<button class="btn ghost block" onclick="screenHistorico()">📋 Conferências realizadas</button>'+
+      '<div class="field" style="margin-top:14px"><label>Agrupar ciclos por</label>'+grpSel()+'</div>'+
+    '</div>';
+    el('imp').onclick=function(){el('file').click();};el('file').onchange=function(){if(el('file').files[0])readFile(el('file').files[0],function(t){ingest(t,el('file').files[0].name);});};
+    wireGrp();return;}
+  var g=grupos(),keys=Object.keys(g).sort();
+  // ranking por urgência (grave desc)
+  var infos=keys.map(function(k){var a=auditForn(k);return{k:k,a:a,c:ciclo(k)};});
+  infos.sort(function(x,y){return (y.a.grave-x.a.grave)|| (y.a.itens-x.a.itens);});
+  var html=whoBar()+
+    (S.catMeta&&S.catMeta.por? '<div style="font-size:12px;color:var(--mut);margin-bottom:6px">📚 Catálogo enviado por <b>'+esc(S.catMeta.por)+'</b></div>':'')+
+    '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><div style="font-size:13px;font-weight:800;color:var(--brand-d)">Fornecedores ('+keys.length+')</div>'+
+    '<div style="margin-left:auto;display:flex;gap:6px"><button class="btn ghost sm" onclick="screenHistorico()">📋 Histórico</button><button class="btn ghost sm" onclick="refreshCatalogo()">↻ Atualizar</button><button class="btn ghost sm" id="troca">Novo arquivo</button></div></div>'+
+    '<div class="field" style="margin-bottom:10px"><label>Agrupar por</label>'+grpSel()+'</div>';
+  html+=infos.map(function(o){var st=o.c.status||'pendente';var stl={pendente:'Pendente',produtos_ok:'Produtos validados',contando:'Contando',estoque_ok:'Estoque validado'}[st];
+    return '<button class="fcard" data-k="'+esc(o.k)+'"><div class="h"><h3>'+esc(o.k)+'</h3><span class="stbadge st-'+st+'">'+stl+'</span></div>'+
+      '<div class="meta">'+o.a.itens+' itens'+(o.a.grave?'<span class="warnpill">'+o.a.grave+' p/ corrigir</span>':'')+(o.a.fator?' · fator≠1: '+o.a.fator:'')+'</div></button>';
+  }).join('');
+  el('screen').innerHTML=html;
+  [].forEach.call(document.querySelectorAll('.fcard'),function(b){b.onclick=function(){S.curForn=b.getAttribute('data-k');screenForn();};});
+  el('troca').onclick=function(){S.records=[];S.rawrows=[];persist();screenPainel();};
+  wireGrp();
+}
+function grpSel(){return '<select class="input" id="grp"><option value="fornecedor"'+(S.fornKey==='fornecedor'?' selected':'')+'>Fornecedor</option><option value="marca"'+(S.fornKey==='marca'?' selected':'')+'>Marca</option><option value="comprador"'+(S.fornKey==='comprador'?' selected':'')+'>Comprador</option></select>';}
+function wireGrp(){if(el('grp'))el('grp').onchange=function(){S.fornKey=el('grp').value;persist();screenPainel();};}
+
+/* ----- tela do fornecedor (portão) ----- */
+function screenForn(){S.view='forn';var k=S.curForn,a=auditForn(k),c=ciclo(k);setSub(k);
+  var podeContar=(c.status==='produtos_ok'||c.status==='contando'||c.status==='estoque_ok');
+  el('screen').innerHTML=whoBar()+
+    '<button class="btn ghost sm noprint" onclick="screenPainel()">← Fornecedores</button>'+
+    '<h2 style="font-size:17px;margin:10px 0 2px">'+esc(k)+'</h2>'+
+    '<div class="muted" style="font-size:13px;margin-bottom:12px">'+a.itens+' itens no cadastro</div>'+
+    '<div class="card" style="padding:14px;margin-bottom:10px"><div style="font-weight:800;margin-bottom:6px">1 · Produtos (auditoria)</div>'+
+      (a.grave? '<div class="banner bad" style="margin:6px 0">'+a.grave+' item(ns) grave(s): '+(a.fatorHi?a.fatorHi+' fator, ':'')+(a.ean?a.ean+' EAN':'')+'. Corrija no Eco antes de contar.</div>'
+              : '<div class="banner" style="margin:6px 0;background:var(--ok-l);color:#14622f">Sem apontamentos graves. Pronto para validar.</div>')+
+      '<button class="btn ghost block sm" onclick="screenAudit()">Ver auditoria detalhada</button>'+
+      '<button class="btn '+(c.status==='pendente'?'primary':'ok')+' block" style="margin-top:8px" onclick="validarProdutos()">'+(c.status==='pendente'?'Marcar PRODUTOS validados':'✓ Produtos validados'+(c.prod_valid_por?' ('+esc(c.prod_valid_por)+')':''))+'</button>'+
+    '</div>'+
+    '<div class="card" style="padding:14px"><div style="font-weight:800;margin-bottom:6px">2 · Contagem de estoque</div>'+
+      (podeContar? '<div class="muted" style="font-size:13px;margin-bottom:8px">Escolha o local (conferências separadas)'+(S.lastLocal?' — este aparelho usou por último: <b>'+(S.lastLocal==='loja'?'Loja':'Depósito')+'</b>':'')+':</div>'+
+        '<div style="display:flex;gap:8px">'+
+          (S.lastLocal==='loja'
+            ? '<button class="btn primary block" onclick="abrirContagem(\'loja\')">🏬 Loja</button><button class="btn ghost block" onclick="abrirContagem(\'deposito\')">📦 Depósito</button>'
+            : '<button class="btn primary block" onclick="abrirContagem(\'deposito\')">📦 Depósito</button><button class="btn ghost block" onclick="abrirContagem(\'loja\')">🏬 Loja</button>')+
+        '</div>'
+        : '<div class="banner warn">🔒 Bloqueado. Valide os produtos acima para liberar a contagem.</div>')+
+    '</div>';
+}
+window.screenForn=screenForn;window.screenPainel=screenPainel;
+function validarProdutos(){var k=S.curForn,a=auditForn(k);var go=function(){setCiclo(k,{status:'produtos_ok',itens:a.itens,prod_valid_por:S.user,prod_valid_em:stamp()});toast('Produtos validados por '+S.user);screenForn();};
+  if(a.grave){askConfirm('Ainda há '+a.grave+' item(ns) grave(s). Validar mesmo assim?',go);}else go();}
+window.validarProdutos=validarProdutos;
+
+function screenAudit(){var k=S.curForn,a=auditForn(k);setSub('Auditoria · '+k);
+  el('screen').innerHTML=whoBar()+'<button class="btn ghost sm" onclick="screenForn()">← Voltar</button>'+
+    '<h2 style="font-size:16px;margin:10px 0">Auditoria — '+esc(k)+'</h2>'+
+    (a.list.length? a.list.map(function(o){var b='';if(o.flags.fator)b+='<span class="fatorwarn">Fator '+o.flags.fator+(o.flags.fatorHi?' GRAVE':'')+'</span> ';if(o.flags.ean)b+='<span class="warnpill">EAN</span> ';if(o.flags.dup)b+='<span class="warnpill" style="background:#eae4f7;color:#5b3ea8">Duplicada</span> ';return '<div class="citem"><span class="cod">'+esc(o.r.codigo)+'</span><span class="d">'+esc(o.r.descricao)+'<br>'+b+'</span></div>';}).join('')
+      : '<div class="banner" style="background:var(--ok-l);color:#14622f">Nenhum apontamento neste fornecedor.</div>');
+}
+window.screenAudit=screenAudit;
+
+/* ----- contagem ----- */
+function abrirContagem(local){S.curLocal=local;S.lastLocal=local;S.curRodada=1;persist();if(ciclo(S.curForn).status==='produtos_ok')setCiclo(S.curForn,{status:'contando'});screenContagem();}
+window.abrirContagem=abrirContagem;
+function screenContagem(){S.view='cont';var k=S.curForn,local=S.curLocal,items=itemsDe(k);setSub('Contagem · '+local);
+  var r=S.curRodada;
+  var lockR2=canCount(k,local,2,S.user), lockR3=canCount(k,local,3,S.user);
+  var html=whoBar()+'<button class="btn ghost sm noprint" onclick="screenForn()">← '+esc(k)+'</button>'+
+    '<div style="display:flex;align-items:center;gap:8px;margin:8px 0"><b>'+esc(k)+'</b> · <span class="stbadge st-contando">'+(local==='deposito'?'📦 Depósito':'🏬 Loja')+'</span></div>'+
+    '<div class="rounds">'+
+      '<button data-r="1" class="'+(r===1?'on':'')+'">1ª Contagem</button>'+
+      '<button data-r="2" class="'+(r===2?'on':'')+'">2ª Reconf.</button>'+
+      '<button data-r="3" class="'+(r===3?'on':'')+'">3ª Desempate</button>'+
+    '</div>';
+  // bloqueio por usuário
+  if(r===2&&!lockR2.ok){html+='<div class="banner bad">🔒 A 2ª contagem precisa ser feita por OUTRO usuário. Você fez a 1ª. Troque de usuário para reconferir.</div>';}
+  else if(r===3&&!lockR3.ok){html+='<div class="banner bad">🔒 O desempate precisa ser um usuário diferente da 1ª e 2ª. Troque de usuário.</div>';}
+  else if(r===3){var divs=divergentes(k,local);if(!divs.length){html+='<div class="banner" style="background:var(--ok-l);color:#14622f">Sem divergências entre 1ª e 2ª — desempate não é necessário. 🎉</div>';}}
+  var blocked=(r===2&&!lockR2.ok)||(r===3&&!lockR3.ok);
+  if(!blocked){
+    html+='<div class="banner">Contagem CEGA — o saldo do sistema não é mostrado. Bipe ou digite o código/EAN e informe a quantidade.</div>'+
+      '<div class="scanbox noprint"><input class="input" id="scan" placeholder="Código ou EAN…" autocomplete="off"><button class="btn primary" id="cam">📷</button></div>';
+    // itens a contar nesta rodada
+    var pool = r===3? divergentes(k,local) : items;
+    var counted=roundCount(k,local,r);
+    html+='<div class="prog"><span style="width:'+(pool.length?Math.round(100*counted/pool.length):0)+'%"></span></div>'+
+      '<div class="muted" style="font-size:12px;margin-bottom:8px">'+counted+' de '+pool.length+' contados nesta rodada'+(r===3?' (só divergentes)':'')+'</div>';
+    html+='<div id="clist"></div>';
+  }
+  html+='<div style="display:flex;gap:8px;margin-top:14px" class="noprint">'+
+    '<button class="btn ghost block sm" onclick="screenComparar()">Comparar / Fechar</button></div>';
+  el('screen').innerHTML=html;
+  [].forEach.call(document.querySelectorAll('.rounds button'),function(b){b.onclick=function(){S.curRodada=+b.getAttribute('data-r');screenContagem();};});
+  if(!blocked){
+    var scan=el('scan');if(scan){scan.focus();scan.onkeydown=function(e){if(e.key==='Enter'){addScan(scan.value);scan.value='';}};}
+    if(el('cam'))el('cam').onclick=openCam;
+    drawClist();
+  }
+}
+window.screenContagem=screenContagem;
+function drawClist(){var k=S.curForn,local=S.curLocal,r=S.curRodada;var pool=r===3?divergentes(k,local):itemsDe(k);
+  var rows=pool.map(function(it){var c=getCount(k,local,r,it.codigo);var f=parseBR(it.qtdemb);var fw=(!isNaN(f)&&f!==1)?'<span class="fatorwarn">fator '+f+'</span> ':'';
+    return '<div class="citem'+(c?'':' zero')+'"><span class="cod">'+esc(it.codigo)+'</span><span class="d">'+esc(it.descricao)+' '+fw+'</span><span class="q">'+(c?c.qtd:'—')+'</span><button class="btn ghost sm" onclick="pedirQtd(\''+esc(it.codigo).replace(/'/g,"")+'\')">'+(c?'editar':'contar')+'</button></div>';
+  }).join('');
+  if(el('clist'))el('clist').innerHTML=rows||'<div class="muted center" style="padding:20px">Nada a contar aqui.</div>';
+}
+function addScan(v){v=collapse(v);if(!v)return;var k=S.curForn,items=itemsDe(k);var d=onlyDigits(v);
+  var it=items.filter(function(r){return r.codigo===v||onlyDigits(r.ean)===d&&d.length>0||r.codigo===d;})[0];
+  if(!it){toast('Não achei "'+v+'" neste fornecedor');return;}
+  pedirQtd(it.codigo);
+}
+window.addScan=addScan;
+function pedirQtd(codigo){var k=S.curForn,local=S.curLocal,r=S.curRodada;var it=itemsDe(k).filter(function(x){return x.codigo===codigo;})[0];if(!it)return;
+  var f=parseBR(it.qtdemb);var warn=(!isNaN(f)&&f!==1)?'<div class="banner bad">⚠ Fator '+f+' — confira a unidade! Conte na unidade certa (não multiplique).</div>':'';
+  var cur=getCount(k,local,r,codigo);
+  openSheet('<div style="font-weight:800">'+esc(it.codigo)+'</div><div class="muted" style="font-size:13px;margin-bottom:8px">'+esc(it.descricao)+'</div>'+warn+
+    '<div class="field"><label>Quantidade contada</label><input class="input mono" id="qin" inputmode="decimal" value="'+(cur?cur.qtd:'')+'" placeholder="0"></div>'+
+    '<button class="btn primary block" id="sv">Salvar</button>',function(){
+      el('qin').focus();
+      el('sv').onclick=function(){var q=parseBR(el('qin').value);if(isNaN(q)||q<0){toast('Quantidade inválida');return;}var chk=canCount(k,local,r,S.user);if(!chk.ok){toast('Você não pode contar nesta rodada (fez a '+chk.rodada+'ª)');closeSheet();return;}setCount(k,local,r,it,q,S.user);closeSheet();drawClist();screenContagem();};
+    });
+}
+window.pedirQtd=pedirQtd;
+
+function screenComparar(){S.view='cmp';var k=S.curForn,local=S.curLocal,items=itemsDe(k);setSub('Fechar · '+local);
+  var rows=items.map(function(it){var c1=getCount(k,local,1,it.codigo),c2=getCount(k,local,2,it.codigo),c3=getCount(k,local,3,it.codigo);var fin=finalQty(k,local,it.codigo);return{it:it,q1:c1?c1.qtd:null,q2:c2?c2.qtd:null,q3:c3?c3.qtd:null,fin:fin};});
+  var divs=rows.filter(function(x){return x.fin.div&&x.fin.estado==='divergente';}).length;
+  var html=whoBar()+'<button class="btn ghost sm noprint" onclick="screenContagem()">← Contagem</button>'+
+    '<h2 style="font-size:16px;margin:10px 0 4px">Conferência — '+esc(k)+' · '+(local==='deposito'?'Depósito':'Loja')+'</h2>'+
+    (divs? '<div class="banner bad">'+divs+' item(ns) com divergência entre 1ª e 2ª e SEM desempate. Faça a 3ª contagem antes de fechar.</div>'
+         : '<div class="banner" style="background:var(--ok-l);color:#14622f">Pronto para gerar o relatório.</div>')+
+    '<div style="overflow-x:auto"><table class="cmp"><tr><th>Código</th><th>Descrição</th><th class="n">1ª</th><th class="n">2ª</th><th class="n">3ª</th><th class="n">Final</th></tr>'+
+    rows.map(function(x){var cls=x.fin.div?(x.fin.estado==='divergente'?'div-yes':'div-no'):'';return '<tr><td class="mono">'+esc(x.it.codigo)+'</td><td>'+esc(x.it.descricao)+'</td><td class="n">'+(x.q1==null?'':x.q1)+'</td><td class="n">'+(x.q2==null?'':x.q2)+'</td><td class="n">'+(x.q3==null?'':x.q3)+'</td><td class="n '+cls+'">'+(x.fin.qtd==null?'?':x.fin.qtd)+'</td></tr>';}).join('')+
+    '</table></div>'+
+    '<div style="display:flex;gap:8px;margin-top:14px" class="noprint">'+
+      '<button class="btn ghost block" onclick="exportCSV()">⬇︎ CSV</button>'+
+      '<button class="btn primary block" onclick="gerarPDF()">🖨 Relatório PDF</button>'+
+    '</div>'+
+    '<button class="btn ok block noprint" style="margin-top:8px" '+(divs?'disabled':'')+' onclick="fecharEstoque()">✓ Marcar ESTOQUE validado</button>';
+  el('screen').innerHTML=html;
+}
+window.screenComparar=screenComparar;
+function reportRows(){var k=S.curForn,local=S.curLocal;return itemsFromCounts(k,local).map(function(it){return{codigo:it.codigo,descricao:it.descricao,qtd:finalQty(k,local,it.codigo).qtd};}).filter(function(x){return x.qtd!=null;}).sort(function(a,b){return a.codigo<b.codigo?-1:1;});}
+function toCSV(rows){return '﻿'+rows.map(function(r){return r.map(function(c){var s=String(c==null?'':c);return /[";\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;}).join(';');}).join('\r\n');}
+function download(name,csv){var b=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(a.href);},100);}
+function exportCSV(){var k=S.curForn,local=S.curLocal;var rows=[['CODIGO','DESCRICAO','QUANTIDADE']].concat(reportRows().map(function(x){return [x.codigo,x.descricao,x.qtd];}));download('conferencia_'+k.replace(/[^\w]+/g,'_')+'_'+local+'.csv',toCSV(rows));toast('CSV exportado');}
+window.exportCSV=exportCSV;
+function gerarPDF(){var k=S.curForn,local=S.curLocal,rows=reportRows();
+  el('printarea').innerHTML='<h2>Conferência de Inventário</h2>'+
+    '<div class="hd">Fornecedor: <b>'+esc(k)+'</b> · Local: <b>'+(local==='deposito'?'Depósito':'Loja')+'</b><br>Conferente: '+esc(S.user)+' · '+stamp()+' · '+rows.length+' itens</div>'+
+    '<table><tr><th>Código</th><th>Descrição</th><th class="n">Qtd</th></tr>'+
+    rows.map(function(x){return '<tr><td>'+esc(x.codigo)+'</td><td>'+esc(x.descricao)+'</td><td class="n">'+x.qtd+'</td></tr>';}).join('')+'</table>';
+  window.print();
+}
+window.gerarPDF=gerarPDF;
+function fecharEstoque(){var k=S.curForn;setCiclo(k,{status:'estoque_ok',est_valid_por:S.user,est_valid_em:stamp()});toast('Estoque validado! Gere o relatório e lance no Eco.');screenForn();}
+window.fecharEstoque=fecharEstoque;
+
+/* ---------- HISTÓRICO de conferências ---------- */
+function itemsFromCounts(chave,local){var seen={},out=[];Object.keys(S.counts).forEach(function(k){var pr=k.split('||');if(pr[0]===chave&&pr[1]===local){var cod=pr[3];if(!seen[cod]){seen[cod]=1;var c=S.counts[k];out.push({codigo:cod,descricao:c.descricao||'',ean:c.ean||'',qtdemb:'',embalagem:''});}}});return out.sort(function(a,b){return a.codigo<b.codigo?-1:1;});}
+function opsList(r){return r?Object.keys(r.ops).join(', '):'—';}
+function conferencias(){var map={};Object.keys(S.counts).forEach(function(k){var pr=k.split('||');if(pr.length<4)return;var chave=pr[0],local=pr[1],rod=+pr[2],cod=pr[3];var mk=chave+'||'+local;var a=map[mk]||(map[mk]={chave:chave,local:local,rounds:{},codigos:{},ultima:''});var c=S.counts[k];var r=a.rounds[rod]||(a.rounds[rod]={ops:{},n:0,em:''});r.n++;if(c.operador)r.ops[c.operador]=1;if(c.em&&c.em>r.em)r.em=c.em;a.rounds[rod]=r;a.codigos[cod]=1;if(c.em&&c.em>a.ultima)a.ultima=c.em;});return Object.keys(map).map(function(mk){var a=map[mk];a.itens=Object.keys(a.codigos).length;a.status=ciclo(a.chave).status;return a;}).sort(function(x,y){return x.ultima<y.ultima?1:(x.ultima>y.ultima?-1:0);});}
+function screenHistorico(){S.view='hist';setSub('Conferências realizadas');
+  el('screen').innerHTML=whoBar()+'<button class="btn ghost sm noprint" onclick="screenPainel()">← Painel</button>'+
+    '<h2 style="font-size:16px;margin:10px 0 6px">Conferências realizadas</h2>'+
+    '<input class="input" id="hq" placeholder="Buscar fornecedor…" value="'+esc(S._histq||'')+'" style="margin-bottom:10px">'+
+    '<div id="histlist"></div>';
+  el('hq').oninput=function(){S._histq=el('hq').value;renderHistList();};
+  renderHistList();
+}
+window.screenHistorico=screenHistorico;
+function renderHistList(){var q=(S._histq||'').toUpperCase();var list=conferencias().filter(function(a){return !q||a.chave.toUpperCase().indexOf(q)>=0;});
+  if(!list.length){el('histlist').innerHTML='<div class="banner">Nenhuma conferência registrada ainda.</div>';return;}
+  el('histlist').innerHTML=list.map(function(a){var loc=a.local==='loja'?'🏬 Loja':'📦 Depósito';var rl=[1,2,3].filter(function(n){return a.rounds[n];}).map(function(n){return n+'ª '+opsList(a.rounds[n]);}).join(' · ');var stl={pendente:'Pendente',produtos_ok:'Produtos validados',contando:'Em contagem',estoque_ok:'Estoque validado'}[a.status]||a.status;
+    return '<button class="fcard" onclick="abrirDetalhe(\''+esc(a.chave).replace(/\\/g,"").replace(/'/g,"\\'")+'\',\''+a.local+'\')"><div class="h"><h3>'+esc(a.chave)+'</h3><span class="stbadge st-'+a.status+'">'+stl+'</span></div>'+
+      '<div class="meta">'+loc+' · '+a.itens+' itens · '+fmtDate(a.ultima)+'</div><div class="meta">'+esc(rl)+'</div></button>';
+  }).join('');
+}
+function abrirDetalhe(chave,local){S.curForn=chave;S.curLocal=local;screenConfDetalhe();}
+window.abrirDetalhe=abrirDetalhe;
+function screenConfDetalhe(){var k=S.curForn,local=S.curLocal;S.view='detalhe';setSub('Conferência · '+k);
+  var items=itemsFromCounts(k,local);
+  var conf=conferencias().filter(function(a){return a.chave===k&&a.local===local;})[0]||{rounds:{}};
+  var meta=[1,2,3].filter(function(n){return conf.rounds[n];}).map(function(n){return '<div class="meta"><b>'+n+'ª</b> '+esc(opsList(conf.rounds[n]))+' · '+fmtDate(conf.rounds[n].em)+'</div>';}).join('');
+  var cic=ciclo(k);
+  var rows=items.map(function(it){return{it:it,c1:getCount(k,local,1,it.codigo),c2:getCount(k,local,2,it.codigo),c3:getCount(k,local,3,it.codigo),fin:finalQty(k,local,it.codigo)};});
+  function cell(c){return c?'<td class="n" title="'+esc((c.operador||'')+' · '+fmtDate(c.em))+'">'+c.qtd+'</td>':'<td class="n"></td>';}
+  el('screen').innerHTML=whoBar()+'<button class="btn ghost sm noprint" onclick="screenHistorico()">← Histórico</button>'+
+    '<h2 style="font-size:16px;margin:10px 0 2px">'+esc(k)+' · '+(local==='loja'?'Loja':'Depósito')+'</h2>'+
+    '<div class="card" style="padding:12px;margin:8px 0">'+(meta||'<div class="meta">Sem rodadas registradas.</div>')+(cic.est_valid_por?'<div class="meta">✓ Estoque validado por <b>'+esc(cic.est_valid_por)+'</b> em '+esc(cic.est_valid_em||'')+'</div>':'')+'</div>'+
+    '<div class="muted" style="font-size:12px;margin-bottom:6px">Passe o dedo/mouse sobre a quantidade para ver quem contou. Vermelho = divergência sem desempate.</div>'+
+    '<div style="overflow-x:auto"><table class="cmp"><tr><th>Código</th><th>Descrição</th><th class="n">1ª</th><th class="n">2ª</th><th class="n">3ª</th><th class="n">Final</th></tr>'+
+    rows.map(function(x){var cls=x.fin.div?(x.fin.estado==='divergente'?'div-yes':'div-no'):'';return '<tr><td class="mono">'+esc(x.it.codigo)+'</td><td>'+esc(x.it.descricao)+'</td>'+cell(x.c1)+cell(x.c2)+cell(x.c3)+'<td class="n '+cls+'">'+(x.fin.qtd==null?'?':x.fin.qtd)+'</td></tr>';}).join('')+
+    '</table></div>'+
+    '<div style="display:flex;gap:8px;margin-top:14px" class="noprint"><button class="btn ghost block" onclick="exportCSV()">⬇︎ CSV</button><button class="btn primary block" onclick="gerarPDF()">🖨 PDF</button></div>';
+}
+window.screenConfDetalhe=screenConfDetalhe;
+
+/* ----- câmera ----- */
+var camStream=null;
+function openCam(){if(!('BarcodeDetector' in window)){toast('Este navegador não tem leitor nativo. Use a pistola ou digite.');return;}
+  openSheet('<div style="font-weight:800;margin-bottom:8px">Aponte para o código de barras</div><video id="vid" playsinline></video><button class="btn ghost block" id="fecharcam" style="margin-top:10px">Fechar</button>',function(){startCam();});
+}
+async function startCam(){try{var det=new BarcodeDetector({formats:['ean_13','ean_8','code_128','upc_a','upc_e']});camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});var v=el('vid');v.srcObject=camStream;await v.play();el('fecharcam').onclick=stopCam;var tick=async function(){if(!camStream)return;try{var codes=await det.detect(v);if(codes&&codes.length){var val=codes[0].rawValue;stopCam();addScan(val);return;}}catch(e){}requestAnimationFrame(tick);};requestAnimationFrame(tick);}catch(e){toast('Não consegui abrir a câmera');stopCam();}}
+function stopCam(){if(camStream){camStream.getTracks().forEach(function(t){t.stop();});camStream=null;}closeSheet();}
+
+/* ----- sheet / confirm ----- */
+function openSheet(html,after){var o=document.createElement('div');o.className='overlay';o.id='ov';o.innerHTML='<div class="sheet">'+html+'</div>';o.onclick=function(e){if(e.target===o)closeSheet();};document.body.appendChild(o);if(after)after();}
+function closeSheet(){var o=el('ov');if(o)o.remove();}
+function askConfirm(msg,yes){openSheet('<div style="font-weight:700;margin-bottom:14px">'+esc(msg)+'</div><div style="display:flex;gap:8px"><button class="btn ghost block" onclick="closeSheet()">Cancelar</button><button class="btn primary block" id="okc">Confirmar</button></div>',function(){el('okc').onclick=function(){closeSheet();yes();};});}
+window.closeSheet=closeSheet;window.logout=logout;
+
+/* ---------- boot ---------- */
+window.addEventListener('online',net);window.addEventListener('offline',net);
+restore();net();
+(async function(){await pull();net();if(S.records.length&&S.view==='painel'&&S.user)screenPainel();})();
+screenLogin();
+</script>
+</body>
+</html>

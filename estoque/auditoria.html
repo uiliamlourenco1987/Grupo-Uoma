@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1E4E79">
+<title>Auditoria de Cadastro — Inventário</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--brand:#1E4E79;--brand-d:#12395c;--brand-l:#E9F1F8;--ok:#1E7A54;--ok-l:#E4F3EC;--par:#B45309;--par-l:#FBF0E0;--falta:#B42318;--falta-l:#FBEBE9;--ink:#1B2430;--mut:#69707E;--line:#E3E7EC;--bg:#F4F6F9;--card:#fff;--radius:14px;--shadow:0 1px 3px rgba(27,36,48,.07),0 6px 18px rgba(27,36,48,.05);}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45;font-size:16px}
+  .money,.mono,.pc{font-family:'IBM Plex Mono','SFMono-Regular',monospace}
+  .app{max-width:920px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative;padding-bottom:40px}
+  .top{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,#1B2430 0%,#1E4E79 100%);color:#fff;padding:14px 16px;box-shadow:var(--shadow)}
+  .top .row{display:flex;align-items:center;gap:12px}
+  .brand-badge{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:22px;flex:0 0 auto}
+  .top h1{font-size:15px;margin:0;font-weight:800}.top .sub{font-size:12px;opacity:.85;margin-top:1px}
+  .top a.back{margin-left:auto;color:#fff;text-decoration:none;font-size:13px;font-weight:700;background:rgba(255,255,255,.16);padding:7px 12px;border-radius:999px}
+  .wrap{padding:16px}
+  .muted{color:var(--mut)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .btn{appearance:none;border:0;border-radius:12px;padding:13px 16px;font-size:15px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+  .btn.primary{background:var(--brand);color:#fff}.btn.primary:active{background:var(--brand-d)}
+  .btn.ghost{background:#fff;color:var(--brand);border:1.5px solid var(--brand-l)}
+  .btn.sm{padding:9px 12px;font-size:13px;border-radius:10px}
+  .btn.block{width:100%}
+  /* import */
+  .drop{border:2px dashed #c7d3df;border-radius:18px;background:#fff;padding:34px 18px;text-align:center;cursor:pointer;transition:.15s}
+  .drop:hover,.drop.over{border-color:var(--brand);background:var(--brand-l)}
+  .drop .ico{font-size:40px}
+  .drop h2{margin:10px 0 4px;font-size:18px;font-weight:800}
+  .drop p{margin:0;font-size:13px;color:var(--mut)}
+  .orr{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--mut);font-size:12px;font-weight:700}
+  .orr:before,.orr:after{content:"";flex:1;height:1px;background:var(--line)}
+  .hint{font-size:12px;color:var(--mut);margin-top:14px;line-height:1.5}
+  /* mapping */
+  .maprow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .maprow:last-child{border-bottom:0}
+  .maprow b{font-weight:700}
+  .pill{font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;white-space:nowrap}
+  .pill.ok{background:var(--ok-l);color:var(--ok)}
+  .pill.no{background:var(--falta-l);color:var(--falta)}
+  select.remap{font-family:inherit;font-size:12px;padding:5px 6px;border:1.5px solid var(--line);border-radius:8px;background:#fff;max-width:150px}
+  /* dashboard tiles */
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+  .tile{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px;cursor:pointer;text-align:left;position:relative;transition:.12s}
+  .tile:active{transform:scale(.98)}
+  .tile.on{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-l),var(--shadow)}
+  .tile .n{font-size:26px;font-weight:800;line-height:1}
+  .tile .l{font-size:12px;font-weight:700;color:var(--mut);margin-top:5px}
+  .tile.total .n{color:var(--ink)}
+  .tile.good .n{color:var(--ok)}
+  .tile.warn .n{color:var(--par)}
+  .tile.bad .n{color:var(--falta)}
+  .tile .dot{position:absolute;top:12px;right:12px;font-size:16px}
+  /* toolbar */
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0 12px}
+  .search{flex:1;min-width:160px;padding:11px 12px;border:1.5px solid var(--line);border-radius:11px;font-size:14px;background:#fff}
+  .search:focus{outline:none;border-color:var(--brand)}
+  .chip{padding:8px 12px;border-radius:999px;border:1.5px solid var(--line);background:#fff;font-weight:700;font-size:12px;cursor:pointer}
+  .chip.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+  /* items */
+  .itemhdr{display:flex;justify-content:space-between;align-items:center;margin:16px 2px 8px}
+  .itemhdr .t{font-size:13px;font-weight:800;color:var(--brand-d)}
+  .item{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:12px 14px;margin-bottom:9px}
+  .item .top1{display:flex;align-items:baseline;gap:8px}
+  .item .cod{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;color:var(--brand)}
+  .item .desc{font-weight:700;font-size:14px;flex:1}
+  .item .meta{font-size:12px;color:var(--mut);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 12px}
+  .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .bdg{font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px}
+  .bdg.fator{background:var(--par-l);color:#8a4d05}
+  .bdg.fatorhi{background:var(--falta-l);color:var(--falta)}
+  .bdg.ean{background:var(--falta-l);color:var(--falta)}
+  .bdg.neg{background:var(--falta);color:#fff}
+  .bdg.dup{background:#eae4f7;color:#5b3ea8}
+  .bdg.orf{background:#eef0f4;color:#5b6470}
+  .bdg.trunc{background:#fff4e6;color:#8a4d05}
+  .empty{text-align:center;padding:40px 16px;color:var(--mut)}
+  .empty .ico{font-size:44px}
+  .exportbar{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}
+  .banner{background:var(--brand-l);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--brand-d);font-weight:600;margin-bottom:14px}
+  .banner.warn{background:var(--par-l);color:#8a4d05}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1B2430;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:600;box-shadow:var(--shadow);z-index:60;opacity:0;transition:.2s;pointer-events:none}
+  .toast.show{opacity:1}
+  .sechdr{font-size:12px;font-weight:800;letter-spacing:.4px;color:var(--mut);margin:20px 2px 8px;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="row">
+      <div class="brand-badge">🔍</div>
+      <div>
+        <h1>Auditoria de Cadastro</h1>
+        <div class="sub">Módulo A · Inventário Cíclico</div>
+      </div>
+      <a class="back" href="index.html">← Início</a>
+    </div>
+  </div>
+  <div class="wrap" id="screen"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ====================================================================
+   AUDITORIA DE CADASTRO — Loja do Sorveteiro e Confeiteiro
+   Ferramenta 100% client-side. Arquivo entra -> relatório sai.
+   Não grava em lugar nenhum (Ecocentauro segue sendo a fonte de verdade).
+   ==================================================================== */
+
+var state = { records:[], issues:null, mapping:null, headers:[], filter:'todos', search:'', grupo:'' };
+
+/* ---------- utilidades ---------- */
+function el(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function toast(m){var t=el('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},2200);}
+function normHdr(s){return String(s||'').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Z0-9]/g,'');}
+function onlyDigits(s){return String(s==null?'':s).replace(/\D/g,'');}
+function collapse(s){return String(s==null?'':s).replace(/\s+/g,' ').trim();}
+function fmtMoney(n){ try{return Number(n).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}catch(e){return String(n);} }
+
+/* números BR: "1.234,56" -> 1234.56 ; "12" -> 12 */
+function parseBR(v){
+  if(v==null) return NaN;
+  var s=String(v).trim(); if(!s) return NaN;
+  s=s.replace(/\./g,'').replace(',', '.');
+  var n=parseFloat(s); return isNaN(n)?NaN:n;
+}
+
+/* ---------- dígito verificador EAN-13 (GS1 mod-10) ---------- */
+function eanCheckDigit(d12){
+  var s=0;
+  for(var i=0;i<12;i++){ var n=+d12[i]; s += (i%2===0)? n : n*3; }
+  return (10 - (s%10)) % 10;
+}
+function eanInfo(raw){
+  var d=onlyDigits(raw);
+  if(!d) return {status:'vazio', digits:0};
+  if(d.length!==13) return {status:'tamanho', digits:d.length, clean:d};
+  var ok = eanCheckDigit(d.slice(0,12)) === +d[12];
+  return {status: ok?'ok':'dv', digits:13, clean:d};
+}
+
+/* ---------- dicionário de colunas do Ecocentauro ---------- */
+var FIELDS = {
+  codigo:       {label:'Código do produto', aliases:['CODIGOPRODUTO','PRODUTO','CODPRODUTO','CODIGO','COD']},
+  descricao:    {label:'Descrição',         aliases:['DESCRICAOPRODUTO','DESCRICAO','NOMEPRODUTO','DESCRICAOCOMPLETA']},
+  marca:        {label:'Marca',             aliases:['DESCMARCA','NOMEMARCA','MARCA'], exactOnly:true},
+  codigofabrica:{label:'Código de fábrica', aliases:['CODIGOFABRICA','CODFABRICA','CODIGODEFABRICA','REFERENCIA','REF'], exactOnly:true},
+  embalagem:    {label:'Embalagem/Unidade', aliases:['EMBALAGEM','UNIDADE','UNID','SIGLAUNIDADE','SIGLA'], exactOnly:true},
+  qtdemb:       {label:'Qtde por embalagem (fator)', aliases:['QTDEEMBALAGEM','QTDEMBALAGEM','QTEMBALAGEM','FATORCONVERSAO','FATOR','QTDEMB','QTEMB']},
+  ean:          {label:'EAN / cód. de barras', aliases:['CODIGOBARRA','CODIGOBARRAS','CODBARRA','CODBARRAS','EAN','GTIN','CODIGODEBARRAS']},
+  estoque:      {label:'Estoque atual',      aliases:['ESTOQUEATUAL','ESTOQUE','SALDOATUAL','SALDO','QTDESTOQUE'], exactOnly:true},
+  custo:        {label:'Custo (p/ valor R$)',aliases:['CUSTOFINAL','CUSTOMEDIO','CUSTOREPOSICAO','CUSTOFABRICA','CUSTONOTA','CUSTO'], exactOnly:true},
+  grupo:        {label:'Grupo de produto',   aliases:['DESCRICAOGRUPO','NOMEGRUPO','GRUPOPRODUTO','GRUPO','CATEGORIA'], exactOnly:true},
+  fornecedor:   {label:'Fornecedor',        aliases:['DESCRICAOFORNECEDOR','NOMEFORNECEDOR','FORNECEDOR'], exactOnly:true},
+  endereco:     {label:'Endereço',          aliases:['ENDERECO','LOCALIZACAO','LOCAL'], exactOnly:true}
+};
+var FIELD_ORDER = ['codigo','descricao','marca','codigofabrica','embalagem','qtdemb','ean','estoque','custo','grupo','fornecedor','endereco'];
+var REQUIRED = ['codigo','ean','qtdemb'];
+
+function autoMap(headers){
+  var norm = headers.map(normHdr);
+  var map = {}, used = {};
+  FIELD_ORDER.forEach(function(f){
+    var found=-1, als=FIELDS[f].aliases;
+    // 1) match exato de alias (prioridade — evita confundir "Grupo de ICMS" com grupo do produto)
+    for(var a=0;a<als.length && found<0;a++){
+      for(var i=0;i<norm.length;i++){ if(!used[i] && norm[i]===als[a]){found=i;break;} }
+    }
+    // 2) match por "contém" (fallback, só quando o campo não é exactOnly)
+    if(found<0 && !FIELDS[f].exactOnly){
+      for(var a2=0;a2<als.length && found<0;a2++){
+        for(var j=0;j<norm.length;j++){ if(!used[j] && norm[j].indexOf(als[a2])>=0){found=j;break;} }
+      }
+    }
+    if(found>=0){ map[f]=found; used[found]=true; } else map[f]=null;
+  });
+  return map;
+}
+
+/* ---------- leitura de arquivo (detecta encoding) ---------- */
+function readFile(file, cb){
+  var fr=new FileReader();
+  fr.onload=function(){
+    var buf=new Uint8Array(fr.result);
+    var txt;
+    try{
+      // UTF-8 estrito: lança erro se houver byte inválido -> aí é latin-1
+      // (Ecocentauro/Excel costumam exportar em iso-8859-1 / windows-1252)
+      txt=new TextDecoder('utf-8',{fatal:true}).decode(buf);
+      if(/�/.test(txt)) txt=new TextDecoder('iso-8859-1').decode(buf);
+    }catch(e){ txt=new TextDecoder('iso-8859-1').decode(buf); }
+    // remove BOM
+    txt=txt.replace(/^﻿/,'');
+    cb(txt);
+  };
+  fr.readAsArrayBuffer(file);
+}
+
+/* ---------- parse CSV ---------- */
+function parseCSV(text){
+  var lines=text.split(/\r\n|\n|\r/).filter(function(l){return l.trim().length;});
+  if(!lines.length) return {headers:[],rows:[]};
+  // detecta delimitador pela linha de cabeçalho
+  var head=lines[0];
+  var semi=(head.match(/;/g)||[]).length, comma=(head.match(/,/g)||[]).length, tab=(head.match(/\t/g)||[]).length;
+  var delim = tab>=semi&&tab>=comma ? '\t' : (semi>=comma ? ';' : ',');
+  function splitLine(line){
+    var out=[],cur='',q=false;
+    for(var i=0;i<line.length;i++){
+      var ch=line[i];
+      if(q){
+        if(ch==='"'){ if(line[i+1]==='"'){cur+='"';i++;} else q=false; }
+        else cur+=ch;
+      }else{
+        if(ch==='"') q=true;
+        else if(ch===delim){ out.push(cur); cur=''; }
+        else cur+=ch;
+      }
+    }
+    out.push(cur);
+    return out.map(function(c){return c.trim();});
+  }
+  var headers=splitLine(lines[0]);
+  var rows=[];
+  for(var r=1;r<lines.length;r++){
+    var cells=splitLine(lines[r]);
+    if(cells.length===1 && cells[0]==='') continue;
+    rows.push(cells);
+  }
+  return {headers:headers, rows:rows};
+}
+
+/* ---------- parse HTML (tabela) ---------- */
+function parseHTMLTable(text){
+  var doc=new DOMParser().parseFromString(text,'text/html');
+  var tables=Array.prototype.slice.call(doc.querySelectorAll('table'));
+  var best=null,bestScore=-1;
+  tables.forEach(function(tb){
+    var rows=tb.querySelectorAll('tr');
+    if(rows.length<2) return;
+    // pontua pela quantidade de campos conhecidos no cabeçalho
+    var first=rows[0].querySelectorAll('th,td');
+    var hs=Array.prototype.map.call(first,function(c){return normHdr(c.textContent);});
+    var score=0;
+    FIELD_ORDER.forEach(function(f){ FIELDS[f].aliases.forEach(function(al){ if(hs.indexOf(al)>=0) score+=2; }); });
+    score += Math.min(rows.length,50)*0.1;
+    if(score>bestScore){bestScore=score;best=tb;}
+  });
+  if(!best) return {headers:[],rows:[]};
+  var trs=best.querySelectorAll('tr');
+  var headers=Array.prototype.map.call(trs[0].querySelectorAll('th,td'),function(c){return collapse(c.textContent);});
+  var rows=[];
+  for(var i=1;i<trs.length;i++){
+    var cells=Array.prototype.map.call(trs[i].querySelectorAll('td,th'),function(c){return collapse(c.textContent);});
+    if(cells.join('').trim()==='') continue;
+    rows.push(cells);
+  }
+  return {headers:headers, rows:rows};
+}
+
+/* ---------- pipeline de importação ---------- */
+function ingest(text, fname){
+  var parsed = /\.html?$/i.test(fname||'') || /<table[\s>]/i.test(text.slice(0,4000))
+             ? parseHTMLTable(text) : parseCSV(text);
+  if(!parsed.headers.length || !parsed.rows.length){
+    // tenta o outro formato como fallback
+    parsed = parseCSV(text);
+  }
+  if(!parsed.headers.length || !parsed.rows.length){
+    toast('Não consegui ler linhas nesse arquivo. Tente exportar como CSV.'); return;
+  }
+  state.headers = parsed.headers;
+  state.rawrows = parsed.rows;
+  state.mapping = autoMap(parsed.headers);
+  screenMapping();
+}
+
+function buildRecords(){
+  var m=state.mapping, rows=state.rawrows;
+  function get(cells,f){ var i=m[f]; return (i==null||i<0)? '' : (cells[i]!=null?cells[i]:''); }
+  state.records = rows.map(function(cells,idx){
+    return {
+      _i:idx,
+      codigo: collapse(get(cells,'codigo')),
+      descricao: collapse(get(cells,'descricao')),
+      marca: collapse(get(cells,'marca')),
+      codigofabrica: collapse(get(cells,'codigofabrica')),
+      embalagem: collapse(get(cells,'embalagem')),
+      qtdemb: get(cells,'qtdemb'),
+      ean: collapse(get(cells,'ean')),
+      estoque: get(cells,'estoque'),
+      custo: get(cells,'custo'),
+      grupo: collapse(get(cells,'grupo')),
+      fornecedor: collapse(get(cells,'fornecedor')),
+      endereco: collapse(get(cells,'endereco'))
+    };
+  }).filter(function(r){ return (r.codigo||r.descricao||r.ean); });
+}
+
+/* ---------- motor de checagens ---------- */
+function analyze(){
+  var recs=state.records;
+  // índices para duplicidade
+  var eanMap={}, descMap={};
+  recs.forEach(function(r){
+    var e=eanInfo(r.ean);
+    r._ean=e;
+    if(e.status==='ok' || e.status==='dv'){ // 13 dígitos
+      (eanMap[e.clean]=eanMap[e.clean]||new Set()).add(r.codigo||('#'+r._i));
+    }
+    var dn=collapse(r.descricao).toUpperCase();
+    r._descNorm=dn;
+    r._trunc = dn.length>=34;
+    if(dn) (descMap[dn]=descMap[dn]||new Set()).add(r.codigo||('#'+r._i));
+  });
+
+  var issues={ ean:[], fator:[], dup:[], orf:[], neg:[], counts:{} };
+
+  recs.forEach(function(r){
+    r._flags={};
+    // Estoque negativo (só quando a coluna de estoque está mapeada)
+    var est=parseBR(r.estoque);
+    if(!isNaN(est) && est<0){
+      var cst=parseBR(r.custo);
+      r._flags.neg={saldo:est, valor:isNaN(cst)?null:Math.abs(est)*cst};
+      issues.neg.push(r);
+    }
+    // EAN
+    var e=r._ean, eanBad=false, eanReason='';
+    if(e.status==='vazio'){eanBad=true;eanReason='EAN vazio';}
+    else if(e.status==='tamanho'){eanBad=true;eanReason='EAN com '+e.digits+' dígitos (esperado 13)';}
+    else if(e.status==='dv'){eanBad=true;eanReason='Dígito verificador inválido';}
+    else if(e.status==='ok' && eanMap[e.clean] && eanMap[e.clean].size>1){eanBad=true;eanReason='EAN duplicado ('+eanMap[e.clean].size+' códigos)';}
+    if(eanBad){ r._flags.ean=eanReason; issues.ean.push(r); }
+
+    // Fator de conversão
+    var f=parseBR(r.qtdemb);
+    if(!isNaN(f) && f!==1){
+      var emb=normHdr(r.embalagem);
+      var hi = (emb==='UN'||emb==='UNID'||emb==='UNIDADE'||emb==='') && f>1;
+      r._flags.fator={valor:f, hi:hi, emb:r.embalagem};
+      issues.fator.push(r);
+    }
+    // Descrição duplicada
+    if(r._descNorm && descMap[r._descNorm] && descMap[r._descNorm].size>1){
+      r._flags.dup={qtd:descMap[r._descNorm].size, trunc:r._trunc};
+      issues.dup.push(r);
+    }
+    // Sem código de fábrica
+    if(!r.codigofabrica){ r._flags.orf=true; issues.orf.push(r); }
+  });
+
+  var negVal=0, temCusto=false;
+  issues.neg.forEach(function(r){ if(r._flags.neg.valor!=null){ negVal+=r._flags.neg.valor; temCusto=true; } });
+  issues.counts={
+    total: recs.length,
+    ean: issues.ean.length,
+    fator: issues.fator.length,
+    fatorHi: issues.fator.filter(function(r){return r._flags.fator.hi;}).length,
+    dup: issues.dup.length,
+    orf: issues.orf.length,
+    neg: issues.neg.length,
+    negValor: temCusto? negVal : null
+  };
+  state.issues=issues;
+}
+
+/* ---------- exportar CSV ---------- */
+function toCSV(rows){
+  return '﻿'+rows.map(function(r){
+    return r.map(function(c){
+      var s=String(c==null?'':c);
+      return /[";\n]/.test(s)? '"'+s.replace(/"/g,'""')+'"' : s;
+    }).join(';');
+  }).join('\r\n');
+}
+function download(name, csv){
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(a.href);},100);
+}
+function exportList(kind){
+  var I=state.issues, rows=[], name='';
+  if(kind==='neg'){
+    name='auditoria_estoque_negativo.csv';
+    rows.push(['CODIGO','DESCRICAO','ESTOQUE_ATUAL','CUSTO','VALOR_NEGATIVO','EMBALAGEM','EAN','GRUPO']);
+    I.neg.slice().sort(function(a,b){return a._flags.neg.saldo-b._flags.neg.saldo;}).forEach(function(r){ rows.push([r.codigo,r.descricao,r._flags.neg.saldo,r.custo, r._flags.neg.valor!=null?r._flags.neg.valor.toFixed(2):'', r.embalagem, r.ean, r.grupo]); });
+  }else if(kind==='fator'){
+    name='auditoria_fator_conversao.csv';
+    rows.push(['CODIGO','DESCRICAO','EMBALAGEM','QTDE_EMBALAGEM','SEVERIDADE','EAN','GRUPO']);
+    I.fator.forEach(function(r){ rows.push([r.codigo,r.descricao,r.embalagem,r._flags.fator.valor, r._flags.fator.hi?'ALTA':'media', r.ean, r.grupo]); });
+  }else if(kind==='ean'){
+    name='auditoria_ean.csv';
+    rows.push(['CODIGO','DESCRICAO','EAN','PROBLEMA','GRUPO']);
+    I.ean.forEach(function(r){ rows.push([r.codigo,r.descricao,r.ean,r._flags.ean,r.grupo]); });
+  }else if(kind==='dup'){
+    name='auditoria_descricoes_duplicadas.csv';
+    rows.push(['CODIGO','DESCRICAO','QTDE_CODIGOS_IGUAIS','POSSIVEL_TRUNCAMENTO','EAN','GRUPO']);
+    I.dup.slice().sort(function(a,b){return a._descNorm<b._descNorm?-1:1;}).forEach(function(r){ rows.push([r.codigo,r.descricao,r._flags.dup.qtd, r._flags.dup.trunc?'SIM':'nao', r.ean, r.grupo]); });
+  }else if(kind==='orf'){
+    name='auditoria_sem_codigo_fabrica.csv';
+    rows.push(['CODIGO','DESCRICAO','EAN','GRUPO']);
+    I.orf.forEach(function(r){ rows.push([r.codigo,r.descricao,r.ean,r.grupo]); });
+  }
+  if(rows.length<2){ toast('Nada para exportar nessa lista.'); return; }
+  download(name, toCSV(rows));
+  toast('Exportado: '+name);
+}
+
+/* ==================== TELAS ==================== */
+function screenImport(){
+  el('screen').innerHTML =
+  '<div class="banner">Carregue o <b>cadastro de produtos</b> (com EAN) exportado do Ecocentauro. A auditoria roda no seu aparelho — <b>nada é enviado ou gravado</b>.</div>'+
+  '<div class="card" style="padding:16px">'+
+    '<div class="drop" id="drop">'+
+      '<div class="ico">📄</div>'+
+      '<h2>Escolher arquivo</h2>'+
+      '<p>CSV ou HTML exportado do Ecocentauro<br>(toque para selecionar ou arraste aqui)</p>'+
+    '</div>'+
+    '<input type="file" id="file" accept=".csv,.txt,.html,.htm,text/csv,text/html" style="display:none">'+
+    '<div class="orr">ou</div>'+
+    '<button class="btn ghost block" id="demo">▶︎ Ver exemplo (fornecedor ARCO ÍRIS)</button>'+
+    '<div class="hint">A ferramenta identifica sozinha as colunas do arquivo (código, descrição, EAN, embalagem, fator de conversão…). Se algo não bater, você ajusta na próxima tela antes de rodar.</div>'+
+  '</div>';
+  var drop=el('drop'), file=el('file');
+  drop.onclick=function(){file.click();};
+  file.onchange=function(){ if(file.files[0]) loadFile(file.files[0]); };
+  ['dragover','dragenter'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.add('over');});});
+  ['dragleave','drop'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.remove('over');});});
+  drop.addEventListener('drop',function(e){ if(e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); });
+  el('demo').onclick=loadDemo;
+}
+function loadFile(f){ readFile(f,function(txt){ ingest(txt, f.name); }); }
+
+function screenMapping(){
+  var m=state.mapping, missing=REQUIRED.filter(function(f){return m[f]==null;});
+  var opts=function(sel){ var o='<option value="">— não usar —</option>'; state.headers.forEach(function(h,i){ o+='<option value="'+i+'"'+(sel===i?' selected':'')+'>'+esc(h)+'</option>'; }); return o; };
+  var rows=FIELD_ORDER.map(function(f){
+    var i=m[f], has=(i!=null);
+    return '<div class="maprow"><b>'+FIELDS[f].label+(REQUIRED.indexOf(f)>=0?' *':'')+'</b>'+
+      '<span style="display:flex;gap:8px;align-items:center">'+
+      '<select class="remap" data-f="'+f+'">'+opts(has?i:'')+'</select>'+
+      (has?'<span class="pill ok">ok</span>':'<span class="pill no">?</span>')+
+      '</span></div>';
+  }).join('');
+  el('screen').innerHTML =
+    '<div class="banner">Li <b>'+state.rawrows.length+'</b> linhas. Confira o encaixe das colunas abaixo. Campos com <b>*</b> são obrigatórios.</div>'+
+    (missing.length? '<div class="banner warn">Faltou identificar: <b>'+missing.map(function(f){return FIELDS[f].label;}).join(', ')+'</b>. Selecione a coluna certa antes de continuar.</div>':'')+
+    '<div class="card" style="padding:14px 16px">'+rows+'</div>'+
+    '<div style="display:flex;gap:10px;margin-top:14px">'+
+      '<button class="btn ghost" id="voltar">← Trocar arquivo</button>'+
+      '<button class="btn primary block" id="rodar">Rodar auditoria →</button>'+
+    '</div>';
+  Array.prototype.forEach.call(document.querySelectorAll('.remap'),function(s){
+    s.onchange=function(){ var f=s.getAttribute('data-f'); state.mapping[f]= s.value===''?null:+s.value; screenMapping(); };
+  });
+  el('voltar').onclick=screenImport;
+  el('rodar').onclick=function(){
+    var miss=REQUIRED.filter(function(f){return state.mapping[f]==null;});
+    if(miss.length){ toast('Defina: '+miss.map(function(f){return FIELDS[f].label;}).join(', ')); return; }
+    buildRecords(); analyze(); state.filter='todos'; state.search=''; state.grupo=''; screenReport();
+  };
+}
+
+function screenReport(){
+  var I=state.issues, c=I.counts;
+  var grupos=Array.from(new Set(state.records.map(function(r){return r.grupo;}).filter(Boolean))).sort();
+  var tile=function(key,cls,n,label,dot){
+    return '<button class="tile '+cls+(state.filter===key?' on':'')+'" data-k="'+key+'">'+
+      (dot?'<span class="dot">'+dot+'</span>':'')+
+      '<div class="n">'+n+'</div><div class="l">'+label+'</div></button>';
+  };
+  var temEstoque = state.mapping.estoque!=null;
+  var html=
+    '<div class="tiles">'+
+      tile('todos','total',c.total,'Itens no cadastro','')+
+      (temEstoque? tile('neg', c.neg?'bad':'good', c.neg, 'Estoque negativo'+(c.negValor!=null?' · R$ '+fmtMoney(c.negValor):''), c.neg?'⛔':'✅') : '')+
+      tile('ean', c.ean?'bad':'good', c.ean, 'Problemas de EAN', c.ean?'⛔':'✅')+
+      tile('fator', c.fator?'warn':'good', c.fator, 'Fator ≠ 1'+(c.fatorHi?' ('+c.fatorHi+' grave)':''), c.fator?'⚠️':'✅')+
+      tile('dup', c.dup?'warn':'good', c.dup, 'Descrições duplicadas', c.dup?'⚠️':'✅')+
+      tile('orf', c.orf?'warn':'good', c.orf, 'Sem cód. de fábrica', c.orf?'⚠️':'✅')+
+    '</div>';
+
+  // barra de exportação (contextual ao filtro)
+  html+='<div class="exportbar">';
+  if(temEstoque) html+='<button class="btn ghost sm" data-x="neg">⬇︎ Negativos</button>';
+  html+='<button class="btn ghost sm" data-x="fator">⬇︎ Fator ≠ 1 (corrigir 1º)</button>';
+  html+='<button class="btn ghost sm" data-x="ean">⬇︎ EAN</button>';
+  html+='<button class="btn ghost sm" data-x="dup">⬇︎ Duplicadas</button>';
+  html+='<button class="btn ghost sm" data-x="orf">⬇︎ Sem cód. fábrica</button>';
+  html+='</div>';
+
+  // toolbar
+  html+='<div class="toolbar">'+
+    '<input class="search" id="q" placeholder="Buscar código ou descrição…" value="'+esc(state.search)+'">'+
+    (grupos.length? '<select class="remap" id="gsel" style="max-width:180px"><option value="">Todos os grupos</option>'+grupos.map(function(g){return '<option value="'+esc(g)+'"'+(state.grupo===g?' selected':'')+'>'+esc(g)+'</option>';}).join('')+'</select>':'')+
+    '</div>';
+
+  html+='<div id="list"></div>';
+  el('screen').innerHTML=
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'+
+      '<div style="font-size:13px;font-weight:800;color:var(--brand-d)">Relatório da auditoria</div>'+
+      '<button class="btn ghost sm" id="novo">Novo arquivo</button>'+
+    '</div>'+ html;
+
+  Array.prototype.forEach.call(document.querySelectorAll('.tile'),function(t){ t.onclick=function(){ state.filter=t.getAttribute('data-k'); screenReport(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-x]'),function(b){ b.onclick=function(){ exportList(b.getAttribute('data-x')); }; });
+  el('novo').onclick=screenImport;
+  var q=el('q'); q.oninput=function(){ state.search=q.value; renderList(); };
+  if(el('gsel')) el('gsel').onchange=function(){ state.grupo=el('gsel').value; renderList(); };
+  renderList();
+}
+
+function renderList(){
+  var I=state.issues, f=state.filter, q=collapse(state.search).toUpperCase(), g=state.grupo;
+  var pool;
+  if(f==='ean') pool=I.ean; else if(f==='fator') pool=I.fator; else if(f==='dup') pool=I.dup; else if(f==='orf') pool=I.orf; else if(f==='neg') pool=I.neg;
+  else pool=state.records.filter(function(r){ return r._flags && (r._flags.ean||r._flags.fator||r._flags.dup||r._flags.orf||r._flags.neg); });
+  var titleMap={todos:'Itens com algum apontamento', ean:'Problemas de EAN', fator:'Fator de conversão ≠ 1', dup:'Descrições duplicadas', orf:'Sem código de fábrica', neg:'Estoque negativo'};
+
+  var filtered=pool.filter(function(r){
+    if(g && r.grupo!==g) return false;
+    if(q){ if((r.codigo+' '+r.descricao).toUpperCase().indexOf(q)<0) return false; }
+    return true;
+  });
+
+  var host=el('list');
+  if(!filtered.length){
+    host.innerHTML='<div class="empty"><div class="ico">'+(pool.length?'🔎':'🎉')+'</div><p>'+(pool.length?'Nenhum item bate com o filtro/busca.':'Nenhum apontamento aqui. Cadastro íntegro nesse quesito!')+'</p></div>';
+    return;
+  }
+  var cap=400, show=filtered.slice(0,cap);
+  var out='<div class="itemhdr"><div class="t">'+titleMap[f]+' · '+filtered.length+' '+(filtered.length===1?'item':'itens')+'</div></div>';
+  out+=show.map(function(r){ return itemCard(r); }).join('');
+  if(filtered.length>cap) out+='<div class="empty" style="padding:16px"><p>Mostrando os primeiros '+cap+' de '+filtered.length+'. Use a busca para refinar — o CSV exporta todos.</p></div>';
+  host.innerHTML=out;
+}
+
+function itemCard(r){
+  var b='';
+  if(r._flags.neg){ var ng=r._flags.neg; b+='<span class="bdg neg">Negativo: '+ng.saldo+(ng.valor!=null?' · R$ '+fmtMoney(ng.valor):'')+'</span>'; }
+  if(r._flags.fator){ var fa=r._flags.fator; b+='<span class="bdg '+(fa.hi?'fatorhi':'fator')+'">Fator '+fa.valor+(fa.hi?' · GRAVE ('+esc(fa.emb||'UN')+')':'')+'</span>'; }
+  if(r._flags.ean){ b+='<span class="bdg ean">'+esc(r._flags.ean)+'</span>'; }
+  if(r._flags.dup){ b+='<span class="bdg dup">Descrição repetida ×'+r._flags.dup.qtd+'</span>'; if(r._flags.dup.trunc) b+='<span class="bdg trunc">possível truncamento</span>'; }
+  if(r._flags.orf){ b+='<span class="bdg orf">Sem cód. fábrica</span>'; }
+  var meta=[];
+  if(r.marca) meta.push('Marca: '+esc(r.marca));
+  if(r.embalagem) meta.push('Emb: '+esc(r.embalagem));
+  if(r.ean) meta.push('EAN: '+esc(r.ean));
+  if(r.grupo) meta.push('Grupo: '+esc(r.grupo));
+  return '<div class="item">'+
+    '<div class="top1"><span class="cod">'+esc(r.codigo||'—')+'</span><span class="desc">'+esc(r.descricao||'(sem descrição)')+'</span></div>'+
+    (meta.length?'<div class="meta">'+meta.map(function(m){return '<span>'+m+'</span>';}).join('')+'</div>':'')+
+    '<div class="badges">'+b+'</div>'+
+  '</div>';
+}
+
+/* ==================== EXEMPLO (ARCO ÍRIS) ==================== */
+function mkEAN(prefix12){ return prefix12 + eanCheckDigit(prefix12); } // gera EAN-13 válido
+function loadDemo(){
+  // prefixo GS1 7896226 (briefing) + 5 dígitos únicos por código => EAN-13 válido e sem colisão
+  function ean(n){ var tail=String(n).replace(/\D/g,'').padStart(6,'0').slice(-5); return mkEAN('7896226'+tail); }
+  // gera um EAN com dígito verificador ERRADO de propósito (para demonstrar a checagem)
+  function eanBroken(n){ var v=ean(n); return v.slice(0,12) + String((+v[12]+1)%10); }
+  // colunas = as reais do Ecocentauro (inclui a armadilha "Grupo de ICMS" antes do grupo do produto)
+  var d=[
+    // fator de conversão problemático (o achado principal do briefing)
+    ['002932','ESSENCIA PISTACHE 30 ML','ARCO IRIS','ARC2932','UN','12', ean('002932'),'1.440','5,00','TRIBUTADO','003 ESSENCIAS'],
+    ['002933','ESSENCIA PISTACHE 960 ML','ARCO IRIS','ARC2933','UN','6',  ean('002933'),'0','40,00','TRIBUTADO','003 ESSENCIAS'],
+    // negativo do briefing
+    ['000074','CORANTE LIQUIGEL AZUL ROYAL 30G','ARCO IRIS','ARC0074','UN','1', ean('000074'),'-3','8,50','TRIBUTADO','003 ESSENCIAS'],
+    // grupo 004 "DIVERSOS": descrições idênticas (fusão) + negativos + sem cód. fábrica
+    ['004101','DIVERSOS','','','UN','1', ean('004101'),'-5','3,00','ISENTO','004 ARTIGOS FESTA E SAZONAIS'],
+    ['004102','DIVERSOS','','','UN','1', ean('004102'),'-2','3,00','ISENTO','004 ARTIGOS FESTA E SAZONAIS'],
+    ['004103','DIVERSOS','','','UN','1', ean('004103'),'0','3,00','ISENTO','004 ARTIGOS FESTA E SAZONAIS'],
+    // itens normais, EAN íntegro
+    ['001010','CONFEITO GRANULADO CHOCOLATE 500G','ARCO IRIS','ARC1010','PC','1', ean('001010'),'25','12,00','TRIBUTADO','001 CONFEITARIA'],
+    ['001011','CONFEITO MICANGA COLORIDA 500G','ARCO IRIS','ARC1011','PC','1', ean('001011'),'8','10,00','TRIBUTADO','001 CONFEITARIA'],
+    ['001012','PASTA AMERICANA BRANCA 1KG','ARCO IRIS','ARC1012','UN','1', ean('001012'),'4','18,00','TRIBUTADO','001 CONFEITARIA'],
+    // cadastros órfãos (sem código de fábrica)
+    ['009001','FORMA PAPEL N4 BRANCA','','','CX','1', ean('009001'),'0','','ISENTO','004 ARTIGOS FESTA E SAZONAIS'],
+    ['009002','VELA NUMERO 5 DOURADA','','','UN','1', ean('009002'),'0','','ISENTO','004 ARTIGOS FESTA E SAZONAIS'],
+    // EAN quebrado de propósito, só pra demonstrar a checagem (o ARCO IRIS real tinha 0)
+    ['001099','ACUCAR CRISTAL REFINADO 1KG','ARCO IRIS','ARC1099','UN','1',eanBroken('001099'),'10','5,00','TRIBUTADO','001 CONFEITARIA']
+  ];
+  state.headers=['CODIGOPRODUTO','DESCRICAOPRODUTO','DESCMARCA','CODIGOFABRICA','EMBALAGEM','QTDEEMBALAGEM','CODIGOBARRA','ESTOQUEATUAL','CUSTOFINAL','Grupo de ICMS','DESCRICAOGRUPO'];
+  state.rawrows=d;
+  state.mapping=autoMap(state.headers);
+  buildRecords(); analyze(); state.filter='todos'; state.search=''; state.grupo='';
+  screenReport();
+  toast('Exemplo carregado (12 itens estilo ARCO ÍRIS)');
+}
+
+/* boot */
+screenImport();
+</script>
+</body>
+</html>

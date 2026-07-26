@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1E4E79">
+<title>Inventário — Loja do Sorveteiro e Confeiteiro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--brand:#1E4E79;--brand-d:#12395c;--brand-l:#E9F1F8;--ok:#1E7A54;--ok-l:#E4F3EC;--par:#B45309;--par-l:#FBF0E0;--falta:#B42318;--falta-l:#FBEBE9;--ink:#1B2430;--mut:#69707E;--line:#E3E7EC;--bg:#F4F6F9;--card:#fff;--radius:14px;--shadow:0 1px 3px rgba(27,36,48,.07),0 6px 18px rgba(27,36,48,.05);}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45;font-size:16px}
+  .app{max-width:520px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative}
+  .top{position:sticky;top:0;z-index:20;background:linear-gradient(135deg,#1B2430 0%,#1E4E79 100%);color:#fff;padding:16px}
+  .top .row{display:flex;align-items:center;gap:12px}
+  .brand-badge{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:24px;flex:0 0 auto}
+  .top h1{font-size:16px;margin:0;font-weight:800}.top .sub{font-size:12px;opacity:.85;margin-top:1px}
+  .wrap{padding:16px}
+  .muted{color:var(--mut)}
+  .lead{font-size:13px;color:var(--mut);margin:2px 0 16px}
+  .mod{display:flex;flex-direction:column;gap:14px}
+  .modcard{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:18px;display:flex;gap:14px;align-items:flex-start;text-decoration:none;color:inherit;position:relative}
+  .modcard.on{cursor:pointer}
+  .modcard.off{opacity:.62}
+  .modcard .e{font-size:30px;flex:0 0 auto;line-height:1}
+  .modcard h3{margin:0 0 3px;font-size:17px;font-weight:800}
+  .modcard p{margin:0;font-size:13px;color:var(--mut)}
+  .tag{position:absolute;top:14px;right:14px;font-size:10px;font-weight:800;letter-spacing:.4px;padding:4px 9px;border-radius:999px}
+  .tag.ativo{background:var(--ok-l);color:var(--ok)}
+  .tag.breve{background:#eef0f4;color:var(--mut)}
+  .step{font-size:11px;font-weight:800;color:var(--brand);letter-spacing:.5px;margin-bottom:4px}
+  .foot{padding:20px 16px;text-align:center;font-size:12px;color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="row">
+      <div class="brand-badge">📦</div>
+      <div>
+        <h1>Inventário Cíclico</h1>
+        <div class="sub">Loja do Sorveteiro e Confeiteiro</div>
+      </div>
+    </div>
+  </div>
+  <div class="wrap">
+    <p class="lead">Ferramentas para organizar o estoque por ciclo de compra. Comece pela <b>auditoria de cadastro</b> — ela aponta o que precisa ser corrigido <b>antes</b> de qualquer contagem.</p>
+    <div class="mod">
+
+      <a class="modcard on" href="auditoria.html">
+        <div class="e">🔍</div>
+        <div>
+          <div class="step">MÓDULO A · COMECE AQUI</div>
+          <h3>Auditoria de cadastro</h3>
+          <p>Carregue o cadastro (com EAN) e encontre EANs inválidos, fatores de conversão errados, descrições duplicadas e cadastros órfãos.</p>
+        </div>
+        <span class="tag ativo">ATIVO</span>
+      </a>
+
+      <a class="modcard on" href="coletor.html">
+        <div class="e">📲</div>
+        <div>
+          <div class="step">MÓDULO B</div>
+          <h3>Coletor de contagem</h3>
+          <p>Painel por fornecedor com portão (só conta depois de validar os produtos). Contagem cega, 3 rodadas com usuários diferentes, PIN e relatório PDF/CSV.</p>
+        </div>
+        <span class="tag ativo">ATIVO</span>
+      </a>
+
+      <div class="modcard off">
+        <div class="e">📥</div>
+        <div>
+          <div class="step">MÓDULO C</div>
+          <h3>Conferência de recebimento</h3>
+          <p>Registro de quem conferiu a NF, avarias e faltas, vinculado ao inventário do fornecedor.</p>
+        </div>
+        <span class="tag breve">EM BREVE</span>
+      </div>
+
+    </div>
+  </div>
+  <div class="foot">Lourenço &amp; Monteiro Ltda · Grupo Uoma</div>
+</div>
+</body>
+</html>
