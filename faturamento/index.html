@@ -2499,12 +2499,35 @@ function syncStart(){if(!syncOn())return;syncPull(true);clearInterval(SYNC.timer
 // reconecta e reenvia sozinho quando a rede volta; marca offline quando cai
 window.addEventListener('online',()=>{state.online=true;netRefresh();if(syncOn())flushQueue().then(()=>{netRefresh();syncPull(true);});});
 window.addEventListener('offline',()=>{state.online=false;netRefresh();});
+/* ===== Login único vindo do portal (mesma origem, dentro de iframe) ===== */
+function _portalApplyAuth(d){try{
+  var perm=(d&&d.perm)||{};
+  state.acesso={nome:String((d&&d.nome)||'Portal'),pin:'',ativo:true,perm:perm};
+  state.conferente=state.acesso.nome;
+  state.metaRole=perm.metasRole||'';
+  try{state.metaMes=METAS.mesAtual;}catch(e){}
+  try{persistLocal();}catch(e){}
+  if(d.screen==='admin'&&perm.admin){state.area='ADMIN';screenAdmin();return;}
+  if(d.screen==='metas'&&perm.metas){screenMetas();return;}
+  screenAreaPick();
+}catch(e){try{screenLogin();}catch(_){}}}
+window.addEventListener('message',function(e){try{
+  if(e.origin!==location.origin)return;                 // só aceita da mesma casa (o portal)
+  var d=e.data;if(!d||typeof d!=='object'||d.type!=='uoma-portal-auth')return;
+  _portalApplyAuth(d);
+}catch(err){}});
 try{
   restoreLocal();                       // 01 \u2014 restaura a confer\u00eancia em andamento salva no aparelho
   if(syncOn())syncStart();              // se j\u00e1 tinha planilha ligada, volta a sincronizar
   netRefresh();
   // sempre come\u00e7a no login (respeita a Central de Acesso; nada de cair direto numa \u00e1rea)
-  state.area='';state.acesso=null;screenLogin();
+  state.area='';state.acesso=null;
+  if(window.parent&&window.parent!==window){
+    // embutido no portal: pede a identidade e espera o login \u00fanico (com fallback pro PIN)
+    var _sc=document.getElementById('screen'); if(_sc)_sc.innerHTML='<div style="max-width:420px;margin:60px auto;text-align:center;color:#5b6470;font-family:sans-serif"><div style="font-size:34px">\ud83d\udd10</div><p>Entrando pelo portal\u2026</p></div>';
+    try{window.parent.postMessage({type:'uoma-fat-ready'},location.origin);}catch(e){}
+    setTimeout(function(){if(!state.acesso)screenLogin();},2500);
+  } else { screenLogin(); }
 }
 catch(err){ var sc=document.getElementById('screen'); if(sc)sc.innerHTML='<div style="max-width:520px;margin:40px auto;padding:0 20px;text-align:center;font-family:sans-serif;color:#a01414"><div style="font-size:40px">\u26a0\ufe0f</div><h2>Ops, algo n\u00e3o carregou</h2><p style="color:#5b6470;font-size:14px">Tente recarregar a p\u00e1gina. Se persistir, me mande este aviso:</p><pre style="white-space:pre-wrap;text-align:left;background:#f6f6f8;padding:12px;border-radius:8px;font-size:12px;color:#333">'+String(err&&err.message||err)+'</pre></div>'; }
 </script>
