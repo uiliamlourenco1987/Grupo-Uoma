@@ -1,5 +1,5 @@
 # 📘 Manual de Bolso — Portal Grupo Uoma
-### Estado: **v3.3** · 26/07/2026 · a fonte da verdade pra continuar daqui
+### Estado: **v3.4** · 27/07/2026 · a fonte da verdade pra continuar daqui
 
 Portal único do colaborador do **Grupo Uoma** (Loja do Sorveteiro e Confeiteiro · Padoquinha · Merenda Certa), evoluindo pra **ERP do grupo**. Login único, modular, um app.
 
@@ -48,6 +48,9 @@ Uma **porta única**: cada pessoa loga uma vez e vê **só o que o perfil dela p
 | **Acessos** | Perfil + empresas + permissão por módulo; **＋ Novo colaborador** (cria login) | Só diretoria |
 | **Campanhas** | Ver + **criar/editar/excluir** + **encarte PDF** (grava no banco do faturamento) | Ver: liberados · Editar: diretoria ou permissão |
 | **Estoque** | Painel de inventário (`inv_ciclo`) + **coletor completo embutido** | Liberados |
+| **Metas de vendas** | Resumo: meta × realizado por vendedor (equipe ext/int) + KPIs. *Leitura* | Liberados |
+| **Faturamento** | Resumo: KPIs + financeiro (a receber/vencido/trânsito) + top vendedores. *Leitura* | Liberados |
+| **Separação** | Resumo: últimas separações enviadas (ok/parcial/falta), tabela `enviadas`. *Leitura* | Liberados |
 | **🚨 Erro Zero** | Problema urgente → chega direto na diretoria; **abrir/anotar/status** (Novo→Análise→Resolvido); alerta na tela conta os não resolvidos | Reporta: colaborador (empresa+setor) e cliente (contato.html) · Gerencia: diretoria |
 | **💡 Soluções** | Kanban de ideias/melhorias (Recebida→Análise→Ajuste→Aprovada→Implantada→Descartada) + parecer + premiada | Envia/acompanha: todos · Gerencia: diretoria ou permissão "Soluções" |
 | **💬 Fale com a diretoria** | Bate-papo direto | Todos |
@@ -159,12 +162,14 @@ with check (is_diretoria() and id <> (select id from auth.users where email='uil
 3. **Login por PIN** — usar `colaboradores.senha` (PIN) pro colaborador comum entrar sem e-mail/senha.
 4. **Minha avaliação** na home — ligar aos dados reais (`aval_scores`) em vez de exemplo.
 5. **Sub-permissões finas** por módulo (ex.: no Faturamento, "ver só as vendas") conforme cada módulo amadurece.
+5b. **Metas/Faturamento completos** — hoje são *resumos de leitura* (meta×realizado, vendas, financeiro, separações enviadas). Falta trazer o **detalhe** (bônus, inadimplência, mix, positivação) e a **edição** (planejar metas, lançar) — porta o motor `metasCalc` do faturamento, com sua revisão (mexe em número de bônus).
 6. Texto oficial da apresentação da **Merenda Certa** (hoje provisório).
 7. Revisar a view `aval_media_empresa` (aviso SECURITY DEFINER).
 
 ---
 
 ## 10. Histórico de versões
+- **v3.4** — Metas, Faturamento e Separação no portal (resumos de leitura)
 - **v3.3** — Erro Zero: abrir, anotar e classificar (Novo/Análise/Resolvido)
 - **v3.2** — Setores da planilha real do RH (função segura)
 - **v3.1** — Setores em lista + pré-cadastro em massa
