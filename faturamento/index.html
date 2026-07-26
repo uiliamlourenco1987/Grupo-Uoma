@@ -765,7 +765,7 @@ function askConfirm(msg,onYes,yesLabel){const ov=document.createElement('div');o
   ov.querySelector('#cf_yes').onclick=()=>{ov.remove();onYes&&onYes();};}
 // pede o PIN da pessoa antes de enviar ao faturamento (assinatura). Sem PIN cadastrado -> não trava.
 function askPin(onOk){const pin=(state.acesso&&state.acesso.pin)?String(state.acesso.pin):'';
-  if(!pin){onOk&&onOk();return;}
+  if(!pin){askConfirm('Você não tem <b>PIN de separação</b> cadastrado — sem ele não dá pra enviar ao faturamento. Peça à diretoria pra cadastrar o seu PIN.','',' Entendi');return;}
   const ov=document.createElement('div');ov.className='overlay';
   ov.innerHTML=`<div class="sheet"><h3>🔐 Confirmar envio</h3><p class="muted" style="font-size:13px;margin:0 0 12px">Digite seu PIN para enviar ao faturamento (${esc(state.conferente||'')}).</p>
     <input class="input" id="sp_pin" inputmode="numeric" maxlength="6" placeholder="PIN" style="text-align:center;letter-spacing:6px;font-size:22px">
