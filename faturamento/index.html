@@ -685,7 +685,7 @@ const ORDERS=[
      it("000830","CHOCO POWER MICRO BALL BRANCO 300G - MAVALERIO","MAVALERIO","UN/1",5)]}]}
 ];
 
-let state={conferente:null,area:null,online:true,byOrder:{},current:null,view:null,tab:'geral',sent:[],sentAreaKeys:new Set(),dtDe:'',dtAte:'',logs:{}};
+let state={conferente:null,area:null,online:true,byOrder:{},current:null,view:null,tab:'geral',sent:[],sentAreaKeys:new Set(),dtDe:'',dtAte:'',logs:{},sentShowAll:false};
 ORDERS.forEach(o=>{o.grupos.forEach(g=>g.itens.forEach(i=>i._local=g.local));
   state.byOrder[o.numero]={};o.grupos.forEach(g=>g.itens.forEach(i=>{state.byOrder[o.numero][i.c]={status:null,qtd:null,sub:null,conferente:null,at:null,areaConf:null,lojaResp:null};}));});
 function seed(n,c,p){Object.assign(state.byOrder[n][c],p);}
@@ -1930,7 +1930,8 @@ function screenArea(){state.view='area';mskin(false);state.current=null;setW('op
   if(state.tab==='geral'){const a=$('#area');a.addEventListener('click',onConfClick);a.addEventListener('input',onConfInput);
     workRows(state.area).forEach(r=>{const e=estate(r.o,r.it.c,r.scope);if(state.area==='LOJA'&&e.status&&e.status!=='OK')renderSub(r.o,r.it.c,r.scope);});setSendBar();}
   else if(state.tab==='pedidos'){$('#area').querySelectorAll('.oconf').forEach(card=>card.onclick=()=>{state.current=orderByNum(card.dataset.o);screenConf();});setSendBar();}
-  else setBar('');}
+  else setBar('');
+  var _tg=$('#sentToggle');if(_tg)_tg.onclick=function(){state.sentShowAll=!state.sentShowAll;screenArea();};}
 
 function workRows(area){const rows=[];ordersWithArea(area).forEach(o=>workItems(o,area).forEach(w=>rows.push({o,it:w.it,scope:w.scope,solic:w.solic})));return rows;}
 function marcaKey(m){return (m==null?'':String(m)).trim().toUpperCase();}
@@ -1952,11 +1953,12 @@ function groupHTML(grp,scope){const done=grp.rows.filter(r=>estate(r.o,r.it.c,sc
     ${done<grp.rows.length?`<button class="btnsm alltudo" data-prod="${grp.c}" data-scope="${scope}">\u2713 ${scope==='pend'?'A loja tem pra todos':'Tem tudo pra todos'}</button>`:`<div class="tot" style="color:var(--ok);margin-top:8px">\u2713 todos conferidos</div>`}</div>
     <div class="prodkid">${grp.rows.map(r=>itemCard(r.it,r.o,{showClient:true,compact:true,scope:scope,solic:r.solic})).join('')}</div></div>`;}
 function areaStage(o,area){if(isSent(o,area))return'env';const c=countsA(o,area);if(c.tot===0)return'x';if(c.done===0)return'ag';if(c.done<c.tot)return'sep';return'pr';}
-function pedidosHTML(){const A=state.area;const cols={ag:[],sep:[],pr:[],env:[]};
-  ordersWithArea(A).forEach(o=>{const s=areaStage(o,A);if(cols[s])cols[s].push(o);});
+function pedidosHTML(){const A=state.area;const cols={ag:[],sep:[],pr:[],env:[]};const cut=daysAgoKey(2);const showAll=!!state.sentShowAll;var envHidden=0;
+  ordersWithArea(A).forEach(o=>{const s=areaStage(o,A);if(s==='env'&&!showAll){const k=dateKey(sentWhenOf(o.numero,A));if(k&&k<cut){envHidden++;return;}}if(cols[s])cols[s].push(o);});
   const card=o=>{const c=countsA(o,A),other=otherStatusLabel(o,A);return `<div class="kcard oconf" data-o="${o.numero}"><div class="kn2">N\u00ba ${o.numero}</div><h4>${esc(clienteShort(o))}</h4><div class="kc">${c.done}/${c.tot} itens \u00b7 ${o.data}</div>${cardOrigins(o)}${other?`<div class="kc" style="margin-top:4px">${other}</div>`:''}</div>`;};
   const col=(t,arr,cls)=>`<div class="kcol ${cls}"><div class="khdr">${t}<span class="kn">${arr.length}</span></div><div class="kbody">${arr.length?arr.map(o=>card(o)).join(''):emptyKCol()}</div></div>`;
-  return `<div class="banner">\ud83e\uddfe Toque num pedido para conferir. Ele anda da esquerda pra direita conforme voc\u00ea separa.</div>
+  const toggle=showAll?`<button class="link" id="sentToggle" style="display:block;margin:8px 2px 4px">\u25c2 Enviado: mostrar s\u00f3 os \u00faltimos 3 dias</button>`:(envHidden>0?`<button class="link" id="sentToggle" style="display:block;margin:8px 2px 4px">\ud83d\udce4 Enviado mostra os \u00faltimos 3 dias \u00b7 ver todos (${envHidden}) \u2192</button>`:'');
+  return `<div class="banner">\ud83e\uddfe Toque num pedido para conferir. Ele anda da esquerda pra direita conforme voc\u00ea separa.</div>${toggle}
     <div class="kanban">${col('\u23f3 Aguardando',cols.ag,'c1')}${col('\ud83d\udcc2 Em separa\u00e7\u00e3o',cols.sep,'c2')}${col('\u2705 Pronto p/ enviar',cols.pr,'c3')}${col('\ud83d\udce4 Enviado',cols.env,'c4')}</div>`;}
 
 /* ---- Card de item ---- */
@@ -2080,11 +2082,20 @@ function sendSheet(){const area=state.area;const ready=readyOrders(area);const r
   guardClick($('#s_all',ov),()=>{if(!ready.length)return;askPin(()=>{ready.forEach(o=>sendOrder(o,area));ov.remove();toast(ready.length+' enviado(s) \u2713');state.tab='enviadas';screenArea();});});
   $('#s_ind',ov).onclick=()=>{ov.remove();state.tab='pedidos';screenArea();toast('Toque em "Enviar este pedido"');};
   guardClick($('#s_lote',ov),()=>{if(!allMarked)return;askPin(()=>{sendBatch(area);ov.remove();toast('Lote enviado \u2713');state.tab='enviadas';screenArea();});});}
-function enviadasHTML(){const recs=state.sent.filter(r=>r.area===state.area).slice().reverse();
-  if(!recs.length)return `<div class="banner">\ud83d\udce4 As separa\u00e7\u00f5es que voc\u00ea enviar aparecem aqui.</div><div class="card" style="padding:20px;text-align:center;color:var(--mut)">Nada enviado ainda.</div>`;
-  return `<div class="banner">\ud83d\udce4 Separa\u00e7\u00f5es da ${state.area} j\u00e1 enviadas ao faturamento.</div>`+recs.map(r=>r.tipo==='lote'
+function daysAgoKey(n){const d=new Date();d.setDate(d.getDate()-n);const p=x=>String(x).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;}
+function sentWhenOf(numero,area){const N=String(numero);for(let i=0;i<state.sent.length;i++){const r=state.sent[i];if(r.area!==area)continue;if(r.tipo==='lote'){if((r.pedidos||[]).some(p=>String(p.numero)===N))return r.quando;}else if(String(r.numero)===N)return r.quando;}return '';}
+function enviadasHTML(){const all=state.sent.filter(r=>r.area===state.area).slice().reverse();
+  if(!all.length)return `<div class="banner">\ud83d\udce4 As separa\u00e7\u00f5es que voc\u00ea enviar aparecem aqui.</div><div class="card" style="padding:20px;text-align:center;color:var(--mut)">Nada enviado ainda.</div>`;
+  const cut=daysAgoKey(2);const showAll=!!state.sentShowAll;
+  const recs=showAll?all:all.filter(r=>{const k=dateKey(r.quando);return !k||k>=cut;});
+  const hidden=all.length-recs.length;
+  const card=r=>r.tipo==='lote'
     ?`<div class="card ordcard"><div class="h"><span class="num">LOTE DA LISTA</span><span class="stbadge done">Enviada \u2713</span></div><h3>${r.pedidos.length} pedidos \u00b7 ${r.resumo.tot} itens</h3><div class="cli">${r.quando} \u00b7 por ${esc(r.por)}</div><div class="confchips">${r.pedidos.map(p=>`<span class="confchip">N\u00ba ${p.numero}</span>`).join('')}</div></div>`
-    :`<div class="card ordcard"><div class="h"><span class="num">N\u00ba ${r.numero}</span><span class="stbadge done">Enviada \u2713</span></div><h3>${esc(clienteShort2(r.cliente))}</h3><div class="cli">${r.quando} \u00b7 por ${esc(r.por)} \u00b7 ${r.resumo.ok} OK \u00b7 ${r.resumo.par} parcial \u00b7 ${r.resumo.falta} falta</div></div>`).join('');}
+    :`<div class="card ordcard"><div class="h"><span class="num">N\u00ba ${r.numero}</span><span class="stbadge done">Enviada \u2713</span></div><h3>${esc(clienteShort2(r.cliente))}</h3><div class="cli">${r.quando} \u00b7 por ${esc(r.por)} \u00b7 ${r.resumo.ok} OK \u00b7 ${r.resumo.par} parcial \u00b7 ${r.resumo.falta} falta</div></div>`;
+  const head=`<div class="banner">\ud83d\udce4 Separa\u00e7\u00f5es da ${state.area} j\u00e1 enviadas ao faturamento${showAll?'':' \u2014 \u00faltimos 3 dias'}.</div>`;
+  const body=recs.length?recs.map(card).join(''):`<div class="card" style="padding:18px;text-align:center;color:var(--mut)">Nada enviado nos \u00faltimos 3 dias.${hidden?(' <b>'+hidden+'</b> mais antiga(s) guardada(s) \u2014 toque abaixo pra ver.'):''}</div>`;
+  const toggle=showAll?`<button class="link" id="sentToggle" style="display:block;margin:12px auto 0">\u25c2 ver s\u00f3 os \u00faltimos 3 dias</button>`:(hidden>0?`<button class="link" id="sentToggle" style="display:block;margin:12px auto 0">ver todas as enviadas (${hidden} mais antigas) \u2192</button>`:'');
+  return head+body+toggle;}
 
 /* ---- Resumo ---- */
 function screenResumo(){const o=state.current,area=state.area,c=countsA(o,area);setBar('');setW('op');
