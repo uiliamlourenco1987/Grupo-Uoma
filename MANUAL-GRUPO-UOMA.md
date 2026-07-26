@@ -1,5 +1,5 @@
 # 📘 Manual de Bolso — Portal Grupo Uoma
-### Estado: **v3.9** · 27/07/2026 · a fonte da verdade pra continuar daqui
+### Estado: **v4.0** · 27/07/2026 · a fonte da verdade pra continuar daqui
 
 Portal único do colaborador do **Grupo Uoma** (Loja do Sorveteiro e Confeiteiro · Padoquinha · Merenda Certa), evoluindo pra **ERP do grupo**. Login único, modular, um app.
 
@@ -169,6 +169,7 @@ with check (is_diretoria() and id <> (select id from auth.users where email='uil
 ---
 
 ## 10. Histórico de versões
+- **v4.0** — Acesso unificado: permissões POR ÁREA do Faturamento no próprio portal (`permissoes.fat_app`) + login único (abre o app embutido sem PIN, via handshake postMessage mesma-origem)
 - **v3.9** — Portal vira porta única (meio-termo): "Comece por aqui" na home + Faturamento/Separação abrem a ferramenta completa embutida (iframe, padrão Estoque)
 - **v3.8** — Faturamento tela cheia (abas Vendas · Metas editáveis · Financeiro · Separações · Arquivo) + Separação lista completa com romaneio; tudo imprimível
 - **v3.7** — Portal: card "Alimentação de hoje" (diretoria) espelha a Central de Importação
@@ -197,6 +198,14 @@ with check (is_diretoria() and id <> (select id from auth.users where email='uil
 - **v1.4** — Logos por empresa + apagar publicações
 
 ---
+
+### Acesso unificado + login único (v4.0)
+Um cadastro só (o do portal) controla o acesso a tudo, inclusive o que a pessoa vê **dentro** do app de faturamento.
+- **Permissões por área** (portal Acessos → `_fatSecHTML`): cada usuário tem a seção "Faturamento — o que a pessoa vê", salva em `usuarios.permissoes.fat_app` = `{metas:'nao'|'ver'|'fat'|'rh'|'dir', sepAcomp, sepDep, sepLoja, painel, vend, equipe}`. Sem mudança de schema (é jsonb).
+- **Mapeamento**: `buildFatPerm()` traduz `fat_app` → o `perm` que o app entende (`{sep,loja,admin,painel,vend,metas,metasRole,equipe}`). Diretoria = tudo. Fallback: só o módulo `faturamento` ligado → `metas:'ver'` (ou `'fat'` se editar).
+- **Login único (handshake, mesma origem)**: `openFatApp()` no portal responde ao ping `uoma-fat-ready` do iframe com `uoma-portal-auth {nome, perm, screen}`. O app (`_portalApplyAuth`, boot embed-aware) pula o PIN, aplica o `perm` e roteia (área ou deep-link admin/metas). Só aceita `e.origin===location.origin`. Acesso direto ao app (fora do portal) mantém o PIN.
+- **Fonte da verdade dos acessos do app**: agora é o portal (`fat_app`). A "Central de Acesso" interna do app (`METAS.acessos`) continua existindo pra uso direto, mas o portal é o caminho normal.
+- **Importante**: é controle de **tela** (mostra/esconde áreas) — mesmo nível do app hoje. PII sensível (salário/CPF) está no banco do RH, não aqui.
 
 ### Modelo do portal: porta única / hub (v3.9 — decisão do usuário)
 O portal é o **centro que orienta e mostra resumos**; pra **operar** o pesado, ele **abre a ferramenta completa embutida** (iframe), sem sair. Padrão herdado do Estoque (`#estOvl`/`#estColetor`/`#estFrame`, `renderEstoquePainel`).
