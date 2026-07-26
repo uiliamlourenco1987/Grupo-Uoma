@@ -1933,7 +1933,9 @@ function screenArea(){state.view='area';mskin(false);state.current=null;setW('op
   else setBar('');}
 
 function workRows(area){const rows=[];ordersWithArea(area).forEach(o=>workItems(o,area).forEach(w=>rows.push({o,it:w.it,scope:w.scope,solic:w.solic})));return rows;}
-function consolida(rows){const map=new Map();rows.forEach(r=>{const k=r.it.c;if(!map.has(k))map.set(k,{c:r.it.c,d:r.it.d,m:r.it.m,e:r.it.e,total:0,rows:[]});const g=map.get(k);g.total+=r.solic;g.rows.push(r);});const arr=[...map.values()];arr.sort((a,b)=>a.d.localeCompare(b.d));return arr;}
+function marcaKey(m){return (m==null?'':String(m)).trim().toUpperCase();}
+function byMarcaDesc(am,ad,bm,bd){var ka=marcaKey(am),kb=marcaKey(bm);var ea=ka===''?1:0,eb=kb===''?1:0;if(ea!==eb)return ea-eb;if(ka!==kb)return ka<kb?-1:1;return (ad||'').localeCompare(bd||'');}
+function consolida(rows){const map=new Map();rows.forEach(r=>{const k=r.it.c;if(!map.has(k))map.set(k,{c:r.it.c,d:r.it.d,m:r.it.m,e:r.it.e,total:0,rows:[]});const g=map.get(k);g.total+=r.solic;g.rows.push(r);});const arr=[...map.values()];arr.sort((a,b)=>byMarcaDesc(a.m,a.d,b.m,b.d));return arr;}
 function geralHTML(){const rows=workRows(state.area);const own=rows.filter(r=>r.scope==='own');const pend=rows.filter(r=>r.scope==='pend');
   const done=rows.filter(r=>estate(r.o,r.it.c,r.scope).status).length;
   let html=`<div class="banner">\ud83d\udccb ${state.area==='DEP\u00d3SITO'?'Tudo o que o dep\u00f3sito precisa separar hoje \u2014 cada produto somado, clientes por dentro.':'Itens da loja + o que o dep\u00f3sito repassou pra voc\u00ea verificar.'}</div>
@@ -2032,6 +2034,7 @@ function updateBar(){const o=state.current,c=countsA(o,state.area);setBar(`<butt
 /* ---- Confer\u00eancia por pedido ---- */
 function screenConf(){const o=state.current,area=state.area,c=countsA(o,area);state.view='conf';mskin(false);setW('op');
   const rows=workItems(o,area);const own=rows.filter(r=>r.scope==='own');const pend=rows.filter(r=>r.scope==='pend');
+  const smk=(a,b)=>byMarcaDesc(a.it.m,a.it.d,b.it.m,b.it.d);own.sort(smk);pend.sort(smk);
   $('#screen').innerHTML=`<div class="wrap" id="conf"><button class="link" id="voltar" style="margin-bottom:8px">\u25c2 voltar</button>
     <div class="card ordhead" style="padding:14px 16px"><div class="num">N\u00ba ${o.numero} \u00b7 ${area}</div><h2 style="font-size:16px;margin:2px 0 6px">${esc(o.cliente)}</h2>
       ${otherStatusLabel(o,area)?`<div class="otherline" style="margin:0 0 8px">${otherStatusLabel(o,area)}</div>`:''}
