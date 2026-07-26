@@ -763,6 +763,18 @@ function askConfirm(msg,onYes,yesLabel){const ov=document.createElement('div');o
   document.body.appendChild(ov);
   ov.querySelector('#cf_no').onclick=()=>ov.remove();
   ov.querySelector('#cf_yes').onclick=()=>{ov.remove();onYes&&onYes();};}
+// pede o PIN da pessoa antes de enviar ao faturamento (assinatura). Sem PIN cadastrado -> não trava.
+function askPin(onOk){const pin=(state.acesso&&state.acesso.pin)?String(state.acesso.pin):'';
+  if(!pin){onOk&&onOk();return;}
+  const ov=document.createElement('div');ov.className='overlay';
+  ov.innerHTML=`<div class="sheet"><h3>🔐 Confirmar envio</h3><p class="muted" style="font-size:13px;margin:0 0 12px">Digite seu PIN para enviar ao faturamento (${esc(state.conferente||'')}).</p>
+    <input class="input" id="sp_pin" inputmode="numeric" maxlength="6" placeholder="PIN" style="text-align:center;letter-spacing:6px;font-size:22px">
+    <div style="display:flex;gap:10px;margin-top:14px"><button class="btn ghost" id="sp_no">Cancelar</button><button class="btn primary" id="sp_ok">Confirmar envio</button></div></div>`;
+  document.body.appendChild(ov);const inp=ov.querySelector('#sp_pin');setTimeout(()=>{try{inp.focus();}catch(e){}},60);
+  const go=()=>{if(String(inp.value.trim())!==pin){toast('PIN incorreto');inp.value='';try{inp.focus();}catch(e){}return;}ov.remove();onOk&&onOk();};
+  ov.querySelector('#sp_no').onclick=()=>ov.remove();
+  ov.querySelector('#sp_ok').onclick=go;
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')go();});}
 // trava duplo-clique: desabilita o bot\u00e3o enquanto a a\u00e7\u00e3o roda
 function guardClick(el,fn){if(!el)return;el.onclick=(ev)=>{if(el._busy)return;el._busy=true;el.disabled=true;
   Promise.resolve().then(()=>fn(ev)).finally(()=>{el._busy=false;if(document.body.contains(el))el.disabled=false;});};}
@@ -2062,9 +2074,9 @@ function sendSheet(){const area=state.area;const ready=readyOrders(area);const r
     <button class="btnsend" id="s_lote" ${allMarked?'':'disabled'}><b>\ud83d\udccb Pela lista de separa\u00e7\u00e3o</b><small>${allMarked?'envia a lista inteira como um lote \u00fanico':'faltam itens sem marcar na lista'}</small></button>
     <button class="btn ghost" id="s_cancel" style="margin-top:6px">Cancelar</button></div>`;
   document.body.appendChild(ov);$('#s_cancel',ov).onclick=()=>ov.remove();
-  guardClick($('#s_all',ov),()=>{if(!ready.length)return;ready.forEach(o=>sendOrder(o,area));ov.remove();toast(ready.length+' enviado(s) \u2713');state.tab='enviadas';screenArea();});
+  guardClick($('#s_all',ov),()=>{if(!ready.length)return;askPin(()=>{ready.forEach(o=>sendOrder(o,area));ov.remove();toast(ready.length+' enviado(s) \u2713');state.tab='enviadas';screenArea();});});
   $('#s_ind',ov).onclick=()=>{ov.remove();state.tab='pedidos';screenArea();toast('Toque em "Enviar este pedido"');};
-  guardClick($('#s_lote',ov),()=>{if(!allMarked)return;sendBatch(area);ov.remove();toast('Lote enviado \u2713');state.tab='enviadas';screenArea();});}
+  guardClick($('#s_lote',ov),()=>{if(!allMarked)return;askPin(()=>{sendBatch(area);ov.remove();toast('Lote enviado \u2713');state.tab='enviadas';screenArea();});});}
 function enviadasHTML(){const recs=state.sent.filter(r=>r.area===state.area).slice().reverse();
   if(!recs.length)return `<div class="banner">\ud83d\udce4 As separa\u00e7\u00f5es que voc\u00ea enviar aparecem aqui.</div><div class="card" style="padding:20px;text-align:center;color:var(--mut)">Nada enviado ainda.</div>`;
   return `<div class="banner">\ud83d\udce4 Separa\u00e7\u00f5es da ${state.area} j\u00e1 enviadas ao faturamento.</div>`+recs.map(r=>r.tipo==='lote'
@@ -2084,7 +2096,7 @@ function screenResumo(){const o=state.current,area=state.area,c=countsA(o,area);
       <button class="btn ghost" style="margin-top:10px" id="prt">\ud83d\udda8\ufe0f Imprimir / PDF</button>
       <button class="link" style="display:block;margin:14px auto 0" id="edit">\u25c2 voltar e ajustar</button>
       <button class="link" style="display:block;margin:12px auto 0" id="home">\u2261 ir para a lista</button></div></div>`;
-  const dev=$('#dev');if(dev)dev.onclick=()=>{sendOrder(o,area);toast('Parte '+area+' enviada \u2713');state.tab='enviadas';screenArea();};
+  const dev=$('#dev');if(dev)dev.onclick=()=>{askPin(()=>{sendOrder(o,area);toast('Parte '+area+' enviada \u2713');state.tab='enviadas';screenArea();});};
   $('#prt').onclick=()=>window.print();$('#edit').onclick=()=>screenConf();$('#home').onclick=()=>screenArea();}
 
 /* ---- ADMIN ---- */
@@ -2507,7 +2519,7 @@ window.addEventListener('offline',()=>{state.online=false;netRefresh();});
 /* ===== Login único vindo do portal (mesma origem, dentro de iframe) ===== */
 function _portalApplyAuth(d){try{
   var perm=(d&&d.perm)||{};
-  state.acesso={nome:String((d&&d.nome)||'Portal'),pin:'',ativo:true,perm:perm};
+  state.acesso={nome:String((d&&d.nome)||'Portal'),pin:String((d&&d.pin)||''),ativo:true,perm:perm};
   state.conferente=state.acesso.nome;
   state.metaRole=perm.metasRole||'';
   try{state.metaMes=METAS.mesAtual;}catch(e){}
