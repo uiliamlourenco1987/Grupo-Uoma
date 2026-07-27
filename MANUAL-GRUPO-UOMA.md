@@ -1,5 +1,5 @@
 # 📘 Manual de Bolso — Portal Grupo Uoma
-### Estado: **v6.1** · 27/07/2026 · a fonte da verdade pra continuar daqui
+### Estado: **v6.2** · 27/07/2026 · a fonte da verdade pra continuar daqui
 
 > **Rotina de release (IMPORTANTE):** a cada versão nova, bump JUNTOS: `ver.json` (`{"v":"X.Y"}`), a constante `BUILD` no `<head>` de `home.html` **e** `entrar.html`, e `VERSIONS[0]`/`verTag`. É o que faz o portal se atualizar sozinho (auto-update lê `ver.json` e recarrega se `BUILD` estiver diferente). Sub-apps embutidos recarregam via `?v=BUILD` no `src` do iframe. Ao recopiar `faturamento/index.html`, o `?v` já força o refresh.
 
@@ -171,6 +171,7 @@ with check (is_diretoria() and id <> (select id from auth.users where email='uil
 ---
 
 ## 10. Histórico de versões
+- **v6.2** — **Privacidade na Separação** (módulo `SEP`): `scopeOrders`/`allowedVendNames` filtram os pedidos pela pessoa — **Vendedor** → só os pedidos com `vendedor` batendo o nome dele (`myVend`+`ME.nome`, normalizado); **Supervisor** → pedidos dos vendedores da equipe dele (`fat_app.equipe`); **Faturamento/Financeiro/Diretoria (ou separacao=editar)** → tudo. Aplicado em `renderAndamento` (lista + KPIs) e `summary`; `open()` faz `ensureFAT()` pra ter os nomes. Casamento por conter o nome no campo `vendedor` do pedido
 - **v6.1** — **Privacidade no resumo de Metas** (`renderMetas`): filtra `m.vend` pela equipe de quem abre — **Vendedor** → sua equipe (via `myVend().grupo`); **Supervisor** → sua equipe (`permissoes.fat_app.equipe`); **Diretoria/Faturamento** → tudo. Antes, qualquer um com `metas` via o número de todos. Só renderiza a coluna da equipe no escopo
 - **v6.0** — **Cadastro de login pelo portal destravado.** Causa: `usuarios.id` tem FK para `auth.users`; o INSERT pelo papel `authenticated` (portal) falhava na validação da FK (`permission denied for table users`) — no dashboard funciona por ser admin. Fix: `wireNovo` grava o perfil via RPC **`portal_criar_usuario`** (SECURITY DEFINER, guardada por `is_diretoria()`), que roda como dono e contorna a trava sem expor `auth.users`. **Pendência do dono:** rodar `sql/portal_criar_usuario.sql`. Editar quem já existe (`wireAcessos` → UPDATE) não mudou (UPDATE não revalida a FK)
 - **v5.9** — **Acessos unificado numa classificação só: o Cargo.** Removido o select de "Papel" (role) da tela; agora escolhe-se só o **Cargo** (`permissoes.perfil`), e o `role` é **derivado** (`deriveRole`: diretoria se cargo diretoria; edicao se algum módulo 'editar'; senão visualizacao). Cada cargo tem **padrões** (`CARGO_DEF`) que **pré-marcam** os toggles ao escolher/trocar o cargo (`applyCargoDefaults` no onchange); a grade "O que essa pessoa vê" fica **sempre aberta** (details open) e clicável. `wireNovo` cria já com os padrões do cargo. Migração segura: diretor existente sem cargo cai em Cargo=Diretoria (não rebaixa). Toggles detalhados = os mesmos `.pmod`/`.fack`/`.fapm` de antes
