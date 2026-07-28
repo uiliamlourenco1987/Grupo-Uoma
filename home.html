@@ -9,7 +9,7 @@
 <title>Portal Grupo Uoma — Início (mural)</title>
 <script>
 /* auto-update: recarrega sozinho quando há versão nova (fim do ?v na mão) */
-(function(){try{var BUILD="6.2";window.__BUILD=BUILD;var K="uoma_reload";
+(function(){try{var BUILD="6.3";window.__BUILD=BUILD;var K="uoma_reload";
   fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var latest=(j&&j.v)?String(j.v):"";
     if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
@@ -396,24 +396,6 @@
 
         <div class="mypanels" id="myPanels"></div>
 
-        <div class="aval">
-          <div class="h">🎯 Minha avaliação</div>
-          <div class="avtop">
-            <div class="score"><div class="big">8,7</div><div class="lb">minha nota</div></div>
-            <div class="ranks">
-              <div class="rk"><span class="pos">3º</span><span class="rl">no ranking<br>da empresa</span></div>
-              <div class="rk"><span class="pos">7º</span><span class="rl">no ranking<br>do grupo</span></div>
-            </div>
-          </div>
-          <div class="perg-lbl">Por pergunta</div>
-          <div class="perg"><span class="q">Pontualidade</span><span class="bar"><i style="width:90%"></i></span><b>9,0</b></div>
-          <div class="perg"><span class="q">Trabalho em equipe</span><span class="bar"><i style="width:85%"></i></span><b>8,5</b></div>
-          <div class="perg"><span class="q">Proatividade</span><span class="bar"><i style="width:80%"></i></span><b>8,0</b></div>
-          <div class="perg"><span class="q">Organização</span><span class="bar"><i style="width:92%"></i></span><b>9,2</b></div>
-          <div class="perg"><span class="q">Relacionamento</span><span class="bar"><i style="width:88%"></i></span><b>8,8</b></div>
-          <div class="medias">Médias da equipe — setor <b>8,2</b> · empresa <b>7,9</b> · grupo <b>8,0</b></div>
-        </div>
-
         <div class="composer" id="composer" style="display:none">
           <div class="av" id="cav">··</div>
           <div class="box">
@@ -678,6 +660,7 @@
   var APRES={loja:{n:"Loja do Sorveteiro e Confeiteiro",d:"Loja de produtos de panifica\u00e7\u00e3o, sorveteria e confeitaria. H\u00e1 mais de 30 anos no Amap\u00e1."},padoquinha:{n:"Padoquinha",d:"Primeira ind\u00fastria de salgados ultracongelados do Amap\u00e1."},merenda:{n:"Merenda Certa",d:"Alimenta\u00e7\u00e3o e merenda com qualidade e responsabilidade para o dia a dia."}};
   function renderApres(empresas){var box=el("apresEmp");if(!box)return;var keys=(empresas&&empresas.indexOf&&empresas.indexOf("todas")>=0)?["loja","padoquinha","merenda"]:((empresas&&empresas.filter)?empresas.filter(function(k){return APRES[k];}):[]);if(keys.length===1){var a=APRES[keys[0]];box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}else if(keys.length>1){box.innerHTML="<div class=\"al\">As empresas</div>"+keys.map(function(k){var a=APRES[k];return "<div style=\"margin-top:9px\"><b style=\"font-size:13.5px\">"+esc(a.n)+"</b><p style=\"margin:2px 0 0\">"+esc(a.d)+"</p></div>";}).join("");}else{var a=APRES.loja;box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}}
   var VERSIONS=[
+    {v:"v6.3",d:"27/07",desc:"Fim dos números de exemplo: o card 'Minha avaliação' fixo (nota 8,7) saiu; agora mostra a avaliação REAL de cada um (ou 'aparece quando o RH publicar')."},
     {v:"v6.2",d:"27/07",desc:"Privacidade na Separação: o painel de Separação é filtrado pelo cargo — Vendedor vê só os pedidos dele; Supervisor vê a equipe dele; Diretoria/Faturamento veem tudo."},
     {v:"v6.1",d:"27/07",desc:"Privacidade nas Metas: o resumo 'Metas de vendas' agora é filtrado pelo cargo — Vendedor/Supervisor veem só a própria equipe; Diretoria/Faturamento veem tudo."},
     {v:"v6.0",d:"26/07",desc:"Cadastro de login pelo portal destravado: grava o perfil via função protegida portal_criar_usuario (contorna a trava de FK com auth.users). Rodar sql/portal_criar_usuario.sql."},
@@ -1051,7 +1034,7 @@ async function renderMyPanels(){var box=el("myPanels");if(!box)return;vhInjectCS
     if(hasMetas){var v=myVend();var tz=el("mp-tz-metas");var card=box.querySelector(".mp-card[data-open=metas]");if(tz){if(v){var pct=v.objFat>0?Math.round(v.vendido/v.objFat*100):0;var hit=pct>=100;tz.innerHTML="<div style=\"font-size:12px;opacity:.9\">Sua meta de "+esc((mesObj().label||"").split(" / ")[0]||"")+"</div><div style=\"font-family:var(--serif);font-size:22px;font-weight:700;margin-top:2px\">"+brMoney(v.vendido||0)+" <span style=\"font-size:13px;opacity:.85\">/ "+brMoney(v.objFat||0)+"</span></div><div class=\"mp-bar\"><span class=\""+(hit?"hit":"")+"\" style=\"width:"+Math.min(100,pct)+"%\"></span></div><div style=\"font-size:12px\"><b>"+pct+"%</b> da meta · toque para ver detalhes →</div>";}else{if(card)card.classList.remove("big");tz.textContent="ver metas do time →";}}}
     if(hasFat){try{var m2=mesObj();var vd=(m2.vend||[]).filter(function(x){return !x.semTotal;});var oT=0,vT=0;vd.forEach(function(x){oT+=x.objFat||0;vT+=x.vendido||0;});var fp=oT>0?Math.round(vT/oT*100):0;var ft=el("mp-tz-faturamento");if(ft&&oT>0){ft.innerHTML="<b style=\"font-size:15px;color:var(--navy)\">"+fp+"%</b> da meta do mês · <span style=\"color:var(--mut)\">"+brMoney(vT)+"</span> →";}}catch(e){}}
   }catch(e){}}
-  if(hasSep){try{var rr=await fetch(FSB_URL+"/rest/v1/enviadas?select=quando&order=quando.desc&limit=200",{headers:{apikey:FSB_KEY,Authorization:"Bearer "+FSB_KEY}});var ev=await rr.json();if(Array.isArray(ev)){var d0=new Date();var td=("0"+d0.getDate()).slice(-2)+"/"+("0"+(d0.getMonth()+1)).slice(-2)+"/"+d0.getFullYear();var n=ev.filter(function(x){return String(x.quando||"").slice(0,10)===td;}).length;var st=el("mp-tz-separacao");if(st){st.innerHTML=n>0?("<b style=\"font-size:15px;color:var(--navy)\">"+n+"</b> separaç"+(n===1?"ão":"ões")+" enviada"+(n===1?"":"s")+" hoje →"):"nenhuma enviada hoje · toque para ver →";}}}catch(e){}}
+  if(hasSep){try{var rr=await fetch(FSB_URL+"/rest/v1/enviadas?select=quando&order=quando.desc&limit=200",{headers:{apikey:FSB_KEY,Authorization:"Bearer "+FSB_KEY}});var ev=await rr.json();if(Array.isArray(ev)){var d0=new Date();var td=("0"+d0.getDate()).slice(-2)+"/"+("0"+(d0.getMonth()+1)).slice(-2)+"/"+d0.getFullYear();var n=ev.filter(function(x){return String(x.quando||"").slice(0,10)===td;}).length;var st=el("mp-tz-separacao");if(st){st.innerHTML=n>0?("<b style=\"font-size:15px;color:var(--navy)\">"+n+"</b> separaç"+(n===1?"ão":"ões")+" enviada"+(n===1?"":"s")+" hoje →"):"nenhuma enviada hoje · toque para ver →";}}}catch(e){}}try{var _rav=await fetchAval();box.insertAdjacentHTML("beforeend",avalCardHTML(_rav));}catch(e){}
   }
   async function openCampanhas(){var ov=el("campOvl");if(!ov)return;ov.classList.add("show");var box=el("campList");box.innerHTML="<div style=\"text-align:center;color:var(--mut);font-size:12.5px;padding:20px\">Carregando campanhas&hellip;</div>";try{var r=await fetch(FSB_URL+"/rest/v1/metas?select=data&id=eq.1",{headers:{apikey:FSB_KEY,Authorization:"Bearer "+FSB_KEY}});var j=await r.json();var data=(j&&j[0]&&j[0].data)||null;if(!data){box.innerHTML="<div style=\"text-align:center;color:var(--mut);font-size:12.5px;padding:20px\">N&atilde;o consegui carregar as campanhas.</div>";return;}FAT=data;renderCamps();}catch(e){box.innerHTML="<div style=\"text-align:center;color:var(--mut);font-size:12.5px;padding:20px\">N&atilde;o consegui carregar as campanhas agora.</div>";}}
   (function(){var c=el("campClose");if(c)c.onclick=function(){el("campOvl").classList.remove("show");};var ov=el("campOvl");if(ov)ov.addEventListener("click",function(e){if(e.target===ov)ov.classList.remove("show");});})();
