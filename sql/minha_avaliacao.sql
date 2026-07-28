@@ -3,12 +3,10 @@
 --  SQL Editor > New query > colar tudo > Run.  (CREATE OR REPLACE: pode re-rodar)
 --
 --  Cada pessoa vê SÓ a própria nota (contorna o RLS das tabelas aval_*).
---  Regras da DIRETORIA (role='diretoria' na tabela usuarios):
---    • NÃO leva o desconto de -25 por não ter avaliado os colegas
---      (diretoria não é obrigada a avaliar).
---    • NÃO entra no ranking (nem aparece na posição de ninguém).
---    • A nota do diretor continua sendo devolvida SÓ pra ele mesmo
---      (esta função só retorna a linha de quem chamou).
+--  Retorna: nota do mês + posição no ranking + média geral da EMPRESA e do GRUPO.
+--  Regras da DIRETORIA (usuarios.role='diretoria'):
+--    • NÃO leva o -25 por não avaliar;  • fica FORA do ranking e das médias;
+--    • a nota do diretor só aparece pra ele mesmo.
 -- ============================================================
 
 create extension if not exists unaccent;
@@ -17,7 +15,8 @@ create or replace function public.minha_avaliacao(p_comp text default null)
 returns table(
   competencia text, nota int, media_pares numeric,
   faltas int, atrasos int, suspensoes int, advertencias int, obs text,
-  posicao int, total int
+  posicao int, total int,
+  media_empresa numeric, media_grupo numeric
 )
 language plpgsql security definer set search_path = public as $$
 declare v_nome text; v_key text; v_comp text; v_houve boolean; v_dir text[];
@@ -26,7 +25,6 @@ begin
   if v_nome is null then return; end if;
   v_key := upper(unaccent(btrim(v_nome)));
 
-  -- chaves (nome normalizado) de quem é diretoria
   select coalesce(array_agg(upper(unaccent(btrim(nome)))), '{}') into v_dir
   from usuarios where role = 'diretoria';
 
@@ -54,7 +52,6 @@ begin
   ),
   scored as (
     select b.*,
-      -- penalidade de -25 NÃO se aplica à diretoria
       (v_houve and not (b.k = any(v_dir)) and not exists(
          select 1 from aval_respostas ar where ar.competencia=v_comp
            and upper(unaccent(btrim(ar.avaliador)))=b.k)) as pen,
@@ -70,13 +67,14 @@ begin
     from scored sc
   ),
   ranked as (
-    -- ranking EXCLUI a diretoria
     select f.*, rank() over (partition by f.empresa order by f.notaf desc) as pos,
                 count(*) over (partition by f.empresa) as tot
     from fin f where not (f.k = any(v_dir))
   )
   select v_comp, round(fc.notaf)::int, fc.media, fc.f, fc.a, fc.s, fc.adv, fc.obs,
-         rk2.pos::int, rk2.tot::int
+         rk2.pos::int, rk2.tot::int,
+         (select round(avg(f2.notaf),1) from fin f2 where not (f2.k = any(v_dir)) and f2.empresa = fc.empresa) as media_empresa,
+         (select round(avg(f3.notaf),1) from fin f3 where not (f3.k = any(v_dir))) as media_grupo
   from fin fc left join ranked rk2 on rk2.k = fc.k
   where fc.k = v_key
   limit 1;
