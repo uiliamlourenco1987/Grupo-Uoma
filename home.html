@@ -9,7 +9,7 @@
 <title>Portal Grupo Uoma — Início (mural)</title>
 <script>
 /* auto-update: recarrega sozinho quando há versão nova (fim do ?v na mão) */
-(function(){try{var BUILD="6.4";window.__BUILD=BUILD;var K="uoma_reload";
+(function(){try{var BUILD="6.5";window.__BUILD=BUILD;var K="uoma_reload";
   fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var latest=(j&&j.v)?String(j.v):"";
     if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
@@ -660,6 +660,7 @@
   var APRES={loja:{n:"Loja do Sorveteiro e Confeiteiro",d:"Loja de produtos de panifica\u00e7\u00e3o, sorveteria e confeitaria. H\u00e1 mais de 30 anos no Amap\u00e1."},padoquinha:{n:"Padoquinha",d:"Primeira ind\u00fastria de salgados ultracongelados do Amap\u00e1."},merenda:{n:"Merenda Certa",d:"Alimenta\u00e7\u00e3o e merenda com qualidade e responsabilidade para o dia a dia."}};
   function renderApres(empresas){var box=el("apresEmp");if(!box)return;var keys=(empresas&&empresas.indexOf&&empresas.indexOf("todas")>=0)?["loja","padoquinha","merenda"]:((empresas&&empresas.filter)?empresas.filter(function(k){return APRES[k];}):[]);if(keys.length===1){var a=APRES[keys[0]];box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}else if(keys.length>1){box.innerHTML="<div class=\"al\">As empresas</div>"+keys.map(function(k){var a=APRES[k];return "<div style=\"margin-top:9px\"><b style=\"font-size:13.5px\">"+esc(a.n)+"</b><p style=\"margin:2px 0 0\">"+esc(a.d)+"</p></div>";}).join("");}else{var a=APRES.loja;box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}}
   var VERSIONS=[
+    {v:"v6.5",d:"02/08",desc:"Folha: corrigido o cálculo do líquido (estava saindo alto). Agora todo desconto (INSS, IRRF, vale, etc.) é SEMPRE subtraído — a grade e o holerite usam a mesma conta e nunca divergem, mesmo se a tabela de regras estiver incompleta. Ao Salvar os Lançamentos, o líquido é recalculado e regravado. INSS/IRRF seguem digitados manualmente (cálculo automático das faixas fica pra depois)."},
     {v:"v6.4",d:"27/07",desc:"Avaliação mostra nota do mês + média da empresa + média do grupo. RH pode validar/criar cadastros no Controle de Acessos (menos diretoria). Rodar sql/minha_avaliacao.sql (atualizado) e sql/rh_acessos.sql."},
     {v:"v6.3",d:"27/07",desc:"Fim dos números de exemplo: o card 'Minha avaliação' fixo (nota 8,7) saiu; agora mostra a avaliação REAL de cada um (ou 'aparece quando o RH publicar')."},
     {v:"v6.2",d:"27/07",desc:"Privacidade na Separação: o painel de Separação é filtrado pelo cargo — Vendedor vê só os pedidos dele; Supervisor vê a equipe dele; Diretoria/Faturamento veem tudo."},
