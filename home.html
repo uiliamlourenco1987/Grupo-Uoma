@@ -9,7 +9,7 @@
 <title>Portal Grupo Uoma — Início (mural)</title>
 <script>
 /* auto-update: recarrega sozinho quando há versão nova (fim do ?v na mão) */
-(function(){try{var BUILD="8.2";window.__BUILD=BUILD;var K="uoma_reload";
+(function(){try{var BUILD="8.3";window.__BUILD=BUILD;var K="uoma_reload";
   fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var latest=(j&&j.v)?String(j.v):"";
     if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
@@ -675,6 +675,7 @@
   var APRES={loja:{n:"Loja do Sorveteiro e Confeiteiro",d:"Loja de produtos de panifica\u00e7\u00e3o, sorveteria e confeitaria. H\u00e1 mais de 30 anos no Amap\u00e1."},padoquinha:{n:"Padoquinha",d:"Primeira ind\u00fastria de salgados ultracongelados do Amap\u00e1."},merenda:{n:"Merenda Certa",d:"Alimenta\u00e7\u00e3o e merenda com qualidade e responsabilidade para o dia a dia."}};
   function renderApres(empresas){var box=el("apresEmp");if(!box)return;var keys=(empresas&&empresas.indexOf&&empresas.indexOf("todas")>=0)?["loja","padoquinha","merenda"]:((empresas&&empresas.filter)?empresas.filter(function(k){return APRES[k];}):[]);if(keys.length===1){var a=APRES[keys[0]];box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}else if(keys.length>1){box.innerHTML="<div class=\"al\">As empresas</div>"+keys.map(function(k){var a=APRES[k];return "<div style=\"margin-top:9px\"><b style=\"font-size:13.5px\">"+esc(a.n)+"</b><p style=\"margin:2px 0 0\">"+esc(a.d)+"</p></div>";}).join("");}else{var a=APRES.loja;box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}}
   var VERSIONS=[
+    {v:"v8.3",d:"03/08",desc:"Folha/Recibo: agora sai a OBSERVAÇÃO no recibo. O que você escrever na coluna Obs. do colaborador (nos Lançamentos) aparece num quadrinho 'Observações' no recibo/holerite dele. Se a Obs. estiver vazia, nada aparece."},
     {v:"v8.2",d:"03/08",desc:"Folha/Lançamentos: cores por natureza da coluna — 🟢 verde = crédito (soma), 🔴 vermelho = desconto, 🟡 amarelo = informativo (ex.: Pago Fora/FGTS), 🔵 azul = forma de pagamento (Banco/Dinheiro/PIX). E a cor SEGUE as Regras: se você mudar o tipo de um item na aba Regras (ex.: virar Desconto ou Fora da folha), a coluna muda de cor sozinha. Legenda no topo da tela."},
     {v:"v8.1",d:"03/08",desc:"Folha: AJUDA DE ALIMENTAÇÃO como terceiro campo de ajuda (junto de Aj.Custo e Aj.Transp.). As três somam no Sal.Bruto e aparecem no recibo, na aba Ajudas & Vales, no filtro de impressão e no seletor de colunas — todas em verde de provento. Requer o SQL: alter table folha add column if not exists ajalim numeric default 0;"},
     {v:"v8.0",d:"03/08",desc:"Folha/Lançamentos: agora dá pra ARRASTAR as colunas (segura no cabeçalho ⠿ e solta onde quiser) pra deixar na ordem que preferir — fica salvo no aparelho. Botão ↺ Ordem volta ao padrão. E a Ajuda de Custo/Transporte deixou de ficar vermelha (cor de desconto): agora aparece em verde, como provento que é."},
