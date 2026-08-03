@@ -1258,11 +1258,114 @@ function importMarcaPeso(file){if(!file)return;const rd=new FileReader();
     const vmatch=(vnome)=>Object.values(per).filter(r=>{const rn=norm(alias[r.nome.toUpperCase()]||r.nome);return rn===norm(vnome)||rn.includes(norm(vnome))||norm(vnome).includes(rn);});
     m.vend.forEach(v=>{
       // matriz completa marca\u00d7vendedor (base das campanhas)
-      const mine=vmatch(v.nome);if(mine.length){v.marcaVendas={};mine.forEach(r=>{v.marcaVendas[r.marca.toUpperCase()]={vendas:Math.round(r.vendas*100)/100,peso:Math.round(r.peso*10)/10};});}
+      const mine=vmatch(v.nome);if(mine.length){
+        // limpa s\u00f3 as marcas de PESO antigas; preserva as alimentadas por produto/campanha (itens/produtos/positivados)
+        var mvOld=v.marcaVendas||{};Object.keys(mvOld).forEach(K=>{var e=mvOld[K];if(!(e&&(e.itens!=null||e.produtos!=null||e.positivados!=null)))delete mvOld[K];});v.marcaVendas=mvOld;
+        mine.forEach(r=>{const K=r.marca.toUpperCase();const ex=v.marcaVendas[K]||{};v.marcaVendas[K]=Object.assign({},ex,{vendas:Math.round(r.vendas*100)/100,peso:Math.round(r.peso*10)/10});});}
       (v.marcas||[]).forEach(b=>{const hit=mine.find(r=>norm(r.marca)===norm(b.marca)||norm(r.marca).includes(norm(b.marca))||norm(b.marca).includes(norm(r.marca)));
         if(hit){b.real=b.tipo==='PESO'?Math.round(hit.peso*10)/10:Math.round(hit.vendas*100)/100;n++;}});});
     toast(n?('Marcas por vendedor atualizadas: '+n+' \u2713'):'Nenhuma marca cadastrada bateu com o relat\u00f3rio');syncPushMetas();reRender();}catch(e){toast('Erro ao ler o relat\u00f3rio');}};
   rd.readAsText(file,'utf-8');}
+/* ===== Campanha por produto/fornecedor (ex.: Sustentare): itens, mix de produtos, positiva\u00e7\u00e3o de venda ===== */
+function parseCampProdutoTxt(raw){
+  var text=raw;
+  if(/<\s*pre/i.test(raw)||/<\s*html/i.test(raw)){try{var doc=new DOMParser().parseFromString(raw,'text/html');var pre=doc.querySelector('pre');text=pre?pre.textContent:(doc.body?doc.body.textContent:raw);}catch(e){}}
+  var out={};var cur=null;var marcaGuess='';
+  text.split(/\r?\n/).forEach(function(ln){
+    var mv=ln.match(/VENDEDOR:\s*\d+\s*-\s*(.+?)\s*$/i);
+    if(mv){cur=norm(mv[1]);if(!out[cur])out[cur]={produtos:0,itens:0,vendas:0};return;}
+    if(!marcaGuess){var md=ln.match(/-\s*([A-Za-z]{4,})\s*$/);if(md&&/SUSTENT|MAVAL|SELECT|DR\.?OET|GENUIN/i.test(ln))marcaGuess=md[1].toUpperCase();}
+    var mt=ln.match(/TOTAL DO VENDEDOR:\s*\((\d+)\)\s+([\-\d.,]+)\s+([\-\d.,]+)/i);
+    if(mt&&cur){out[cur]={produtos:parseInt(mt[1],10)||0,itens:parseBR(mt[2])||0,vendas:parseBR(mt[3])||0};cur=null;return;}
+  });
+  out.__marca=marcaGuess;return out;
+}
+function parseCampProdutoCSV(raw){
+  var out={};var lines=String(raw).split(/\r?\n/).filter(function(x){return x.trim();});if(!lines.length)return out;
+  var split=function(line){var res=[],c='',q=false;for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){q=!q;}else if(ch===','&&!q){res.push(c);c='';}else c+=ch;}res.push(c);return res.map(function(s){return s.trim();});};
+  var head=split(lines[0]).map(function(h){return norm(h);});
+  var idx=function(t){for(var i=0;i<head.length;i++){if(head[i].indexOf(t)>=0)return i;}return -1;};
+  var iV=idx('VENDEDOR'),iC=idx('CLIENTE'),iF=idx('VENDAS');if(iV<0)return out;
+  for(var r=1;r<lines.length;r++){var c=split(lines[r]);if(!c[iV])continue;var nm=norm(c[iV]);
+    var cli=iC>=0?(parseInt(String(c[iC]).replace(/[^\d]/g,''),10)||0):0;
+    var fat=iF>=0?(parseBR(String(c[iF]).replace(/[^\d.,-]/g,''))||0):0;
+    out[nm]={positivados:cli,vendas:fat};}
+  return out;
+}
+function importCampProduto(marca,prodMap,cliMap){
+  var m=mesObj();if(!m||!m.vend)return 0;var MK=String(marca||'').toUpperCase().trim();if(!MK)return 0;
+  var alias={'JOSE ADRIANO':'ADRIANO','ANDERSON SILVA':'ANDERSON','GENIVALDO SUPERVISOR':'GENIVALDO'};
+  var find=function(map,vn){if(!map)return null;var vnn=norm(vn);var ks=Object.keys(map);for(var i=0;i<ks.length;i++){var k=ks[i];if(k==='__marca')continue;var kn=norm(alias[k]||k);if(kn===vnn||kn.indexOf(vnn)>=0||vnn.indexOf(kn)>=0)return map[k];}return null;};
+  var n=0;
+  m.vend.forEach(function(v){
+    var pr=find(prodMap,v.nome),cl=find(cliMap,v.nome);if(!pr&&!cl)return;
+    var mv=(v.marcaVendas=v.marcaVendas||{});var e=Object.assign({},mv[MK]||{});
+    if(pr){e.produtos=pr.produtos||0;e.itens=pr.itens||0;e.vendas=Math.round((pr.vendas||0)*100)/100;}
+    if(cl){e.positivados=cl.positivados||0;if((e.vendas==null||!pr)&&cl.vendas)e.vendas=Math.round(cl.vendas*100)/100;}
+    if(e.peso==null)e.peso=0;
+    mv[MK]=e;n++;
+  });
+  return n;
+}
+function screenCampProduto(){setBar('');setW('wide');state.view='campproduto';mskin(true);
+  $('#screen').innerHTML='<div class="wrap">'+whoBar()+
+    '<div class="mselbar"><h2 style="margin:0;font-size:20px">\ud83c\udfed Dados de campanha por produto</h2><button class="link" id="cpvolt" style="margin-left:auto">\u25c2 voltar</button></div>'+
+    '<div class="card" style="padding:16px;max-width:660px">'+
+      '<p class="muted" style="font-size:12.5px;margin:0 0 12px">Alimenta a campanha de um <b>produto/fornecedor</b> (ex.: Sustentare) por vendedor: <b>itens vendidos</b> (unidades), <b>produtos diferentes</b> (mix) e <b>positiva\u00e7\u00e3o de venda</b> (em quantas vendas o produto esteve presente). Depois \u00e9 s\u00f3 criar a campanha com essa marca e escolher o crit\u00e9rio.</p>'+
+      '<div class="field" style="margin-bottom:12px"><label>Marca / fornecedor</label><input class="input" id="cpMarca" value="SUSTENTARE" style="text-transform:uppercase;padding:9px;border:1.5px solid var(--line);border-radius:8px;font-weight:700"></div>'+
+      '<div class="field" style="margin-bottom:12px"><label>1) Produtos por vendedor \u2014 VEN430LA (.html)</label><br><input type="file" id="cpProd" accept=".html,.htm"></div>'+
+      '<div class="field" style="margin-bottom:12px"><label>2) Ranking com clientes/presen\u00e7a (.csv) \u2014 p/ positiva\u00e7\u00e3o de venda</label><br><input type="file" id="cpCli" accept=".csv,.txt"></div>'+
+      '<div id="cpMsg" class="muted" style="font-size:12.5px;margin:8px 0;min-height:16px"></div>'+
+      '<button class="btnsm" id="cpDo" style="width:auto;padding:11px 20px;background:#146c37;color:#fff;border:none;font-weight:700">Importar dados</button>'+
+    '</div></div>';
+  wireWho();var vb=$('#cpvolt');if(vb)vb.onclick=function(){screenCampanhas();};
+  $('#cpDo').onclick=function(){
+    var marca=($('#cpMarca').value||'').trim();var msg=$('#cpMsg');msg.style.color='#B42318';
+    if(!marca){msg.textContent='Informe a marca / fornecedor.';return;}
+    var fp=$('#cpProd').files[0],fc=$('#cpCli').files[0];
+    if(!fp&&!fc){msg.textContent='Escolha ao menos o relat\u00f3rio de produtos (VEN430LA).';return;}
+    var prodMap=null,cliMap=null,pending=0;
+    var done=function(){if(pending>0)return;
+      if(prodMap&&prodMap.__marca&&(!$('#cpMarca').value.trim()))marca=prodMap.__marca;
+      var n=importCampProduto(marca,prodMap,cliMap);syncPushMetas();
+      msg.style.color='#146c37';msg.innerHTML='Importado \u2713 \u2014 <b>'+n+'</b> vendedor(es) atualizados para <b>'+esc(marca.toUpperCase())+'</b>. Agora crie/edite a campanha com marca <b>'+esc(marca.toUpperCase())+'</b> e escolha o crit\u00e9rio (itens vendidos \u00b7 mix \u00b7 positiva\u00e7\u00e3o de venda).';
+    };
+    if(fp){pending++;var r1=new FileReader();r1.onload=function(){try{prodMap=parseCampProdutoTxt(r1.result);}catch(e){}pending--;done();};r1.readAsText(fp,'utf-8');}
+    if(fc){pending++;var r2=new FileReader();r2.onload=function(){try{cliMap=parseCampProdutoCSV(r2.result);}catch(e){}pending--;done();};r2.readAsText(fc,'utf-8');}
+  };
+}
+/* ---- Link do fornecedor: token \u00fanico por campanha (leitura p\u00fablica) ---- */
+function campToken(c){if(!c.token){c.token='fc'+String(Date.now())+Math.floor(Math.random()*1e6).toString(36);}return c.token;}
+function campLink(c){var t=campToken(c);var base=location.origin+location.pathname;return base+(base.indexOf('?')<0?'?':'&')+'forn='+encodeURIComponent(t);}
+function dialogLinkFornecedor(c,url){
+  var ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;background:rgba(10,20,40,.55);display:flex;align-items:center;justify-content:center;z-index:9999;padding:18px';
+  ov.innerHTML='<div style="background:#fff;border-radius:14px;max-width:520px;width:100%;padding:20px;font-family:sans-serif">'+
+    '<h3 style="margin:0 0 4px">🔗 Link do fornecedor</h3>'+
+    '<p style="font-size:12.5px;color:#5b6470;margin:0 0 12px">'+esc(c.fornecedor||'')+' — <b>'+esc(c.nome||'')+'</b>. Envie este link pra fábrica acompanhar a campanha — <b>somente leitura, sem login</b>. Vale enquanto a campanha existir.</p>'+
+    '<input id="lkInp" value="'+esc(url)+'" readonly style="width:100%;padding:10px;border:1.5px solid #e3e8f0;border-radius:8px;font-size:12px;margin-bottom:10px">'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
+      '<button id="lkCopy" class="btnsm" style="width:auto;padding:9px 16px;background:#146c37;color:#fff;border:none;font-weight:700">📋 Copiar</button>'+
+      '<a href="https://wa.me/?text='+encodeURIComponent('Acompanhe a campanha '+(c.nome||'')+': '+url)+'" target="_blank" rel="noopener" class="btnsm" style="width:auto;padding:9px 16px;text-decoration:none">🟢 WhatsApp</a>'+
+      '<a href="'+esc(url)+'" target="_blank" rel="noopener" class="btnsm" style="width:auto;padding:9px 16px;text-decoration:none">👁️ Abrir</a>'+
+      '<button id="lkClose" class="link" style="margin-left:auto">fechar</button>'+
+    '</div></div>';
+  document.body.appendChild(ov);
+  ov.addEventListener('click',function(e){if(e.target===ov)ov.remove();});
+  ov.querySelector('#lkClose').onclick=function(){ov.remove();};
+  ov.querySelector('#lkCopy').onclick=function(){var i=ov.querySelector('#lkInp');i.select();try{navigator.clipboard.writeText(i.value);}catch(e){try{document.execCommand('copy');}catch(_){}}var b=ov.querySelector('#lkCopy');b.textContent='✓ Copiado';setTimeout(function(){b.textContent='📋 Copiar';},1500);};
+}
+async function screenFornecedor(token){mskin(true);setW('wide');
+  $('#screen').innerHTML='<div class="wrap"><div style="text-align:center;color:#5b6470;padding:50px;font-family:sans-serif">Carregando campanha\u2026</div></div>';
+  try{var d=await apiGet();hydrate(d);}catch(e){}
+  var c=(METAS.campanhas||[]).find(function(x){return String(x.token||'')===String(token);});
+  if(!c){$('#screen').innerHTML='<div class="wrap"><div class="banner" style="margin-top:30px">Link inv\u00e1lido ou campanha encerrada. Fale com a Loja do Sorveteiro.</div></div>';return;}
+  try{state.metaMes=mesVigente();}catch(e){}
+  var hoje=new Date();var ativa=true;try{ativa=(new Date(c.ini)<=hoje&&hoje<=new Date(c.fim));}catch(e){}
+  $('#screen').innerHTML='<div class="wrap">'+
+    '<div style="text-align:center;margin:10px 0 16px"><div style="font-size:11px;letter-spacing:1.2px;color:var(--brand-d);font-weight:800">ACOMPANHAMENTO DA CAMPANHA</div><h2 style="margin:4px 0;font-family:var(--serif)">'+esc(c.fornecedor||'')+'</h2><div class="muted" style="font-size:12.5px">'+(ativa?'campanha em andamento':'campanha encerrada')+' \u00b7 '+esc(c.ini||'')+' a '+esc(c.fim||'')+'</div></div>'+
+    campCardHTML(c,false)+
+    '<p class="muted" style="font-size:11px;text-align:center;margin-top:16px">Somente leitura \u00b7 atualiza sozinho \u00b7 Grupo Uoma \u2014 Loja do Sorveteiro</p></div>';
+}
 /* ---- B\u00f4nus dos supervisores ---- */
 const GEN_BASE_PCT=0.8, GEN_PP={inad:0.1,fat:0.1,mix:0.05,posit:0.05}, GEN_PP_MAX=0.3;
 /* metas do supervisor = resultado consolidado da equipe (faturamento, mix, positiva\u00e7\u00e3o) \u2014 calculado automaticamente do que j\u00e1 \u00e9 importado */
@@ -1619,7 +1722,7 @@ function myMetaHTML(vnome){const m=mesObj();const v=metaMatch(vnome,m.vend)||m.v
     ${(()=>{const ch=myCampHTML(v);return ch?`<div class="mgrid" style="grid-template-columns:1fr;max-width:460px"><div class="mcard">${ch}</div></div>`:'';})()}`;}
 
 /* ===== CAMPANHAS DE FORNECEDOR (ranking) ===== */
-function campCrit(c){return {FAT:'Faturamento (R$)',PESO:'Peso (kg)',CRESC:'Crescimento %',PROD:'Produtos (variedade)',POSIT:'Positivação (clientes)',MIX:'Marcas movimentadas',METALVO:'% da meta (individual)'}[c.criterio]||c.criterio;}
+function campCrit(c){return {FAT:'Faturamento (R$)',PESO:'Peso (kg)',CRESC:'Crescimento %',PROD:'Mix — produtos diferentes',QTD:'Itens vendidos (unid.)',POSIT:'Positivação de venda (presença)',MIX:'Marcas movimentadas',METALVO:'% da meta (individual)'}[c.criterio]||c.criterio;}
 // multi-critério: cada critério vira uma "sub-campanha" que reaproveita a lógica existente
 function campCriterios(c){if(c&&c.criterios&&c.criterios.length)return c.criterios;return [{criterio:(c&&c.criterio)||'FAT',premio:(c&&c.premio)||{tipo:'PODIO',podio:[],rank:'EQUIPE'}}];}
 function subCamp(c,cr){return Object.assign({},c,{criterio:cr.criterio,premio:cr.premio,metasInd:cr.metasInd,porMeta:cr.porMeta});}
@@ -1628,10 +1731,10 @@ function campMarcos(c){return (c&&c.marcos)?c.marcos:[];}
 function campValor(v,c){const mk=c.marcas||[];
   if(c.criterio==='CRESC'){let cur=0,prev=0;mk.forEach(k=>{const a=(v.marcaVendas||{})[k],b=(v.marcaVendasPrev||{})[k];cur+=a?a.vendas:0;prev+=b?b.vendas:0;});return prev>0?((cur-prev)/prev*100):(cur>0?100:0);}
   var crit=(c.criterio==='METALVO')?'FAT':c.criterio;
-  let val=0;mk.forEach(k=>{const a=(v.marcaVendas||{})[k];if(!a)return;if(crit==='FAT')val+=a.vendas;else if(crit==='PESO')val+=a.peso;else if(crit==='PROD')val+=(a.produtos||0);else if(crit==='POSIT')val+=(a.positivados||0);else if(crit==='MIX')val+=1;});
+  let val=0;mk.forEach(k=>{const a=(v.marcaVendas||{})[k];if(!a)return;if(crit==='FAT')val+=a.vendas;else if(crit==='PESO')val+=a.peso;else if(crit==='PROD')val+=(a.produtos||0);else if(crit==='QTD')val+=(a.itens||0);else if(crit==='POSIT')val+=(a.positivados||0);else if(crit==='MIX')val+=1;});
   if(c.porMeta||c.criterio==='METALVO'){var meta=(c.metasInd&&c.metasInd[v.nome])||0;return meta>0?val/meta*100:0;}
   return val;}
-function campFmt(c,val){if(c.porMeta||c.criterio==='METALVO')return Math.floor(val)+'% da meta';if(c.criterio==='FAT')return brMoney(val);if(c.criterio==='PESO')return nrBR(Math.round(val*10)/10)+' kg';if(c.criterio==='CRESC')return nrBR(Math.round(val*10)/10)+'%';if(c.criterio==='PROD')return nrBR(val)+' produto(s)';if(c.criterio==='POSIT')return nrBR(val)+' cliente(s)';return nrBR(val)+' marca(s)';}
+function campFmt(c,val){if(c.porMeta||c.criterio==='METALVO')return Math.floor(val)+'% da meta';if(c.criterio==='FAT')return brMoney(val);if(c.criterio==='PESO')return nrBR(Math.round(val*10)/10)+' kg';if(c.criterio==='CRESC')return nrBR(Math.round(val*10)/10)+'%';if(c.criterio==='PROD')return nrBR(val)+' produto(s)';if(c.criterio==='QTD')return nrBR(val)+' item(ns)';if(c.criterio==='POSIT')return nrBR(val)+' venda(s)';return nrBR(val)+' marca(s)';}
 function campRank(c,scope){let list=mesObj().vend.slice();if(scope==='EXTERNO')list=list.filter(v=>v.grupo==='EXTERNO');else if(scope==='INTERNO')list=list.filter(v=>v.grupo==='INTERNO');
   return list.map(v=>({v,val:campValor(v,c)})).filter(r=>r.val>0&&r.val>=(c.minPart||0)).sort((a,b)=>b.val-a.val);}
 function campPremioPos(c,pos,val){const p=c.premio||{};
@@ -1642,8 +1745,8 @@ function campPremioPos(c,pos,val){const p=c.premio||{};
 function rkColHTML(c,scope,titulo,pays){const rows=campRank(c,scope);
   return `<div class="rkcol"><h4>${titulo}</h4>${rows.length?rows.slice(0,6).map((r,idx)=>{const pos=idx+1;const prize=pays?campPremioPos(c,pos,r.val):0;const gap=idx>0?rows[idx-1].val-r.val:0;
     return `<div class="rkrow"><span class="rkpos ${pos<=3?'p'+pos:''}">${pos}\u00ba</span><span class="rknm">${esc(r.v.nome)}</span><span class="rkval">${campFmt(c,r.val)}</span>${prize?`<span class="rkprize">R$ ${nrBR(prize)}</span>`:''}${idx>0&&gap>0?`<span class="rkgap">-${campFmt(c,gap)}</span>`:''}</div>`;}).join(''):'<div class="rkgap" style="text-align:center;padding:8px">sem vendas ainda</div>'}</div>`;}
-const CRIT_DESC={FAT:'quem mais vendeu em R$ da(s) marca(s)',PESO:'quem mais vendeu em peso (kg) da(s) marca(s)',CRESC:'quem mais cresceu (%) frente ao per\u00edodo anterior',PROD:'quem vendeu a maior variedade de produtos da(s) marca(s)',POSIT:'quem colocou a(s) marca(s) em mais clientes (positiva\u00e7\u00e3o)',METALVO:'quem bateu a maior % da sua meta individual',MIX:'quem movimentou mais marcas da campanha'};
-const CRIT_NOME={FAT:'faturamento',PESO:'peso',CRESC:'crescimento',METALVO:'% da meta',PROD:'variedade de produtos',POSIT:'positiva\u00e7\u00e3o',MIX:'n\u00ba de marcas'};
+const CRIT_DESC={FAT:'quem mais vendeu em R$ da(s) marca(s)',PESO:'quem mais vendeu em peso (kg) da(s) marca(s)',CRESC:'quem mais cresceu (%) frente ao per\u00edodo anterior',PROD:'quem vendeu a maior variedade de produtos diferentes da(s) marca(s)',QTD:'quem mais vendeu em quantidade (itens/unidades) da(s) marca(s)',POSIT:'quem colocou a(s) marca(s) em mais vendas (presen\u00e7a nas vendas)',METALVO:'quem bateu a maior % da sua meta individual',MIX:'quem movimentou mais marcas da campanha'};
+const CRIT_NOME={FAT:'faturamento',PESO:'peso',CRESC:'crescimento',METALVO:'% da meta',PROD:'produtos diferentes',QTD:'itens vendidos',POSIT:'positiva\u00e7\u00e3o de venda',MIX:'n\u00ba de marcas'};
 function campRulesLines(c){const p=c.premio||{};const L=[];
   L.push(['Crit\u00e9rio de ranking',(c.porMeta?('quem bateu a maior % da sua meta individual de '+(CRIT_NOME[c.criterio]||c.criterio)):(CRIT_DESC[c.criterio]||c.criterio))]);
   L.push(['Marca(s) que contam',(c.marcas||[]).join(', ')||'\u2014']);
@@ -1664,7 +1767,7 @@ function campCols(p){var r=(p&&p.rank)||'EQUIPE';
 function campCardHTML(c,dir){const crs=campCriterios(c);const multi=crs.length>1;
   return `<div class="campcard"><div class="camphd"><span class="fico">\ud83c\udfc6</span>
     <div><h3>${esc(c.nome)}</h3><div class="cs">Fornecedor ${esc(c.fornecedor)} \u00b7 marca(s): ${esc((c.marcas||[]).join(', '))} \u00b7 ${esc(c.ini)} a ${esc(c.fim)} \u00b7 ${multi?(crs.length+' crit\u00e9rios'):campCrit({criterio:crs[0].criterio})}</div></div>
-    ${dir?`<div class="camppremio no-print"><button class="link cedit" data-id="${c.id}">\u270f\ufe0f editar</button> \u00b7 <button class="link cenc" data-id="${c.id}">\ud83d\udda8\ufe0f encarte PDF</button> \u00b7 <button class="link cdel" data-id="${c.id}" style="color:var(--falta)">excluir</button></div>`:''}</div>
+    ${dir?`<div class="camppremio no-print"><button class="link cedit" data-id="${c.id}">\u270f\ufe0f editar</button> \u00b7 <button class="link cenc" data-id="${c.id}">\ud83d\udda8\ufe0f encarte PDF</button> \u00b7 <button class="link clink" data-id="${c.id}">\ud83d\udd17 link do fornecedor</button> \u00b7 <button class="link cdel" data-id="${c.id}" style="color:var(--falta)">excluir</button></div>`:''}</div>
     ${crs.map((cr,ci)=>{const sc=subCamp(c,cr);const p=cr.premio||{};const paysGeral=p.rank==='GERAL',paysEq=p.rank==='EQUIPE';
       return `${multi?`<div style="font-weight:800;font-size:12.5px;color:var(--brand-d);margin:12px 0 6px;padding:7px 12px;background:var(--brand-l);border-radius:9px">\ud83c\udfaf Crit\u00e9rio ${ci+1}: ${campCrit({criterio:cr.criterio})}</div>`:''}
       <div style="margin:2px 0 12px;background:#F7F4EC;border:1px solid var(--line);border-radius:10px;padding:10px 14px">
@@ -1677,14 +1780,17 @@ function campCardHTML(c,dir){const crs=campCriterios(c);const multi=crs.length>1
 function screenCampanhas(){setBar('');setW('wide');state.view='camp';mskin(true);const dir=metaRH();const camps=METAS.campanhas||[];
   $('#screen').innerHTML=`<div class="wrap">${whoBar()}
     <div class="mselbar"><h2 style="margin:0;font-size:20px">\ud83c\udfc6 Campanhas</h2>
-      ${dir?'<button class="btnsm" id="cnew" style="width:auto;padding:9px 16px;margin-left:auto">\uff0b Nova campanha</button>':''}
+      ${dir?'<button class="btnsm" id="ccampprod" style="width:auto;padding:9px 16px;margin-left:auto">\ud83c\udfed Importar dados (produto)</button>':''}
+      ${dir?'<button class="btnsm" id="cnew" style="width:auto;padding:9px 16px">\uff0b Nova campanha</button>':''}
       <button class="link" id="cvoltar" ${dir?'':'style="margin-left:auto"'}>\u25c2 voltar</button></div>
     <p class="muted" style="font-size:13px;margin:0 2px 12px">Campanhas de fornecedor \u2014 usam as mesmas vendas do faturamento. O ranking \u00e9 autom\u00e1tico (interno \u00b7 externo \u00b7 geral) a partir das vendas por marca.</p>
     ${camps.length?camps.map(c=>campCardHTML(c,dir)).join(''):'<div class="banner">Nenhuma campanha ainda.'+(dir?' Clique em \u201cNova campanha\u201d.':'')+'</div>'}</div>`;
   wireWho();$('#cvoltar').onclick=()=>sairApp();
   if(dir){const nb=$('#cnew');if(nb)nb.onclick=()=>editCampanha(null);
+    {const cp=$('#ccampprod');if(cp)cp.onclick=()=>screenCampProduto();}
     $('#screen').querySelectorAll('.cedit').forEach(b=>b.onclick=()=>editCampanha(b.dataset.id));
     $('#screen').querySelectorAll('.cenc').forEach(b=>b.onclick=()=>screenEncarte(b.dataset.id));
+    $('#screen').querySelectorAll('.clink').forEach(b=>b.onclick=()=>{const cp=(METAS.campanhas||[]).find(c=>c.id===b.dataset.id);if(!cp)return;const url=campLink(cp);syncPushMetas();dialogLinkFornecedor(cp,url);});
     $('#screen').querySelectorAll('.cdel').forEach(b=>b.onclick=()=>{const cp=(METAS.campanhas||[]).find(c=>c.id===b.dataset.id)||{};askConfirm('Excluir a campanha <b>'+esc(cp.nome||'\u2014')+'</b>? N\u00e3o d\u00e1 pra desfazer.',()=>{METAS.campanhas=METAS.campanhas.filter(c=>c.id!==b.dataset.id);logChange('Campanha',esc(cp.nome||'\u2014'),'ativa','exclu\u00edda');syncPushMetas();toast('Campanha exclu\u00edda');screenCampanhas();},'Excluir');});}
 }
 function screenEncarte(id){setBar('');setW('wide');state.view='encarte';mskin(true);const c=(METAS.campanhas||[]).find(x=>x.id===id);if(!c)return screenCampanhas();
@@ -1737,7 +1843,7 @@ function editCampanha(id){setBar('');setW('wide');state.view='campedit';mskin(tr
       <div style="display:flex;align-items:center;gap:10px"><div style="font-weight:800;color:var(--brand-d)">🎯 Critério ${ci+1}</div>${multiCrit?'<button class="link" id="crmcrit" style="color:var(--falta);margin-left:auto">✕ remover este critério</button>':''}</div>
       <label>O que conta no ranking
         <select id="c_crit" style="padding:9px;border:1.5px solid var(--line);border-radius:8px;font-size:14px">
-          ${[['FAT','Faturamento (R$)'],['PESO','Peso (kg)'],['PROD','Produtos (variedade)'],['POSIT','Positivação (clientes)'],['CRESC','Crescimento %'],['MIX','Marcas movimentadas']].map(([k,l])=>`<option value="${k}" ${cr.criterio===k?'selected':''}>${l}</option>`).join('')}</select></label>
+          ${[['FAT','Faturamento (R$)'],['PESO','Peso (kg)'],['QTD','Itens vendidos (unid.)'],['PROD','Mix — produtos diferentes'],['POSIT','Positivação de venda (presença)'],['CRESC','Crescimento %'],['MIX','Marcas movimentadas']].map(([k,l])=>`<option value="${k}" ${cr.criterio===k?'selected':''}>${l}</option>`).join('')}</select></label>
       ${['FAT','PESO','PROD','POSIT'].indexOf(cr.criterio)>=0?`<label style="display:flex;align-items:flex-start;gap:9px;font-size:13px;background:#F1EFE9;border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer"><input type="checkbox" id="c_pormeta" ${cr.porMeta?'checked':''} style="width:18px;height:18px;margin-top:1px;flex:0 0 auto"><span><b>Cada vendedor tem a sua meta</b> — classifica por <b>% da meta batida</b> (setores diferentes: supermercado ≠ padaria)</span></label>`:''}
       <label>Quem disputa e recebe o prêmio
         <select id="c_rank" style="padding:9px;border:1.5px solid var(--line);border-radius:8px;font-size:14px">
@@ -2631,7 +2737,9 @@ try{
   netRefresh();
   // sempre come\u00e7a no login (respeita a Central de Acesso; nada de cair direto numa \u00e1rea)
   state.area='';state.acesso=null;
-  if(window.parent&&window.parent!==window){
+  var _forn='';try{_forn=new URLSearchParams(location.search).get('forn')||'';}catch(e){}
+  if(_forn){ screenFornecedor(_forn); }
+  else if(window.parent&&window.parent!==window){
     // embutido no portal: pede a identidade e espera o login \u00fanico (com fallback pro PIN)
     var _sc=document.getElementById('screen'); if(_sc)_sc.innerHTML='<div style="max-width:420px;margin:60px auto;text-align:center;color:#5b6470;font-family:sans-serif"><div style="font-size:34px">\ud83d\udd10</div><p>Entrando pelo portal\u2026</p></div>';
     try{window.parent.postMessage({type:'uoma-fat-ready'},location.origin);}catch(e){}
