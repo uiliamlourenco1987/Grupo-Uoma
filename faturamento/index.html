@@ -1103,7 +1103,7 @@ function parseProdVend(raw){const txt=String(raw).replace(/<[^>]+>/g,'\n');const
 function pickMixReport(){const inp=document.createElement('input');inp.type='file';inp.accept='.html,.htm';inp.onchange=e=>{if(e.target.files[0])importProdVend(e.target.files[0]);};inp.click();}
 function importProdVend(file){if(!file)return;const rd=new FileReader();const alias={'JOSE ADRIANO':'ADRIANO','ANDERSON SILVA':'ANDERSON'};
   rd.onload=()=>{try{const per=parseProdVend(rd.result);const m=mesObj();let n=0;const teamSet={EXTERNO:new Set(),INTERNO:new Set()};
-    m.vend.forEach(v=>{const key=Object.keys(per).find(k=>{const kn=norm(alias[k.toUpperCase()]||k);return kn===norm(v.nome)||kn.includes(norm(v.nome))||norm(v.nome).includes(kn);});
+    m.vend.forEach(v=>{v.mixVend=0;const key=Object.keys(per).find(k=>{const kn=norm(alias[k.toUpperCase()]||k);return kn===norm(v.nome)||kn.includes(norm(v.nome))||norm(v.nome).includes(kn);});
       if(key){v.mixVend=per[key].size;n++;per[key].forEach(c=>teamSet[v.grupo].add(c));}});
     if(!m.mixEquipe)m.mixEquipe={};['EXTERNO','INTERNO'].forEach(g=>{m.mixEquipe[g]=Object.assign(m.mixEquipe[g]||{obj:0,real:0},{real:teamSet[g].size});});
     toast(n?('Mix atualizado: '+n+' vend. \u00b7 uni\u00e3o ext '+teamSet.EXTERNO.size+' / int '+teamSet.INTERNO.size+' \u2713'):'Nenhum vendedor bateu com o relat\u00f3rio');syncPushMetas();reRender();}catch(e){toast('Erro ao ler o relat\u00f3rio');}};
