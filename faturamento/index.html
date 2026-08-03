@@ -1033,9 +1033,9 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);co
       <div class="k ok"><div class="n">${brMoney(tg.vend)}</div><div class="l">Vendido</div></div>
       <div class="k sub"><div class="n">${pct(tg.obj>0?tg.vend/tg.obj:0)}</div><div class="l">Atingido</div></div>
       <div class="k falta"><div class="n">${brMoney(tg.bonus)}</div><div class="l">B\u00f4nus previsto</div></div></div>
-    ${canEditMes()?`<div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 8px">${metaFat()?'<button class="btnsm" id="mplan" style="width:auto;padding:9px 16px">\u270f\ufe0f Planejar metas</button>':''}${metaFat()?'<button class="btnsm" id="mimport" style="width:auto;padding:9px 16px">📋 Importar planilha</button><button class="btnsm" id="mmodelo" style="width:auto;padding:9px 16px">⬇️ Modelo</button><button class="btnsm" id="mexport" style="width:auto;padding:9px 16px">⬇️ Metas atuais</button><input type="file" id="mimportF" accept=".csv,.txt" style="display:none">':''}<button class="btnsm" id="mpag" style="width:auto;padding:9px 16px">\ud83d\udcb5 Pagamentos</button>${metaFat()?`<button class="btnsm" id="mcentral" style="width:auto;padding:9px 16px;background:var(--brand,#0a7);color:#fff;border:none;font-weight:700">\ud83d\udce5 Central de Importa\u00e7\u00e3o Di\u00e1ria</button><button class="btnsm" id="mdesemp" style="width:auto;padding:9px 16px;background:#2f6fed;color:#fff;border:none;font-weight:700">📊 Importar Desempenho (tudo)</button><button class="btnsm" id="mimp" style="width:auto;padding:9px 16px">\ud83d\udce5 Importar realizado (Eco)</button><button class="btnsm" id="mmarca" style="width:auto;padding:9px 16px">\ud83c\udff7\ufe0f Importar marcas (VENDAS PESO)</button><button class="btnsm" id="mprod" style="width:auto;padding:9px 16px">\ud83d\udce6 Importar mix por produto (VEN430LA)</button>
+    ${canEditMes()?`<div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 8px">${metaFat()?'<button class="btnsm" id="mplan" style="width:auto;padding:9px 16px">\u270f\ufe0f Planejar metas</button>':''}${metaFat()?'<button class="btnsm" id="mimport" style="width:auto;padding:9px 16px">📋 Importar planilha</button><button class="btnsm" id="mmodelo" style="width:auto;padding:9px 16px">⬇️ Modelo</button><button class="btnsm" id="mexport" style="width:auto;padding:9px 16px">⬇️ Metas atuais</button><input type="file" id="mimportF" accept=".csv,.txt" style="display:none">':''}<button class="btnsm" id="mpag" style="width:auto;padding:9px 16px">\ud83d\udcb5 Pagamentos</button>${metaFat()?`<button class="btnsm" id="mcentral" style="width:auto;padding:9px 16px;background:var(--brand,#0a7);color:#fff;border:none;font-weight:700">\ud83d\udce5 Central de Importa\u00e7\u00e3o Di\u00e1ria</button><button class="btnsm" id="mdesemp" style="width:auto;padding:9px 16px;background:#2f6fed;color:#fff;border:none;font-weight:700">📊 Importar Desempenho (tudo)</button><button class="btnsm" id="mmarca" style="width:auto;padding:9px 16px">\ud83c\udff7\ufe0f Importar marcas (VENDAS PESO)</button><button class="btnsm" id="mprod" style="width:auto;padding:9px 16px">\ud83d\udce6 Importar mix por produto (VEN430LA)</button>
       <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)">Data ref.: <input type="date" id="inadRef" value="${esc(state.inadRef||todayISO())}" style="padding:7px;border:1.5px solid var(--line);border-radius:7px"></span>`:''}
-      <input type="file" id="mimpF" accept=".html,.htm" class="hidden"><input type="file" id="mdesempF" accept=".csv,.txt" class="hidden"><input type="file" id="mmarcaF" accept=".html,.htm" class="hidden"><input type="file" id="mprodF" accept=".html,.htm" class="hidden"></div>`:'<p class="muted" style="font-size:12px;margin:4px 2px 8px">Somente leitura \u2014 planejamento \u00e9 feito pela diretoria.</p>'}
+      <input type="file" id="mdesempF" accept=".csv,.txt" class="hidden"><input type="file" id="mmarcaF" accept=".html,.htm" class="hidden"><input type="file" id="mprodF" accept=".html,.htm" class="hidden"></div>`:'<p class="muted" style="font-size:12px;margin:4px 2px 8px">Somente leitura \u2014 planejamento \u00e9 feito pela diretoria.</p>'}
     ${(!metaEquipe()||metaEquipe()==='EXTERNO')?grp('EQUIPE EXTERNA','ext',ext,te):''}
     ${(!metaEquipe()||metaEquipe()==='INTERNO')?grp('EQUIPE INTERNA','int',intn,ti):''}
     ${marcasHTML(m)}
@@ -1053,7 +1053,6 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);co
   const nb0=$('#mnovo');if(nb0)nb0.onclick=()=>dialogNovoMes();
   {const pgb=$('#mpag');if(pgb)pgb.onclick=()=>screenMetasPag();}
   if(metaFat()){$('#mplan').onclick=()=>screenMetasPlan();{var _im=$('#mimport');if(_im)_im.onclick=()=>$('#mimportF').click();var _imf=$('#mimportF');if(_imf)_imf.onchange=function(e){var f=e.target.files[0];if(f){var rd=new FileReader();rd.onload=function(){importMetasCSV(String(rd.result||''));};rd.readAsText(f);}};var _mo=$('#mmodelo');if(_mo)_mo.onclick=()=>baixarModeloMetas();var _mx=$('#mexport');if(_mx)_mx.onclick=()=>baixarMetasAtuais();}{const _cb=$('#mcentral');if(_cb)_cb.onclick=()=>screenIntake();}
-    $('#mimp').onclick=()=>$('#mimpF').click();$('#mimpF').onchange=e=>importMetasEco(e.target.files[0]);
     $('#mmarca').onclick=()=>$('#mmarcaF').click();$('#mmarcaF').onchange=e=>importMarcaPeso(e.target.files[0]);
     const rf=$('#inadRef');if(rf)rf.onchange=e=>state.inadRef=e.target.value;
     $('#mprod').onclick=()=>$('#mprodF').click();$('#mprodF').onchange=e=>importProdVend(e.target.files[0]);
@@ -1161,9 +1160,27 @@ function parseMarcaPeso(t){const doc=new DOMParser().parseFromString(t,'text/htm
   const per={};for(let i=7;i+6<=cells.length;i+=7){const marca=(cells[i+1]||'').trim();const nome=(cells[i+3]||'').trim();if(!marca||!nome)continue;
     const key=norm(marca)+'|'+norm(nome);if(!per[key])per[key]={marca,nome,peso:0,vendas:0};per[key].peso+=parseBR(cells[i+4])||0;per[key].vendas+=parseBR(cells[i+6])||0;}
   return per;}
+function parseMarcaPesoCSV(text){
+  text=String(text||'').replace(/^﻿/,'');
+  var lines=text.split(/\r?\n/).filter(function(l){return l.trim()!=='';});
+  if(lines.length<2)return {};
+  var split=function(l){return l.split(';').map(function(c){return c.replace(/^"|"$/g,'').trim();});};
+  var head=split(lines[0]).map(function(h){return h.toUpperCase().replace(/[^A-Z]/g,'');});
+  var col=function(nm){return head.indexOf(nm);};
+  var iMarca=col('MARCA'),iNome=col('NOMEVENDEDOR'),iPeso=col('KILLOSTOTAIS'),iVend=col('VENDAS');
+  if(iNome<0)iNome=col('VENDEDOR');
+  if(iMarca<0||iNome<0)return {};
+  var per={};
+  for(var i=1;i<lines.length;i++){var c=split(lines[i]);var marca=(c[iMarca]||'').trim(),nome=(c[iNome]||'').trim();if(!marca||!nome)continue;
+    var key=norm(marca)+'|'+norm(nome);if(!per[key])per[key]={marca:marca,nome:nome,peso:0,vendas:0};
+    per[key].peso+=(iPeso>=0?_csvNum(c[iPeso]):0);per[key].vendas+=(iVend>=0?_csvNum(c[iVend]):0);}
+  return per;}
+function parseMarcaPesoAny(text){var s=String(text||'');var first=(s.split('\n')[0]||'');
+  if(first.indexOf(';')>=0&&/MARCA/i.test(first)&&/(KILLOSTOTAIS|NOMEVENDEDOR|VALORPORKILLO)/i.test(first))return parseMarcaPesoCSV(s);
+  return parseMarcaPeso(s);}
 function importMarcaPeso(file){if(!file)return;const rd=new FileReader();
   const alias={'JOSE ADRIANO':'ADRIANO','ANDERSON SILVA':'ANDERSON'};
-  rd.onload=()=>{try{const per=parseMarcaPeso(rd.result);const m=mesObj();let n=0;
+  rd.onload=()=>{try{const per=parseMarcaPesoAny(rd.result);const m=mesObj();let n=0;
     const vmatch=(vnome)=>Object.values(per).filter(r=>{const rn=norm(alias[r.nome.toUpperCase()]||r.nome);return rn===norm(vnome)||rn.includes(norm(vnome))||norm(vnome).includes(rn);});
     m.vend.forEach(v=>{
       // matriz completa marca\u00d7vendedor (base das campanhas)
@@ -1392,13 +1409,9 @@ var IK_CSS='.ikdrop{border:2.5px dashed var(--line,#cbd3e0);border-radius:16px;p
 function intakeRef(){return (state.inadRef||todayISO());}
 function intakeTypes(){return [
   {k:'separacao', enc:'utf-8',      lbl:'Separação (pedidos)',             grp:'Separação', re:/LISTA DE SEPARA/i,                            imp:function(f){importSeparacao(f);}},
-  {k:'inadvend',  enc:'iso-8859-1', lbl:'Inadimplência / A receber',            grp:'Financeiro', re:/BASE PARA INADIMPL|INADIMPL[ÊE]NCIA/i,          imp:function(f){state.inadRef=intakeRef();importInadVend(f);}},
-  {k:'financeiro',enc:'iso-8859-1', lbl:'Financeiro da empresa (REC424LA)',          grp:'Financeiro', re:/REC424LA|DOCUMENTOS\s*\(RECEBIDOS/i,           imp:function(f){importFinanceiro(f);}},
-  {k:'recebidos', enc:'iso-8859-1', lbl:'Recebidos por vendedor (REC408LA)',         grp:'Financeiro', re:/REC408LA/i,                                   imp:function(f){importRecebidos(f);}},
   {k:'desemp',    enc:'utf-8',      lbl:'Desempenho (vendas, positiva\u00e7\u00e3o, carteira, inadimpl\u00eancia)', grp:'Vendas', re:/CARTEIRACLIENTES|CLIENTESATENDIDOS/i, imp:function(f){importDesempenho(f);}},
   {k:'prodvend',  enc:'iso-8859-1', lbl:'Mix por produto (VEN430LA)',                grp:'Vendas',     re:/VEN430LA|PRODUTOS VENDIDOS POR VENDEDOR/i,    imp:function(f){importProdVend(f);}},
-  {k:'marcapeso', enc:'utf-8',      lbl:'Marcas por peso (VENDAS PESO)',             grp:'Vendas',     re:/VENDAS\s*PESO/i,                              imp:function(f){importMarcaPeso(f);}},
-  {k:'metaseco',  enc:'utf-8',      lbl:'Realizado por vendedor (Eco)',              grp:'Vendas',     re:/\(Eco\)/i,                                    imp:function(f){importMetasEco(f);}},
+  {k:'marcapeso', enc:'utf-8',      lbl:'Marcas por peso (VENDAS PESO)',             grp:'Vendas',     re:/VENDAS\s*PESO|KILLOSTOTAIS|VALORPORKILLO/i,                              imp:function(f){importMarcaPeso(f);}},
   {k:'catalogo',  enc:'iso-8859-1', lbl:'Catálogo de produtos',                 grp:'Cadastros',  re:/CADASTRO DE PRODUTOS/i,                       imp:function(f){importCatalogo(f);}}
 ];}
 function intakeFind(k){return intakeTypes().filter(function(t){return t.k===k;})[0]||null;}
@@ -1411,7 +1424,7 @@ function intakeCount(k,text){try{
   if(k==='inadvend'){var iv=parseInadVend(text,new Date(intakeRef()+'T00:00:00'));return iv&&iv.per?Object.keys(iv.per).length:0;}
   if(k==='financeiro'){var r=parseFinanceiro(text);if(!r)return 0;return (typeof r.count==='number')?r.count:(Array.isArray(r)?r.length:1);}
   if(k==='prodvend')return Object.keys(parseProdVend(text)||{}).length;
-  if(k==='marcapeso')return Object.keys(parseMarcaPeso(text)||{}).length;
+  if(k==='marcapeso')return Object.keys(parseMarcaPesoAny(text)||{}).length;
   if(k==='recebidos')return Object.keys(parseRecebidos(text)||{}).length;
 }catch(e){return -1;}return 0;}
 function readFileEnc(file,enc){return new Promise(function(res,rej){var rd=new FileReader();rd.onload=function(){res(rd.result);};rd.onerror=function(){rej(rd.error);};rd.readAsText(file,enc||'utf-8');});}
