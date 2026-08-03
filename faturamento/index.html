@@ -1735,7 +1735,9 @@ function campValor(v,c){const mk=c.marcas||[];
   if(c.porMeta||c.criterio==='METALVO'){var meta=(c.metasInd&&c.metasInd[v.nome])||0;return meta>0?val/meta*100:0;}
   return val;}
 function campFmt(c,val){if(c.porMeta||c.criterio==='METALVO')return Math.floor(val)+'% da meta';if(c.criterio==='FAT')return brMoney(val);if(c.criterio==='PESO')return nrBR(Math.round(val*10)/10)+' kg';if(c.criterio==='CRESC')return nrBR(Math.round(val*10)/10)+'%';if(c.criterio==='PROD')return nrBR(val)+' produto(s)';if(c.criterio==='QTD')return nrBR(val)+' item(ns)';if(c.criterio==='POSIT')return nrBR(val)+' venda(s)';return nrBR(val)+' marca(s)';}
+function ehSuperv(nome){const n=String(nome||'').toUpperCase();return n===String(METAS_SUPERV.EXTERNO||'').toUpperCase()||n===String(METAS_SUPERV.INTERNO||'').toUpperCase();}
 function campRank(c,scope){let list=mesObj().vend.slice();if(scope==='EXTERNO')list=list.filter(v=>v.grupo==='EXTERNO');else if(scope==='INTERNO')list=list.filter(v=>v.grupo==='INTERNO');
+  list=list.filter(v=>!v.isExtra&&!ehSuperv(v.nome));   // supervisores e o card Férias/Extra não concorrem ao prêmio
   return list.map(v=>({v,val:campValor(v,c)})).filter(r=>r.val>0&&r.val>=(c.minPart||0)).sort((a,b)=>b.val-a.val);}
 function campPremioPos(c,pos,val){const p=c.premio||{};
   if(p.tipo==='PODIO')return (p.podio&&pos<=p.podio.length)?(p.podio[pos-1]||0):0;
