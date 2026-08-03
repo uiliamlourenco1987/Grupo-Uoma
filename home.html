@@ -9,7 +9,7 @@
 <title>Portal Grupo Uoma — Início (mural)</title>
 <script>
 /* auto-update: recarrega sozinho quando há versão nova (fim do ?v na mão) */
-(function(){try{var BUILD="7.1";window.__BUILD=BUILD;var K="uoma_reload";
+(function(){try{var BUILD="7.2";window.__BUILD=BUILD;var K="uoma_reload";
   fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var latest=(j&&j.v)?String(j.v):"";
     if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
@@ -675,6 +675,7 @@
   var APRES={loja:{n:"Loja do Sorveteiro e Confeiteiro",d:"Loja de produtos de panifica\u00e7\u00e3o, sorveteria e confeitaria. H\u00e1 mais de 30 anos no Amap\u00e1."},padoquinha:{n:"Padoquinha",d:"Primeira ind\u00fastria de salgados ultracongelados do Amap\u00e1."},merenda:{n:"Merenda Certa",d:"Alimenta\u00e7\u00e3o e merenda com qualidade e responsabilidade para o dia a dia."}};
   function renderApres(empresas){var box=el("apresEmp");if(!box)return;var keys=(empresas&&empresas.indexOf&&empresas.indexOf("todas")>=0)?["loja","padoquinha","merenda"]:((empresas&&empresas.filter)?empresas.filter(function(k){return APRES[k];}):[]);if(keys.length===1){var a=APRES[keys[0]];box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}else if(keys.length>1){box.innerHTML="<div class=\"al\">As empresas</div>"+keys.map(function(k){var a=APRES[k];return "<div style=\"margin-top:9px\"><b style=\"font-size:13.5px\">"+esc(a.n)+"</b><p style=\"margin:2px 0 0\">"+esc(a.d)+"</p></div>";}).join("");}else{var a=APRES.loja;box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}}
   var VERSIONS=[
+    {v:"v7.2",d:"03/08",desc:"Folha/Lançamentos: botão 🖨️ Imprimir (gera uma folha limpa dos lançamentos por competência — bruto, líquido e o rateio Banco/Dinheiro/PIX com totais). E ao Salvar os lançamentos, os dados agora atualizam a folha em memória — Pagamentos, Ajudas & Vales, Financeiro e as outras abas passam a refletir na hora o que foi preenchido."},
     {v:"v7.1",d:"03/08",desc:"Folha: as REGRAS agora se comunicam com a folha de verdade. Ao salvar as regras (marcar/desmarcar entra no líquido, aparece no recibo, etc.), o sistema recalcula E regrava a folha no banco — vale na hora em toda a folha e no portal, não fica só de enfeite."},
     {v:"v7.0",d:"03/08",desc:"Folha (correção): proventos marcados 'entra na base' (Outros Recebimentos, Metas, Comissão) agora SOMAM no líquido — antes eram ignorados. E o pagamento (Banco/Dinheiro/PIX) passou a ser conferido pelo LÍQUIDO (o que se paga), não pelo Total. Conferido com a folha do escritório: Rebeca = 1.043,00."},
     {v:"v6.9",d:"03/08",desc:"Metas: removidos os dados de EXEMPLO do código (meses/vendedores/financeiro/campanhas fictícios) — as telas ganham estado vazio (sem crash, sem número falso). Novo fluxo por PLANILHA: baixe o Modelo (CSV), o faturamento preenche só os dados de meta (vendedor, equipe, meta faturamento/mix, carteira, positivação), e Importar planilha alimenta o mês — atualiza quem já existe (preserva o realizado), adiciona novos e remove quem não está na planilha (limpa exemplos). Também dá pra Baixar metas atuais pra editar e reimportar."},
