@@ -1368,7 +1368,7 @@ function marcaMetaEditor(mm,i,m){const groups=marcaGroups(mm.escopo);const mc=ma
     <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:4px">${colInputs}</div>
     <div class="muted" style="font-size:11.5px;margin-top:8px"><b>${mc.nColab} participante(s)</b> (com meta &gt; 0) \u00b7 <b>cada</b> vendedor que bater a sua meta ganha o valor do seu setor (${groups.map(g=>(g==='EXTERNO'?'externo ':'interno ')+brMoney(marcaValorSetor(mm,g))).join(' \u00b7 ')}). Se todos baterem, o fornecedor paga at\u00e9 ${brMoney(mc.colab.filter(c=>c.part).reduce((a,c)=>a+c.valorInd,0))}.</div>
   </div>`;}
-function metaMatch(ecoNome,list){const alias={'JOSE ADRIANO':'ADRIANO','ANDERSON SILVA':'ANDERSON','GENIVALDO SUPERVISOR':'GENIVALDO'};
+function metaMatch(ecoNome,list){if(!list||!list.length||!ecoNome)return null;const alias={'JOSE ADRIANO':'ADRIANO','ANDERSON SILVA':'ANDERSON','GENIVALDO SUPERVISOR':'GENIVALDO'};
   const n=norm(alias[ecoNome.trim().toUpperCase()]||ecoNome);
   return list.find(v=>{const vn=norm(v.nome);return vn===n||n.includes(vn)||vn.includes(n);});}
 /* ===== CENTRAL DE IMPORTAÇÃO DIÁRIA ===== */
@@ -1497,7 +1497,10 @@ function importDesempenho(file){if(!file)return;
   if(typeof mesFechado==='function'&&mesFechado()){toast('Mês fechado — reabra para importar.');return;}
   const rd=new FileReader();
   rd.onload=()=>{try{const rows=parseDesempenho(rd.result);if(!rows.length){toast('Não reconheci esse CSV de desempenho');return;}
-    const m=mesObj();let n=0;
+    const m=mesObj();
+    if(!m){toast('Crie ou selecione o mês antes de importar.');return;}
+    if(!m.vend||!m.vend.length){toast('Importe as METAS do mês (📋 planilha) antes do Desempenho.');return;}
+    let n=0;
     rows.forEach(r=>{const v=metaMatch(r.nome,m.vend);if(v){
       v.vendido=Math.round(r.vendas*100)/100;
       v.positivados=(v.grupo==='INTERNO')?r.positVendas:r.positClientes;
