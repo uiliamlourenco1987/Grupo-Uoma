@@ -716,6 +716,15 @@ function screenLogin(){setBar('');setWide(false);state.view='login';mskin(false)
   let chosen=null;$('#names').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;[...$('#names').children].forEach(c=>c.classList.remove('on'));b.classList.add('on');chosen=b.dataset.n;});
   $('#enter').addEventListener('click',()=>{const pin=$('#pin').value.trim();if(!chosen){toast('Escolha seu nome');return;}const a=findAcesso(chosen);if(!a||String(a.pin)!==pin){toast('PIN incorreto');return;}state.conferente=chosen;state.acesso=a;if(wantCampanhas()){try{state.metaRole=(a.perm&&a.perm.metasRole)||'sup';state.metaWho=chosen;state.metaMes=mesVigente();screenCampanhas();return;}catch(e){}}screenAreaPick();});}
 
+function embedded(){return !!(state.embedded||(window.parent&&window.parent!==window));}
+function sairApp(){
+  if(embedded()){                       // dentro do portal: NUNCA mostrar o menu do app — volta pro portal (único controle de acesso)
+    try{window.parent.postMessage({type:'uoma-fat-back'},location.origin);}catch(e){}
+    var sc=document.getElementById('screen');if(sc)sc.innerHTML='<div style="max-width:420px;margin:60px auto;text-align:center;color:#5b6470;font-family:sans-serif"><div style="font-size:30px">↩︎</div><p>Voltando ao portal…</p></div>';
+    return;
+  }
+  screenAreaPick();
+}
 function screenAreaPick(){setBar('');setW('pick');state.view='areapick';mskin(false);state.area='';
   const ac=state.acesso||findAcesso(state.conferente)||{perm:{sep:true,loja:true,admin:true,painel:true}};const pm=ac.perm||{};
   const opt=(key,a,e,t,s)=>pm[key]?`<button data-a="${a}"><span class="e">${e}</span><span>${t}<small>${s}</small></span></button>`:'';
@@ -755,7 +764,7 @@ function renderPainel(){
       <div class="k"><div class="n" style="color:#16a34a">${fi.length}</div><div class="l">Finalizados</div></div></div>
     <div class="kanban">${col('\u23f3 Aguardando',pend,'c1')}${col('\ud83d\udcc2 Em separa\u00e7\u00e3o',ab,'c2')}${col('\u25d1 Separados parcialmente',pa,'c3',o=>`falta: ${faltaArea(o)}`,'par')}${col('\u2705 Finalizados e enviados',fi,'c4',()=>'enviado \u2713','ok')}${col('\u26a0\ufe0f Com cortes / substitui\u00e7\u00f5es',iss,'c5',o=>issueFlag(o),'falt')}</div>
     <button class="link no-print" id="pnsair" style="display:block;margin:16px auto 0">\u25c2 sair do painel</button></div>`;
-  const s=$('#pnsair');if(s)s.onclick=()=>screenAreaPick();}
+  const s=$('#pnsair');if(s)s.onclick=()=>sairApp();}
 function screenPainel(){setBar('');setW('tv');state.view='painel';mskin(false);renderPainel();
   clearInterval(state.painelTimer);state.painelTimer=setInterval(()=>{if(state.view!=='painel'){clearInterval(state.painelTimer);return;}renderPainel();},8000);
   clearInterval(state.clockTimer);state.clockTimer=setInterval(()=>{if(state.view!=='painel'){clearInterval(state.clockTimer);return;}const c=$('#pnclock');if(c)c.textContent=nowClock();},1000);}
@@ -800,18 +809,18 @@ function screenVendLogin(){setBar('');setW('');state.view='vendlogin';mskin(fals
     <button class="link" style="display:block;margin:12px auto 0" id="vback">\u25c2 voltar</button></div>`;
   let ch=null;$('#vn').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;[...$('#vn').children].forEach(c=>c.classList.remove('on'));b.classList.add('on');ch=VENDEDORES.find(v=>v.cod===b.dataset.c);});
   $('#venter').onclick=()=>{const pin=$('#vpin').value.trim();if(!ch){toast('Escolha o vendedor');return;}if(ch.pin!==pin){toast('PIN incorreto');return;}state.vend=ch;screenVendPed();};
-  $('#vback').onclick=()=>screenAreaPick();}
+  $('#vback').onclick=()=>sairApp();}
 function screenVendPed(){setBar('');setW('wide');state.view='vend';mskin(false);const v=state.vend;const pedidos=vendOrders(v);
   $('#screen').innerHTML=`<div class="wrap"><div class="whobar"><span class="lbl">Vendedor:</span><b style="color:var(--brand-d)">${esc(v.nome)}</b><button class="link" id="vsair" style="margin-left:auto">sair</button></div>
     ${myMetaHTML(v.nome)}
     <h2 style="margin:14px 2px 4px;font-size:20px">Seus pedidos</h2>
     <p class="muted" style="margin:0 2px 12px;font-size:13px">Somente leitura \u2014 acompanhe a posi\u00e7\u00e3o e veja o que foi cortado ou substitu\u00eddo.</p>
     ${pedidos.length?boardCore(pedidos,true):'<div class="card" style="padding:20px;text-align:center;color:var(--mut)">Voc\u00ea n\u00e3o tem pedidos no momento.</div>'}</div>`;
-  $('#vsair').onclick=()=>screenAreaPick();
+  $('#vsair').onclick=()=>sairApp();
   $('#screen').querySelectorAll('.romlink').forEach(c=>c.onclick=()=>{state.romFrom='vend';screenRomaneio(orderByNum(c.dataset.o));});}
 function screenMinhaMeta(){setBar('');setW('wide');state.view='minhameta';mskin(false);var nome=(state.acesso&&state.acesso.nome)||state.conferente||'';
   $('#screen').innerHTML=`<div class="wrap"><div class="whobar"><span class="lbl">Vendedor:</span><b style="color:var(--brand-d)">${esc(nome)}</b><button class="link" id="mmsair" style="margin-left:auto">menu</button></div>${myMetaHTML(nome)}</div>`;
-  var s=$('#mmsair');if(s)s.onclick=()=>screenAreaPick();}
+  var s=$('#mmsair');if(s)s.onclick=()=>sairApp();}
 
 /* ================= METAS DE VENDAS ================= */
 function mesVigente(){try{var ms=METAS.meses||{};var d=new Date();var ck=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');if(ms[ck]&&(ms[ck].vend||[]).length)return ck;var kd=Object.keys(ms).filter(function(k){return (ms[k].vend||[]).length;}).sort();if(kd.length)return kd[kd.length-1];if(ms[ck])return ck;var ks=Object.keys(ms).sort();return ks.length?ks[ks.length-1]:METAS.mesAtual;}catch(e){return METAS.mesAtual;}}
@@ -985,7 +994,7 @@ function screenMetasLogin(){setBar('');setW('');state.view='metaslogin';mskin(tr
     <button class="link" style="display:block;margin:12px auto 0" id="mback">\u25c2 voltar</button></div>`;
   let ch=null;$('#mn').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;[...$('#mn').children].forEach(c=>c.classList.remove('on'));b.classList.add('on');ch=METAS_ACCESS.find(a=>a.nome===b.dataset.n);});
   $('#menter').onclick=()=>{const pin=$('#mpin').value.trim();if(!ch){toast('Escolha o acesso');return;}if(ch.pin!==pin){toast('PIN incorreto');return;}state.metaRole=ch.role;state.metaWho=ch.nome;state.metaMes=mesVigente();screenMetas();};
-  $('#mback').onclick=()=>screenAreaPick();}
+  $('#mback').onclick=()=>sairApp();}
 /* ===== Metas por PLANILHA (CSV) — só os dados de meta; realizado vem do import diário ===== */
 function _mCsvHead(){return "Vendedor,Equipe,Meta Faturamento,Meta Mix,Carteira,Meta Positivacao (%)";}
 function _csvEsc(v){v=String(v==null?'':v);return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
@@ -1098,7 +1107,7 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);sy
     ${marcasHTML(m)}
     <p class="muted" style="font-size:12px;text-align:center;margin-top:18px">Valores de b\u00f4nus por meta batida: Faturamento ${brMoney(METAS_BONUS.fat)} \u00b7 Mix ${brMoney(METAS_BONUS.mix)} \u00b7 Positiva\u00e7\u00e3o ${brMoney(METAS_BONUS.posit)} \u00b7 Inadimpl\u00eancia ${brMoney(METAS_BONUS.inad)}.</p></div>`;
   wireWho();
-  $('#msair').onclick=()=>screenAreaPick();
+  $('#msair').onclick=()=>sairApp();
   {const pb=$('#mpainel');if(pb)pb.onclick=()=>screenPainelMetas();}
   {const _fb=$('#mfechar');if(_fb)_fb.onclick=()=>fecharMes();}
   {const _rb2=$('#mreabrir');if(_rb2)_rb2.onclick=()=>reabrirMes();}
@@ -1672,7 +1681,7 @@ function screenCampanhas(){setBar('');setW('wide');state.view='camp';mskin(true)
       <button class="link" id="cvoltar" ${dir?'':'style="margin-left:auto"'}>\u25c2 voltar</button></div>
     <p class="muted" style="font-size:13px;margin:0 2px 12px">Campanhas de fornecedor \u2014 usam as mesmas vendas do faturamento. O ranking \u00e9 autom\u00e1tico (interno \u00b7 externo \u00b7 geral) a partir das vendas por marca.</p>
     ${camps.length?camps.map(c=>campCardHTML(c,dir)).join(''):'<div class="banner">Nenhuma campanha ainda.'+(dir?' Clique em \u201cNova campanha\u201d.':'')+'</div>'}</div>`;
-  wireWho();$('#cvoltar').onclick=()=>screenAreaPick();
+  wireWho();$('#cvoltar').onclick=()=>sairApp();
   if(dir){const nb=$('#cnew');if(nb)nb.onclick=()=>editCampanha(null);
     $('#screen').querySelectorAll('.cedit').forEach(b=>b.onclick=()=>editCampanha(b.dataset.id));
     $('#screen').querySelectorAll('.cenc').forEach(b=>b.onclick=()=>screenEncarte(b.dataset.id));
@@ -1983,7 +1992,7 @@ function screenArea(){state.view='area';mskin(false);state.current=null;setW('op
     <div class="tabs"><button data-t="geral" class="${state.tab==='geral'?'on':''}">\ud83d\udccb Lista geral</button>
       <button data-t="pedidos" class="${state.tab==='pedidos'?'on':''}">\ud83e\uddfe Por pedido</button>
       <button data-t="enviadas" class="${state.tab==='enviadas'?'on':''}">\ud83d\udce4 Enviadas</button></div>${body}</div>`;
-  wireWho();$('#trocararea').onclick=()=>screenAreaPick();
+  wireWho();$('#trocararea').onclick=()=>sairApp();
   $('#area').querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{state.tab=b.dataset.t;screenArea();});
   if(state.tab==='geral'){const a=$('#area');a.addEventListener('click',onConfClick);a.addEventListener('input',onConfInput);
     workRows(state.area).forEach(r=>{const e=estate(r.o,r.it.c,r.scope);if(state.area==='LOJA'&&e.status&&e.status!=='OK')renderSub(r.o,r.it.c,r.scope);});setSendBar();}
@@ -2297,7 +2306,7 @@ function screenAdmin(){state.view='admin';mskin(false);state.current=null;setBar
         ${cortados.length?cortados.map(({o,it,r})=>`<div class="fl romlink" data-o="${o.numero}" style="cursor:pointer"><div class="fd">${esc(it.d)}</div><div class="meta" style="margin-top:2px"><span>\ud83e\uddfe <b>${esc(clienteShort(o))}</b> \u00b7 N\u00ba ${o.numero}</span><span style="color:var(--falta)">cortado: <b>${nrBR(r.shortfall)}</b> de ${nrBR(r.requested)}</span></div></div>`).join(''):'<div class="muted" style="text-align:center;padding:10px">Nenhum.</div>'}</div>
     </div>
     <p class="muted" style="font-size:12px;text-align:center;margin-top:18px">Os n\u00fameros s\u00e3o atualizados em tempo real pelo banco de dados (Supabase).</p></div>`;
-  wireWho();$('#trocararea').onclick=()=>screenAreaPick();
+  wireWho();$('#trocararea').onclick=()=>sairApp();
   {const ab=$('#admAcessos');if(ab)ab.onclick=()=>screenAcessos();}
   $('#impPed').onclick=()=>$('#impPedF').click();$('#impPedF').onchange=e=>importSeparacao(e.target.files[0]);
   $('#impPre').onclick=()=>$('#impPreF').click();$('#impPreF').onchange=e=>importCatalogo(e.target.files[0]);
@@ -2594,7 +2603,7 @@ window.addEventListener('offline',()=>{state.online=false;netRefresh();});
 /* ===== Login único vindo do portal (mesma origem, dentro de iframe) ===== */
 function _portalApplyAuth(d){try{
   var perm=(d&&d.perm)||{};
-  state.acesso={nome:String((d&&d.nome)||'Portal'),pin:String((d&&d.pin)||''),ativo:true,perm:perm};
+  state.acesso={nome:String((d&&d.nome)||'Portal'),pin:String((d&&d.pin)||''),ativo:true,perm:perm};state.embedded=true;
   state.conferente=state.acesso.nome;
   state.metaRole=perm.metasRole||'';
   try{state.metaMes=mesVigente();}catch(e){}
