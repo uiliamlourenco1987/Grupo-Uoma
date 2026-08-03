@@ -1354,12 +1354,21 @@ function dialogLinkFornecedor(c,url){
   ov.querySelector('#lkClose').onclick=function(){ov.remove();};
   ov.querySelector('#lkCopy').onclick=function(){var i=ov.querySelector('#lkInp');i.select();try{navigator.clipboard.writeText(i.value);}catch(e){try{document.execCommand('copy');}catch(_){}}var b=ov.querySelector('#lkCopy');b.textContent='✓ Copiado';setTimeout(function(){b.textContent='📋 Copiar';},1500);};
 }
+function campBestMes(c){
+  var marks=(c.marcas||[]).map(function(x){return String(x).toUpperCase();});
+  var ms=METAS.meses||{};
+  var has=function(k){var mm=ms[k];if(!mm||!mm.vend)return false;return mm.vend.some(function(v){var mv=v.marcaVendas||{};return marks.some(function(mk){var a=mv[mk];return a&&((a.vendas||0)||(a.itens||0)||(a.produtos||0)||(a.positivados||0)||(a.peso||0));});});};
+  var cur=mesVigente();if(has(cur))return cur;
+  var keys=Object.keys(ms).sort();for(var i=keys.length-1;i>=0;i--){if(has(keys[i]))return keys[i];}
+  return cur;
+}
 async function screenFornecedor(token){mskin(true);setW('wide');
   $('#screen').innerHTML='<div class="wrap"><div style="text-align:center;color:#5b6470;padding:50px;font-family:sans-serif">Carregando campanha\u2026</div></div>';
-  try{var d=await apiGet();hydrate(d);}catch(e){}
+  // busca s\u00f3 o blob de metas (robusto: n\u00e3o depende do RLS das outras tabelas)
+  try{var r=await fetch(SB_URL+'/rest/v1/metas?select=data&id=eq.1',{headers:sbH()});var j=await r.json();var blob=(j&&j[0]&&j[0].data)||null;if(blob&&blob.meses)METAS=blob;}catch(e){}
   var c=(METAS.campanhas||[]).find(function(x){return String(x.token||'')===String(token);});
   if(!c){$('#screen').innerHTML='<div class="wrap"><div class="banner" style="margin-top:30px">Link inv\u00e1lido ou campanha encerrada. Fale com a Loja do Sorveteiro.</div></div>';return;}
-  try{state.metaMes=mesVigente();}catch(e){}
+  try{state.metaMes=campBestMes(c);}catch(e){}
   var hoje=new Date();var ativa=true;try{ativa=(new Date(c.ini)<=hoje&&hoje<=new Date(c.fim));}catch(e){}
   $('#screen').innerHTML='<div class="wrap">'+
     '<div style="text-align:center;margin:10px 0 16px"><div style="font-size:11px;letter-spacing:1.2px;color:var(--brand-d);font-weight:800">ACOMPANHAMENTO DA CAMPANHA</div><h2 style="margin:4px 0;font-family:var(--serif)">'+esc(c.fornecedor||'')+'</h2><div class="muted" style="font-size:12.5px">'+(ativa?'campanha em andamento':'campanha encerrada')+' \u00b7 '+esc(c.ini||'')+' a '+esc(c.fim||'')+'</div></div>'+
@@ -1728,7 +1737,7 @@ function campCriterios(c){if(c&&c.criterios&&c.criterios.length)return c.criteri
 function subCamp(c,cr){return Object.assign({},c,{criterio:cr.criterio,premio:cr.premio,metasInd:cr.metasInd,porMeta:cr.porMeta});}
 function campDias(c){try{var d1=new Date((c&&c.ini)||''),d2=new Date((c&&c.fim)||'');var n=Math.round((d2-d1)/86400000);return isFinite(n)&&n>0?n:0;}catch(e){return 0;}}
 function campMarcos(c){return (c&&c.marcos)?c.marcos:[];}
-function campValor(v,c){const mk=c.marcas||[];
+function campValor(v,c){const mk=(c.marcas||[]).map(k=>String(k).toUpperCase());
   if(c.criterio==='CRESC'){let cur=0,prev=0;mk.forEach(k=>{const a=(v.marcaVendas||{})[k],b=(v.marcaVendasPrev||{})[k];cur+=a?a.vendas:0;prev+=b?b.vendas:0;});return prev>0?((cur-prev)/prev*100):(cur>0?100:0);}
   var crit=(c.criterio==='METALVO')?'FAT':c.criterio;
   let val=0;mk.forEach(k=>{const a=(v.marcaVendas||{})[k];if(!a)return;if(crit==='FAT')val+=a.vendas;else if(crit==='PESO')val+=a.peso;else if(crit==='PROD')val+=(a.produtos||0);else if(crit==='QTD')val+=(a.itens||0);else if(crit==='POSIT')val+=(a.positivados||0);else if(crit==='MIX')val+=1;});
