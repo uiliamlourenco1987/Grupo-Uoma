@@ -491,6 +491,7 @@ function marcaMetaCalc(mm,m){const groups=marcaGroups(mm.escopo);const colab=[];
   return {groups,colab,nColab,alvoTotal,realTotal,hits,custoTotal};}
 function marcaBonusForVend(v,m){let bo=0;const items=[];marcaMetasOf(m).forEach(mm=>{const mc=marcaMetaCalc(mm,m);const mine=mc.colab.find(c=>c.v===v);if(!mine)return;if(mine.hit)bo+=mine.valorInd;items.push({marca:mm.marca,criterio:mm.criterio,metaInd:mine.metaInd,real:mine.real,hit:mine.hit,valorInd:mine.valorInd});});return {bonus:bo,items};}
 function marcaKnownList(m){const s=new Set(Object.keys(METAS_MARCA_BONUS_DEFAULT));(m.vend||[]).forEach(v=>Object.keys(v.marcaVendas||{}).forEach(k=>s.add(k)));return [...s].sort();}
+function marcasParaCampanha(){var s=new Set();try{marcaKnownList(mesObj()).forEach(function(x){if(x)s.add(String(x).toUpperCase());});}catch(e){}try{(CATALOG||[]).forEach(function(c){if(c&&c.m)s.add(String(c.m).toUpperCase());});}catch(e){}try{(METAS.campanhas||[]).forEach(function(c){(c.marcas||[]).forEach(function(x){if(x)s.add(String(x).toUpperCase());});});}catch(e){}return Array.from(s).filter(Boolean).sort();}
 
 let CATALOG=[
   {c:"000569",d:"MISTURA BOLO CHOCOLATE 5KG - FINISSIMO",m:"FINISSIMO",g:"MISTURAS E PREPAROS"},
@@ -1847,9 +1848,9 @@ function editCampanha(id){setBar('');setW('wide');state.view='campedit';mskin(tr
     +`<button class="ctab" id="caddcrit" style="padding:8px 13px;border-radius:9px 9px 0 0;border:1.5px dashed var(--gold-soft);border-bottom:none;font-size:12.5px;font-weight:800;cursor:pointer;background:#fff;color:#8a6b1f">＋ critério</button>`;
   $('#screen').innerHTML=`<div class="wrap"><div class="mselbar"><h2 style="margin:0;font-size:20px">${id?'✏️ Editar':'＋ Nova'} campanha</h2><button class="link" id="cev" style="margin-left:auto">◂ voltar</button></div>
     <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px;max-width:660px">
-      <label>Nome da campanha ${inp('c_nome',c.nome,'ex.: Campanha do mês')}</label>
-      <label>Fornecedor ${inp('c_forn',c.fornecedor,'ex.: HARALD')}</label>
-      <label>Marca(s) que contam (separadas por vírgula) ${inp('c_marcas',(c.marcas||[]).join(', '),'HARALD, MAVALERIO')}</label>
+      <label>Nome da campanha ${inp('c_nome',c.nome,'ex.: Campanha de fim de ano')}<div style="font-size:11px;color:var(--mut);margin-top:3px">Um nome qualquer, à sua escolha.</div></label>
+      <label>Fornecedor / marca que conta <input id="c_forn" value="${esc(c.fornecedor||(c.marcas&&c.marcas[0])||'')}" list="campMarcasDL" placeholder="comece a digitar…" autocomplete="off" style="padding:9px 11px;border:1.5px solid var(--line);border-radius:8px;font-size:14px;text-transform:uppercase;width:100%"><datalist id="campMarcasDL">${marcasParaCampanha().map(x=>`<option value="${esc(x)}">`).join('')}</datalist><div style="font-size:11px;color:var(--mut);margin-top:3px">Comece a digitar e escolha da lista. <b>É esta marca que liga as vendas à campanha</b> — e é a mesma que você usa no “🏭 Importar dados”.</div></label>
+      <details style="font-size:13px"><summary style="cursor:pointer;color:var(--mut)">Outras marcas que também contam (opcional)</summary><div style="margin-top:8px">${inp('c_marcas',(c.marcas||[]).slice(1).join(', '),'ex.: outra marca do mesmo fornecedor')}<div style="font-size:11px;color:var(--mut);margin-top:3px">Só se a campanha somar mais de uma marca. Separe por vírgula.</div></div></details>
       <div style="display:flex;gap:12px;flex-wrap:wrap"><label style="flex:1">Início ${inp('c_ini',c.ini,'','width:100%')}</label><label style="flex:1">Fim ${inp('c_fim',c.fim,'','width:100%')}</label><label style="flex:1">Mín. p/ participar ${inp('c_min',c.minPart||0,'0','width:100%')}</label></div>
       <hr style="border:none;border-top:1px solid var(--line)">
       <div style="font-weight:800;font-size:12px;letter-spacing:.08em;color:#9a927e;text-transform:uppercase">Critérios de premiação</div>
@@ -1883,7 +1884,8 @@ function editCampanha(id){setBar('');setW('wide');state.view='campedit';mskin(tr
         <button class="btnsm" id="mkadd" style="width:auto;padding:7px 14px">＋ adicionar marco</button></div>`:''}
       <button class="btn primary" id="csave" style="max-width:240px">💾 Salvar campanha</button></div></div>`;
   const readForm=()=>{const g=x=>{const e=$('#'+x);return e?e.value:'';};
-    c.nome=g('c_nome').trim();c.fornecedor=g('c_forn').trim();c.marcas=g('c_marcas').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+    c.nome=g('c_nome').trim();c.fornecedor=g('c_forn').trim();
+    {var principal=c.fornecedor.toUpperCase();var extras=g('c_marcas').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);c.marcas=[principal].concat(extras).filter(function(x,i,a){return x&&a.indexOf(x)===i;});}
     c.minPart=parseBR(g('c_min'))||0;c.ini=g('c_ini').trim();c.fim=g('c_fim').trim();
     cr.criterio=g('c_crit');p.tipo=g('c_ptipo');p.rank=g('c_rank');
     {var pm=$('#c_pormeta');cr.porMeta=pm?pm.checked:false;}
