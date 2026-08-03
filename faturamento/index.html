@@ -2471,7 +2471,7 @@ function syncPush(action,payload){
   apiPost(body).catch(()=>{SYNC.queue.push(body);persistLocal();netRefresh();});   // offline: guarda pra reenviar depois
 }
 // ---- Metas de vendas: guarda o planejamento inteiro (metas, marcas, inadimpl\u00eancia, supervisores, campanhas) ----
-function syncPushMetas(){if(!syncOn())return;syncPush('metas',{metas:METAS});}
+function syncPushMetas(){if(!syncOn())return;try{var d=new Date();var ck=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');if(METAS.meses&&METAS.meses[ck])METAS.mesAtual=ck;}catch(e){}syncPush('metas',{metas:METAS});}
 
 /* ===== PERSIST\u00caNCIA LOCAL (n\u00e3o perde a confer\u00eancia se fechar/travar o aparelho) ===== */
 const LS_KEY='sepdig_v1';
