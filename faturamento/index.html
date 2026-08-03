@@ -826,7 +826,7 @@ function screenAreaPick(){setBar('');setW('pick');state.view='areapick';mskin(fa
     opt('metas','CAMPANHAS','\ud83c\udfc6','Campanhas','criar e acompanhar campanhas do fornecedor'),
     opt('metas','PAINELMETAS','\ud83d\udcca','Painel de Metas','acompanhar todas as metas ao vivo'),
     opt('painel','PAINEL','\ud83d\udcfa','Painel de parede (TV)','quadro que atualiza sozinho'),
-    pm.admin?`<button data-a="ACESSOS"><span class="e">\ud83d\udc65</span><span>Central de Acesso<small>colaboradores, PINs e permiss\u00f5es</small></span></button>`:''].join('');
+    (pm.admin&&window.parent===window)?`<button data-a="ACESSOS"><span class="e">\ud83d\udc65</span><span>Central de Acesso<small>colaboradores, PINs e permiss\u00f5es</small></span></button>`:''].join('');
   $('#screen').innerHTML=`<div class="wrap">${whoBar()}
     <div style="text-align:center;margin:18px 0 4px"><h2 style="margin:0">Onde voc\u00ea vai atuar?</h2></div>
     <div class="bigpick">${btns||'<div class="banner">Voc\u00ea ainda n\u00e3o tem acessos liberados. Fale com o administrador.</div>'}</div></div>`;
@@ -2541,9 +2541,16 @@ function _portalApplyAuth(d){try{
   state.metaRole=perm.metasRole||'';
   try{state.metaMes=METAS.mesAtual;}catch(e){}
   try{persistLocal();}catch(e){}
-  if(d.screen==='vend'){screenMinhaMeta();return;}
-  if(d.screen==='admin'&&perm.admin){state.area='ADMIN';screenAdmin();return;}
-  if(d.screen==='metas'&&perm.metas){screenMetas();return;}
+  var sc=d.screen||'';
+  var _me=function(fn){state.metaRole=perm.metasRole||'sup';state.metaWho=state.conferente;try{state.metaMes=METAS.mesAtual;}catch(e){}fn();};
+  if(sc==='vend'){screenMinhaMeta();return;}
+  if(sc==='admin'&&perm.admin){state.area='ADMIN';state.tab='geral';screenAdmin();return;}
+  if(sc==='sep'&&perm.sep){state.area='DEPÓSITO';state.tab='geral';screenArea();return;}
+  if(sc==='loja'&&perm.loja){state.area='LOJA';state.tab='geral';screenArea();return;}
+  if(sc==='metas'&&perm.metas){_me(screenMetas);return;}
+  if(sc==='campanhas'&&perm.metas){_me(screenCampanhas);return;}
+  if(sc==='painelmetas'&&perm.metas){_me(screenPainelMetas);return;}
+  if(sc==='painel'&&perm.painel){screenPainel();return;}
   screenAreaPick();
 }catch(e){try{screenLogin();}catch(_){}}}
 window.addEventListener('message',function(e){try{
