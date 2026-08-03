@@ -349,8 +349,8 @@
 <div class="bottombar hidden" id="bottombar"></div>
 <div class="toast" id="toast"></div>
 <script>
-const CONFERENTES=["M\u00c1RCIA","ADRIANO","JO\u00c3O","ANA"];
-const PINS={"M\u00c1RCIA":"1111","ADRIANO":"2222","JO\u00c3O":"3333","ANA":"4444"};
+const CONFERENTES=[];
+const PINS={};
 // ==== CENTRAL DE ACESSO: colaboradores (nome+PIN) e o que cada um pode acessar ====
 function accessList(){if(typeof METAS!=='undefined'&&METAS.acessos&&METAS.acessos.length)return METAS.acessos;
   return CONFERENTES.map(function(n){return {nome:n,pin:PINS[n],ativo:true,perm:{sep:true,loja:true,admin:true,painel:true,vend:false,metas:false,metasRole:''}};});}
@@ -372,7 +372,7 @@ function metaDir(){return state.metaRole==='dir';}                              
 function metaRH(){return state.metaRole==='dir'||state.metaRole==='rh';}             // edita REGRAS
 function metaFat(){return state.metaRole==='dir'||state.metaRole==='fat';}           // edita METAS (Planejar)
 function metaEdit(){return metaDir()||metaRH()||metaFat();}                          // qualquer editor
-const VENDEDORES=[{cod:"020",nome:"JOSE ADRIANO",pin:"2020"},{cod:"014",nome:"PATRICIA LIMA",pin:"1414"},{cod:"008",nome:"RICARDO SENA",pin:"0808"}];
+const VENDEDORES=[];
 /* ===== METAS DE VENDAS ===== */
 const METAS_BONUS={fat:120,mix:100,posit:100,inad:200};   // R$ por meta batida (padr\u00e3o)
 const METAS_INAD_LIM=10;                                    // (padr\u00e3o) externa
@@ -421,142 +421,14 @@ function positAlvoDe(g){return regraDe(g).positAlvo/100;}
 // por pessoa: participa (true por padr\u00e3o) de cada indicador \u2014 fat, mix, posit, inad (chave = nome)
 function participaMap(){return (typeof METAS!=='undefined'&&METAS.participa)||{};}
 function participa(v,ind){const nm=typeof v==='string'?v:(v&&v.nome);const p=participaMap()[nm]||(v&&v.participa);return !(p&&p[ind]===false);}
-const METAS_ACCESS=[{nome:"DIRETORIA",pin:"9999",role:"dir"},{nome:"GENIVALDO",pin:"1616",role:"sup",equipe:"EXTERNO"},{nome:"TATIANA",pin:"1717",role:"sup",equipe:"INTERNO"}];
-const METAS_SUPERV={EXTERNO:"GENIVALDO",INTERNO:"TATIANA"};
+const METAS_ACCESS=[];
+const METAS_SUPERV={EXTERNO:"",INTERNO:""};
 // vend: nome, grupo, objFat, vendido, objMix, mixVend, carteira, positivados, areceber, vencido, transito, positObj
 // inadimpl\u00eancia = (vencido - transito) / areceber  \u2192 em tr\u00e2nsito = boletos vencidos nos \u00faltimos 3 dias
 function mv(nome,grupo,objFat,vendido,objMix,mixVend,carteira,positivados,areceber,vencido,transito,positObj){return {nome,grupo,objFat,vendido,objMix,mixVend,carteira,positivados,areceber:areceber||0,vencido:vencido||0,transito:transito||0,positObj:positObj||0,marcas:[]};}
 const METAS_MARCA_BONUS_DEFAULT={HARALD:50,MAVALERIO:80,ADIMIX:40,FINISSIMO:60};
-let METAS={mesAtual:"2026-06",financeiro:{areceber:20710376,vencido:5648927.27,transito:2700833.72},marcaBonus:Object.assign({},METAS_MARCA_BONUS_DEFAULT),meses:{
-  "2026-01":{label:"Janeiro / 2026",status:"fechado",diasUteis:26,diasTrab:26,vend:[
-    mv("ADRIANO","EXTERNO",125000,131946.07,250,238,65,56,110137.78,20533.6,0,0),
-    mv("CRISTIANO","EXTERNO",85000,76349.32,250,159,40,17,51445,10830,0,0),
-    mv("DENILSON","EXTERNO",125000,112012.12,250,213,48,38,51680,7232.73,0,0),
-    mv("GABRIELA","EXTERNO",85000,109504.09,250,209,44,20,59970,5226.29,0,0),
-    mv("HERNANDES","EXTERNO",100000,85594.47,250,126,42,31,52995,19819.07,0,0),
-    mv("SUZANA","EXTERNO",190000,104270.24,250,136,28,19,118074,0,0,0),
-    mv("ANDERSON","INTERNO",170000,170669.24,1200,926,89,49,49032,7579.09,0,89),
-    mv("RENAN","INTERNO",170000,170805.57,1200,792,54,47,50861,9138.81,0,54),
-    mv("MAURICIO","INTERNO",70000,72926.36,900,867,0,0,1494.24,158.22,0,0),
-    mv("DELIVERY","INTERNO",20000,20439.37,350,386,180,215,1632.41,20.78,0,180)]},
-  "2026-02":{label:"Fevereiro / 2026",status:"fechado",diasUteis:24,diasTrab:24,vend:[
-    mv("ADRIANO","EXTERNO",120000,15884.42,250,75,65,12,40963.62,27274.13,0,0),
-    mv("CRISTIANO","EXTERNO",85000,110068.46,250,171,40,19,103764.16,6478.52,0,0),
-    mv("DENILSON","EXTERNO",110000,125797.96,250,236,48,36,67198.36,6659.35,0,0),
-    mv("GABRIELA","EXTERNO",85000,66892.25,250,188,44,21,46419.81,8038.99,0,0),
-    mv("HERNANDES","EXTERNO",100000,109320.34,250,136,42,30,70426.74,23246.27,0,0),
-    mv("SUZANA","EXTERNO",210000,148167.37,250,149,28,17,186538.47,0,0,0),
-    mv("ANDERSON","INTERNO",170000,137181.18,1200,885,89,43,36007.76,6700.43,0,89),
-    mv("RENAN","INTERNO",170000,149516.29,1200,734,54,39,44852.84,14820.64,0,54),
-    mv("MAURICIO","INTERNO",70000,71553.95,900,906,0,17,5996.9,313.86,0,0),
-    mv("DELIVERY","INTERNO",20000,23330.06,350,323,180,32,425.48,146.07,0,180)]},
-  "2026-03":{label:"Mar\u00e7o / 2026",status:"fechado",diasUteis:25,diasTrab:25,vend:[
-    mv("ADRIANO","EXTERNO",130000,137521.42,250,235,65,60,95829.08,18930.32,0,0),
-    mv("CRISTIANO","EXTERNO",90000,84791.61,250,161,40,51,69462.63,1195.29,0,0),
-    mv("DENILSON","EXTERNO",130000,133067.74,250,304,46,46,60638.95,4058.85,0,0),
-    mv("GABRIELA","EXTERNO",90000,97426.9,250,265,34,23,59625.07,8718.95,0,0),
-    mv("HERNANDES","EXTERNO",120000,128264.4,250,110,54,21,59939.98,0,0,0),
-    mv("SUZANA","EXTERNO",230000,256107.79,250,192,31,23,218888.69,0,0,0),
-    mv("ANDERSON","INTERNO",180000,220779.44,1300,1183,89,56,46527.18,6125.41,0,89),
-    mv("RENAN","INTERNO",180000,185075.07,1300,883,54,46,44150.13,9245.25,0,54),
-    mv("MAURICIO","INTERNO",80000,104135.61,1050,1036,0,38,6662.93,0,0,0),
-    mv("DELIVERY","INTERNO",20000,33420.84,400,393,180,51,466.86,20.78,0,180)]},
-  "2026-04":{label:"Abril / 2026",status:"fechado",diasUteis:24,diasTrab:24,vend:[
-    mv("ADRIANO","EXTERNO",150000,132950.64,250,200,56,52,102388.02,16197.43,0,0),
-    mv("CRISTIANO","EXTERNO",90000,98358.55,250,158,46,22,73564.62,12355.74,0,0),
-    mv("DENILSON","EXTERNO",120000,156697.13,250,284,43,39,83964.94,3568.76,0,0),
-    mv("GABRIELA","EXTERNO",90000,103803.79,250,207,34,23,55023.3,4560.48,0,0),
-    mv("HERNANDES","EXTERNO",100000,105414.04,250,116,42,19,53134.43,24815.45,0,0),
-    mv("SUZANA","EXTERNO",225000,246448.11,250,205,32,18,205625.24,0,0,0),
-    mv("ANDERSON","INTERNO",200000,181059.6,1300,1072,89,49,35052.13,5286.36,0,89),
-    mv("RENAN","INTERNO",200000,182100.14,1300,908,54,47,38550.53,9852.53,0,54),
-    mv("MAURICIO","INTERNO",80000,113272.84,1050,1076,0,21,2442.68,439.88,0,0),
-    mv("DELIVERY","INTERNO",20000,30052.8,400,359,180,44,325.48,0,0,180)]},
-  "2026-05":{label:"Maio / 2026",status:"fechado",diasUteis:26,diasTrab:26,vend:[
-    mv("ADRIANO","EXTERNO",155000,138635.57,250,242,60,58,108135.46,17100.83,0,0),
-    mv("CRISTIANO","EXTERNO",90000,88813.3,250,158,47,22,79040.36,23535.14,0,0),
-    mv("DENILSON","EXTERNO",150000,111545.31,250,216,43,37,68305.01,7746.12,0,0),
-    mv("GABRIELA","EXTERNO",90000,112324.08,250,208,36,23,64846.33,4560.48,0,0),
-    mv("HERNANDES","EXTERNO",120000,122077.72,250,117,42,23,42778.83,6190.23,0,0),
-    mv("SUZANA","EXTERNO",230000,235214.02,250,203,32,19,236721.49,0,0,0),
-    mv("ANDERSON","INTERNO",180000,1984.49,1350,24,89,3,7751.85,3777.86,0,89),
-    mv("RENAN","INTERNO",180000,279305.85,1350,1023,53,76,69403.51,13700.98,0,53),
-    mv("MAURICIO","INTERNO",80000,149809.6,1100,1107,0,0,12066,1539.1,0,0),
-    mv("DELIVERY","INTERNO",20000,26538.17,350,353,180,29,466.4,0,0,180)]},
-  "2026-06":{label:"Junho / 2026",status:"andamento",diasUteis:26,diasTrab:26,vend:[
-    mv("ADRIANO","EXTERNO",150000,162308.86,250,215,62,57,107504.19,14295.49,0,0),
-    mv("CRISTIANO","EXTERNO",100000,100567.75,250,189,28,20,82702.16,14323.66,0,0),
-    mv("DENILSON","EXTERNO",130000,141740.53,250,261,43,39,69578.32,7327.6,0,0),
-    mv("GABRIELA","EXTERNO",90000,105808.62,250,237,36,20,64728.45,5581.63,0,0),
-    mv("HERNANDES","EXTERNO",120000,171372.32,250,134,44,24,90856.76,5633.46,0,0),
-    mv("SUZANA","EXTERNO",230000,245174.32,250,193,32,19,219902.09,0,0,0),
-    mv("ANDERSON","INTERNO",180000,140153.51,1200,719,89,35,30052.08,2841.54,0,89),
-    mv("RENAN","INTERNO",180000,272230.4,1200,943,53,66,47951.6,11903.33,0,53),
-    mv("MAURICIO","INTERNO",80000,136037.56,1100,1014,0,29,5947.62,0,0,0),
-    mv("DELIVERY","INTERNO",20000,27073.01,350,372,0,36,79.98,0,0,0)]},
-  "2026-07":{label:"Julho / 2026",status:"andamento",diasUteis:27,diasTrab:0,vend:[
-    mv("ADRIANO","EXTERNO",150000,0,250,0,62,0,0,0,0,0),
-    mv("CRISTIANO","EXTERNO",100000,0,250,0,28,0,0,0,0,0),
-    mv("DENILSON","EXTERNO",125000,0,250,0,41,0,0,0,0,0),
-    mv("GABRIELA","EXTERNO",90000,0,250,0,36,0,0,0,0,0),
-    mv("HERNANDES","EXTERNO",0,0,250,0,0,0,0,0,0,0),
-    mv("SUZANA","EXTERNO",230000,0,250,0,32,0,0,0,0,0),
-    mv("ANDERSON","INTERNO",180000,0,1350,0,89,0,0,0,0,89),
-    mv("RENAN","INTERNO",180000,0,1350,0,53,0,0,0,0,53),
-    mv("MAURICIO","INTERNO",0,0,1100,0,0,0,0,0,0,0),
-    mv("DELIVERY","INTERNO",25000,0,350,0,0,0,0,0,0,0)]}
-}};
-// metas de marca por vendedor (m\u00eas em andamento) \u2014 meta pr\u00f3pria de cada um, realizado real do VENDAS PESO
-(function seedMarcas(){const bm=(marca,tipo,meta,real)=>({marca,tipo,meta,real});
-  // metas de marca/peso unificadas \u2014 meta POR colaborador (informada, n\u00e3o dividida) [exemplo]
-  METAS.meses["2026-06"].marcaMetas=[
-    {id:"mm1",marca:"HARALD",criterio:"PESO",escopo:"TODOS",valorSetor:{EXTERNO:100,INTERNO:100},metas:{ADRIANO:100,CRISTIANO:100,DENILSON:100,GABRIELA:100,HERNANDES:100,SUZANA:100,ANDERSON:150,RENAN:150,MAURICIO:150,DELIVERY:20}},
-    {id:"mm2",marca:"ADIMIX",criterio:"PESO",escopo:"EXTERNO",valorSetor:{EXTERNO:50},metas:{ADRIANO:150,CRISTIANO:150,DENILSON:150,GABRIELA:150,HERNANDES:150,SUZANA:150}}];
-  // regras-base por setor (o RH ajusta na engrenagem) + participa\u00e7\u00e3o por pessoa (por nome)
-  METAS.regras=JSON.parse(JSON.stringify(REGRAS_DEFAULT));
-  METAS.participa={SUZANA:{inad:false},DELIVERY:{inad:false},GENIVALDO:{mix:false,posit:false},TATIANA:{mix:false,posit:false}};
-  METAS.log=[
-    {ts:'14/07 16:22',user:'Diretoria',ini:'DI',area:'Regras RH',campo:'B\u00f4nus Inadimpl\u00eancia (Ext)',de:'R$ 180,00',para:'R$ 200,00'},
-    {ts:'14/07 16:20',user:'Diretoria',ini:'DI',area:'Regras RH',campo:'Meta inadimpl\u00eancia (Int)',de:'6%',para:'5%'},
-    {ts:'10/07 11:15',user:'Tatiana',ini:'TA',area:'Participa\u00e7\u00e3o',campo:'TATIANA \u00b7 posit',de:'OFF',para:'ON'}
-  ];
-  // Central de Acesso \u2014 colaboradores, PIN e permiss\u00f5es (o RH/admin ajusta na tela \ud83d\udc65 Central de Acesso)
-  METAS.acessos=[
-    {nome:'JO\u00c3O',pin:'3333',ativo:true,perm:{sep:true,loja:true,admin:true,painel:true,vend:false,metas:true,metasRole:'dir'}},
-    {nome:'M\u00c1RCIA',pin:'1111',ativo:true,perm:{sep:true,loja:false,admin:false,painel:true,vend:false,metas:false,metasRole:''}},
-    {nome:'ADRIANO',pin:'2222',ativo:true,perm:{sep:false,loja:true,admin:false,painel:true,vend:false,metas:false,metasRole:''}},
-    {nome:'ANA',pin:'4444',ativo:true,perm:{sep:false,loja:true,admin:false,painel:true,vend:false,metas:false,metasRole:''}},
-    {nome:'DIRETORIA',pin:'9999',ativo:true,perm:{sep:true,loja:true,admin:true,painel:true,vend:true,metas:true,metasRole:'dir'}},
-    {nome:'RH',pin:'5555',ativo:true,perm:{sep:false,loja:false,admin:false,painel:false,vend:false,metas:true,metasRole:'rh'}},
-    {nome:'FATURAMENTO',pin:'6666',ativo:true,perm:{sep:false,loja:false,admin:true,painel:true,vend:false,metas:true,metasRole:'fat'}},
-    {nome:'GENIVALDO',pin:'1616',ativo:true,perm:{sep:false,loja:false,admin:false,painel:false,vend:false,metas:true,metasRole:'sup',equipe:'EXTERNO'}},
-    {nome:'TATIANA',pin:'1717',ativo:true,perm:{sep:false,loja:false,admin:false,painel:false,vend:false,metas:true,metasRole:'sup',equipe:'INTERNO'}}
-  ];
-  // colaboradores adicionais (VITORIA n\u00e3o entra):
-  //  EMPRESA (interno) e UILIAM c\u00f3d.05 (externo) N\u00c3O contabilizam nos totais das \u00e1reas (semTotal); BALC\u00c3O (interno) conta normalmente
-  Object.keys(METAS.meses).forEach(k=>{const vs=METAS.meses[k].vend;
-    const add=(nome,grupo,carteira,semTotal)=>{if(!vs.some(v=>v.nome===nome)){const nv=mv(nome,grupo,0,0,0,0,carteira,0,0,0,0,0);if(semTotal)nv.semTotal=true;vs.push(nv);}};
-    add('EMPRESA','INTERNO',12,true);add('BALCAO','INTERNO',0,false);add('UILIAM','EXTERNO',0,true);});
-  // modo da comiss\u00e3o de sal\u00e1rio: internos (menos Delivery/Empresa/Balc\u00e3o) = comiss\u00e3o de EQUIPE; os demais = individual
-  const COM_EQUIPE_FORA=['DELIVERY','EMPRESA','BALCAO','UILIAM'];
-  Object.keys(METAS.meses).forEach(k=>METAS.meses[k].vend.forEach(v=>{v.comMode=(v.grupo==='INTERNO'&&COM_EQUIPE_FORA.indexOf(v.nome)<0)?'equipe':'individual';}));
-  // mix da equipe = produtos DISTINTOS do time (uni\u00e3o, n\u00e3o soma/m\u00e9dia)
-  METAS.meses["2026-06"].mixEquipe={EXTERNO:{obj:500,real:252},INTERNO:{obj:1000,real:874}};
-  METAS.meses["2026-05"].mixEquipe={EXTERNO:{obj:500,real:520},INTERNO:{obj:1000,real:1010}};
-  // o que foi pago de b\u00f4nus na planilha (hist\u00f3rico) \u2014 pra comparar com o calculado
-  const PAGO={"2026-01":{ADRIANO:100,GABRIELA:300,ANDERSON:120,RENAN:120,MAURICIO:220,DELIVERY:320},"2026-02":{CRISTIANO:120,DENILSON:120,HERNANDES:120,MAURICIO:220,DELIVERY:120},"2026-03":{ADRIANO:220,CRISTIANO:300,DENILSON:520,GABRIELA:220,HERNANDES:320,SUZANA:320,ANDERSON:120,RENAN:120,MAURICIO:120,DELIVERY:320},"2026-05":{ADRIANO:100,GABRIELA:320,HERNANDES:120,SUZANA:120,RENAN:220,MAURICIO:220,DELIVERY:220}};
-  Object.keys(PAGO).forEach(k=>{const mm=METAS.meses[k];if(mm)mm.vend.forEach(v=>{v.pagoReal=PAGO[k][v.nome]||0;});});
-  // matriz marca \u00d7 vendedor (do VENDAS PESO) \u2014 base das campanhas [vendas, peso]
-  const MV={
-    HARALD:{ADRIANO:[2986.50,79.5],CRISTIANO:[1268.20,33.6],DENILSON:[1706.00,44.2],GABRIELA:[5093.04,131.8],HERNANDES:[4349.10,114.5],SUZANA:[10284.80,270.5],ANDERSON:[6152.24,188.6],RENAN:[6346.52,189.0],MAURICIO:[3552.90,107.4],DELIVERY:[810.30,23.4]},
-    MAVALERIO:{ADRIANO:[989.69,20.1],CRISTIANO:[2462.70,60.6],DENILSON:[1932.88,36.3],GABRIELA:[1209.57,25.6],HERNANDES:[2140.25,54.5],SUZANA:[18536.00,359.7],ANDERSON:[6406.90,85.1],RENAN:[4168.14,72.4],MAURICIO:[2447.48,54.3],DELIVERY:[530.33,12.2]},
-    ADIMIX:{ADRIANO:[5330.80,264.1],CRISTIANO:[3954.79,191.7],DENILSON:[3387.38,153.4],GABRIELA:[2312.79,106.1],HERNANDES:[3314.82,179.2],SUZANA:[4489.95,252.3],ANDERSON:[4555.64,219.1],RENAN:[5367.81,259.8],MAURICIO:[2965.07,143.7],DELIVERY:[99.99,4.2]},
-    FINISSIMO:{ADRIANO:[22696.80,1289.8],CRISTIANO:[6668.00,192.0],DENILSON:[3674.30,120.3],GABRIELA:[1317.15,29.0],HERNANDES:[12579.91,581.5],SUZANA:[44540.60,2593.0],ANDERSON:[2494.03,61.0],RENAN:[5841.70,161.1],MAURICIO:[2665.12,87.5],DELIVERY:[187.18,5.0]}};
-  METAS.meses["2026-06"].vend.forEach(v=>{v.marcaVendas={};Object.keys(MV).forEach(mk=>{if(MV[mk][v.nome])v.marcaVendas[mk]={vendas:MV[mk][v.nome][0],peso:MV[mk][v.nome][1]};});});
-  METAS.campanhas=[
-    {id:"c1",nome:"Desafio HARALD",fornecedor:"HARALD",marcas:["HARALD"],criterio:"FAT",premio:{tipo:"PODIO",podio:[500,300,150],rank:"EQUIPE"},minPart:0,ini:"2026-06-01",fim:"2026-06-30"},
-    {id:"c2",nome:"Mais Peso MAVALERIO",fornecedor:"MAVALERIO",marcas:["MAVALERIO"],criterio:"PESO",premio:{tipo:"META",metaVal:100,premioVal:200,rank:"GERAL"},minPart:0,ini:"2026-06-01",fim:"2026-06-30"}];
-})();
+let METAS={mesAtual:"2026-06",financeiro:{areceber:0,vencido:0,transito:0},marcaBonus:Object.assign({},METAS_MARCA_BONUS_DEFAULT),meses:{"2026-06":{label:"Junho / 2026",status:"andamento",diasUteis:0,diasTrab:0,vend:[]}}};
+// (dados de exemplo removidos — metas entram pela planilha/importação; realizado vem do import diário)
 function inadDe(v){return v.areceber>0?Math.max(0,(v.vencido-v.transito))/v.areceber*100:0;}
 // meta de % da inadimpl\u00eancia (cadastr\u00e1vel por m\u00eas/equipe) \u2014 padr\u00e3o externa 10%, interna 5%
 function inadMetaVal(m,grupo){return regraDe(grupo).inadMeta;}
@@ -1048,7 +920,7 @@ function vendMarcasHTML(v,m){const mb=marcaBonusForVend(v,m||mesObj());if(!mb.it
 function metaTotals(list){return list.reduce((a,v)=>{a.obj+=v.objFat;a.vend+=v.vendido;a.bonus+=metasCalc(v,mesObj()).bonus;return a;},{obj:0,vend:0,bonus:0});}
 function screenPainelMetas(){setBar('');setW('tv');state.view='painelmetas';mskin(true);renderPainelMetas();
   clearInterval(state.pmClock);state.pmClock=setInterval(()=>{if(state.view!=='painelmetas'){clearInterval(state.pmClock);return;}const c=$('#pmclock');if(c)c.textContent=nowClock();},1000);}
-function renderPainelMetas(){const m=mesObj();const eq=metaEquipe();const showExt=!eq||eq==='EXTERNO',showInt=!eq||eq==='INTERNO';
+function renderPainelMetas(){const m=mesObj();if(!m){$('#screen').innerHTML='<div class="wrap" style="text-align:center;color:#cbd5e1;padding:40px">Sem metas neste mês. Importe a planilha de metas.</div>';return;}const eq=metaEquipe();const showExt=!eq||eq==='EXTERNO',showInt=!eq||eq==='INTERNO';
   const ext=teamAgg('EXTERNO'),int=teamAgg('INTERNO');
   const objG=(showExt?ext.objFat:0)+(showInt?int.objFat:0),vendG=(showExt?ext.vendido:0)+(showInt?int.vendido:0),pctG=objG>0?vendG/objG*100:0;
   const bonusTot=m.vend.filter(v=>!eq||v.grupo===eq).reduce((a,v)=>a+metasCalc(v,m).bonus,0);
@@ -1076,7 +948,41 @@ function screenMetasLogin(){setBar('');setW('');state.view='metaslogin';mskin(tr
   let ch=null;$('#mn').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;[...$('#mn').children].forEach(c=>c.classList.remove('on'));b.classList.add('on');ch=METAS_ACCESS.find(a=>a.nome===b.dataset.n);});
   $('#menter').onclick=()=>{const pin=$('#mpin').value.trim();if(!ch){toast('Escolha o acesso');return;}if(ch.pin!==pin){toast('PIN incorreto');return;}state.metaRole=ch.role;state.metaWho=ch.nome;state.metaMes=METAS.mesAtual;screenMetas();};
   $('#mback').onclick=()=>screenAreaPick();}
+/* ===== Metas por PLANILHA (CSV) — só os dados de meta; realizado vem do import diário ===== */
+function _mCsvHead(){return "Vendedor,Equipe,Meta Faturamento,Meta Mix,Carteira,Meta Positivacao (%)";}
+function _csvEsc(v){v=String(v==null?'':v);return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function _dlCSV(fname,text){try{var blob=new Blob(["﻿"+text],{type:'text/csv;charset=utf-8'});var u=URL.createObjectURL(blob);var a=document.createElement('a');a.href=u;a.download=fname;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(u);a.remove();},600);}catch(e){alert('Nao consegui baixar: '+e.message);}}
+function _csvNum(x){x=String(x==null?'':x).trim();if(!x)return 0;x=x.replace(/[R$\s%]/g,'');if(x.indexOf(',')>=0){x=x.replace(/\./g,'').replace(',','.');}var n=parseFloat(x.replace(/[^0-9.\-]/g,''));return isFinite(n)?n:0;}
+function _parseCSV(text){text=String(text||'').replace(/^﻿/,'');var first=(text.split('\n')[0]||'');var sep=(first.indexOf(';')>=0&&first.indexOf(',')<0)?';':',';var rows=[],row=[],cur='',q=false;for(var i=0;i<text.length;i++){var ch=text[i];if(q){if(ch==='"'){if(text[i+1]==='"'){cur+='"';i++;}else q=false;}else cur+=ch;}else{if(ch==='"')q=true;else if(ch===sep){row.push(cur);cur='';}else if(ch==='\n'){row.push(cur);rows.push(row);row=[];cur='';}else if(ch==='\r'){}else cur+=ch;}}if(cur!==''||row.length){row.push(cur);rows.push(row);}return rows;}
+function baixarModeloMetas(){_dlCSV('modelo-metas.csv',[_mCsvHead(),"FULANO DA SILVA,EXTERNO,150000,120,80,","CICLANA SOUZA,INTERNO,90000,100,60,90"].join('\n'));try{toast('Modelo baixado. Preencha e importe.');}catch(e){}}
+function baixarMetasAtuais(){var m=mesObj();if(!m){try{toast('Sem mes de metas.');}catch(e){}return;}var rows=[_mCsvHead()];(m.vend||[]).forEach(function(v){rows.push([_csvEsc(v.nome),_csvEsc(v.grupo),v.objFat||0,v.objMix||0,v.carteira||0,(v.grupo==='INTERNO'?(v.positObj||0):'')].join(','));});_dlCSV('metas-'+curMes()+'.csv',rows.join('\n'));}
+function importMetasCSV(text){
+  if(!metaFat()){try{toast('Sem permissao para editar metas.');}catch(e){}return;}
+  var m=mesObj();if(!m){METAS.meses[curMes()]={label:curMes(),status:'andamento',diasUteis:0,diasTrab:0,vend:[]};m=mesObj();}
+  if(!m.vend)m.vend=[];
+  var rows=_parseCSV(text).filter(function(r){return r.length&&r.join('').trim()!=='';});
+  if(!rows.length){alert('Planilha vazia.');return;}
+  var h=(rows[0]||[]).join(' ').toLowerCase();var start=(h.indexOf('vendedor')>=0||h.indexOf('equipe')>=0)?1:0;
+  var seen={},added=0,updated=0;
+  for(var r=start;r<rows.length;r++){var c=rows[r];var nome=String(c[0]||'').trim();if(!nome){continue;}
+    var grupo=/INT/i.test(String(c[1]||''))?'INTERNO':'EXTERNO';
+    var objFat=_csvNum(c[2]),objMix=_csvNum(c[3]),carteira=_csvNum(c[4]),positObj=_csvNum(c[5]);
+    var key=norm(nome);seen[key]=true;
+    var ex=m.vend.find(function(v){return norm(v.nome)===key;});
+    if(ex){ex.grupo=grupo;ex.objFat=objFat;ex.objMix=objMix;ex.carteira=carteira;ex.positObj=positObj;updated++;}
+    else{m.vend.push(mv(nome,grupo,objFat,0,objMix,0,carteira,0,0,0,0,positObj));added++;}
+  }
+  var absent=m.vend.filter(function(v){return !seen[norm(v.nome)];});var removed=0;
+  if(absent.length&&confirm('Importado: '+added+' novo(s), '+updated+' atualizado(s).\n\nRemover '+absent.length+' vendedor(es) que NAO estao na planilha? (limpa exemplos/errados)')){
+    m.vend=m.vend.filter(function(v){return seen[norm(v.nome)];});removed=absent.length;
+  }
+  try{syncPushMetas();}catch(e){}
+  try{toast('Metas: '+added+' novos, '+updated+' atualizados'+(removed?(', '+removed+' removidos'):'')+'.');}catch(e){}
+  screenMetas();
+}
+
 function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);const m=mesObj();const dir=metaEdit();
+  if(!m){$('#screen').innerHTML='<div class="wrap">'+whoBar()+'<div class="banner" style="margin-top:16px">📋 Sem metas neste mês ainda. Use <b>Importar metas (planilha)</b> para começar.</div></div>';wireWho();return;}
   const byFat=(a,b)=>metasCalc(b,m).fatPct-metasCalc(a,m).fatPct;
   const ext=m.vend.filter(v=>v.grupo==='EXTERNO').sort(byFat),intn=m.vend.filter(v=>v.grupo==='INTERNO').sort(byFat);
   const rankAll=m.vend.slice().sort(byFat);
@@ -1099,7 +1005,7 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);co
       <div class="k ok"><div class="n">${brMoney(tg.vend)}</div><div class="l">Vendido</div></div>
       <div class="k sub"><div class="n">${pct(tg.obj>0?tg.vend/tg.obj:0)}</div><div class="l">Atingido</div></div>
       <div class="k falta"><div class="n">${brMoney(tg.bonus)}</div><div class="l">B\u00f4nus previsto</div></div></div>
-    ${metaEdit()?`<div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 8px">${metaFat()?'<button class="btnsm" id="mplan" style="width:auto;padding:9px 16px">\u270f\ufe0f Planejar metas</button>':''}<button class="btnsm" id="mpag" style="width:auto;padding:9px 16px">\ud83d\udcb5 Pagamentos</button>${metaFat()?`<button class="btnsm" id="mcentral" style="width:auto;padding:9px 16px;background:var(--brand,#0a7);color:#fff;border:none;font-weight:700">\ud83d\udce5 Central de Importa\u00e7\u00e3o Di\u00e1ria</button><button class="btnsm" id="mimp" style="width:auto;padding:9px 16px">\ud83d\udce5 Importar realizado (Eco)</button><button class="btnsm" id="mmarca" style="width:auto;padding:9px 16px">\ud83c\udff7\ufe0f Importar marcas (VENDAS PESO)</button><button class="btnsm" id="mprod" style="width:auto;padding:9px 16px">\ud83d\udce6 Importar mix por produto (VEN430LA)</button><button class="btnsm" id="minadv" style="width:auto;padding:9px 16px">\ud83e\uddfe Inadimpl\u00eancia por vendedor (A Receber)</button><button class="btnsm" id="mrec" style="width:auto;padding:9px 16px">\ud83d\udcb5 Recebidos por vendedor (REC408LA)</button><button class="btnsm" id="mfin" style="width:auto;padding:9px 16px">\ud83e\uddfe Financeiro empresa (REC424LA)</button>
+    ${metaEdit()?`<div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 8px">${metaFat()?'<button class="btnsm" id="mplan" style="width:auto;padding:9px 16px">\u270f\ufe0f Planejar metas</button>':''}${metaFat()?'<button class="btnsm" id="mimport" style="width:auto;padding:9px 16px">📋 Importar planilha</button><button class="btnsm" id="mmodelo" style="width:auto;padding:9px 16px">⬇️ Modelo</button><button class="btnsm" id="mexport" style="width:auto;padding:9px 16px">⬇️ Metas atuais</button><input type="file" id="mimportF" accept=".csv,.txt" style="display:none">':''}<button class="btnsm" id="mpag" style="width:auto;padding:9px 16px">\ud83d\udcb5 Pagamentos</button>${metaFat()?`<button class="btnsm" id="mcentral" style="width:auto;padding:9px 16px;background:var(--brand,#0a7);color:#fff;border:none;font-weight:700">\ud83d\udce5 Central de Importa\u00e7\u00e3o Di\u00e1ria</button><button class="btnsm" id="mimp" style="width:auto;padding:9px 16px">\ud83d\udce5 Importar realizado (Eco)</button><button class="btnsm" id="mmarca" style="width:auto;padding:9px 16px">\ud83c\udff7\ufe0f Importar marcas (VENDAS PESO)</button><button class="btnsm" id="mprod" style="width:auto;padding:9px 16px">\ud83d\udce6 Importar mix por produto (VEN430LA)</button><button class="btnsm" id="minadv" style="width:auto;padding:9px 16px">\ud83e\uddfe Inadimpl\u00eancia por vendedor (A Receber)</button><button class="btnsm" id="mrec" style="width:auto;padding:9px 16px">\ud83d\udcb5 Recebidos por vendedor (REC408LA)</button><button class="btnsm" id="mfin" style="width:auto;padding:9px 16px">\ud83e\uddfe Financeiro empresa (REC424LA)</button>
       <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)">Data ref.: <input type="date" id="inadRef" value="${esc(state.inadRef||todayISO())}" style="padding:7px;border:1.5px solid var(--line);border-radius:7px"></span>`:''}
       <input type="file" id="mimpF" accept=".html,.htm" class="hidden"><input type="file" id="mmarcaF" accept=".html,.htm" class="hidden"><input type="file" id="mfinF" accept=".html,.htm" class="hidden"><input type="file" id="minadvF" accept=".html,.htm" class="hidden"><input type="file" id="mprodF" accept=".html,.htm" class="hidden"><input type="file" id="mrecF" accept=".html,.htm" class="hidden"></div>`:'<p class="muted" style="font-size:12px;margin:4px 2px 8px">Somente leitura \u2014 planejamento \u00e9 feito pela diretoria.</p>'}
     ${(!metaEquipe()||metaEquipe()==='EXTERNO')?grp('EQUIPE EXTERNA','ext',ext,te):''}
@@ -1116,7 +1022,7 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);co
   $('#mmes').onchange=e=>{state.metaMes=e.target.value;screenMetas();};
   const nb0=$('#mnovo');if(nb0)nb0.onclick=()=>dialogNovoMes();
   {const pgb=$('#mpag');if(pgb)pgb.onclick=()=>screenMetasPag();}
-  if(metaFat()){$('#mplan').onclick=()=>screenMetasPlan();{const _cb=$('#mcentral');if(_cb)_cb.onclick=()=>screenIntake();}
+  if(metaFat()){$('#mplan').onclick=()=>screenMetasPlan();{var _im=$('#mimport');if(_im)_im.onclick=()=>$('#mimportF').click();var _imf=$('#mimportF');if(_imf)_imf.onchange=function(e){var f=e.target.files[0];if(f){var rd=new FileReader();rd.onload=function(){importMetasCSV(String(rd.result||''));};rd.readAsText(f);}};var _mo=$('#mmodelo');if(_mo)_mo.onclick=()=>baixarModeloMetas();var _mx=$('#mexport');if(_mx)_mx.onclick=()=>baixarMetasAtuais();}{const _cb=$('#mcentral');if(_cb)_cb.onclick=()=>screenIntake();}
     $('#mimp').onclick=()=>$('#mimpF').click();$('#mimpF').onchange=e=>importMetasEco(e.target.files[0]);
     $('#mmarca').onclick=()=>$('#mmarcaF').click();$('#mmarcaF').onchange=e=>importMarcaPeso(e.target.files[0]);
     $('#mfin').onclick=()=>$('#mfinF').click();$('#mfinF').onchange=e=>importFinanceiro(e.target.files[0]);
@@ -1661,7 +1567,7 @@ function editCampanha(id){setBar('');setW('wide');state.view='campedit';mskin(tr
     +`<button class="ctab" id="caddcrit" style="padding:8px 13px;border-radius:9px 9px 0 0;border:1.5px dashed var(--gold-soft);border-bottom:none;font-size:12.5px;font-weight:800;cursor:pointer;background:#fff;color:#8a6b1f">＋ critério</button>`;
   $('#screen').innerHTML=`<div class="wrap"><div class="mselbar"><h2 style="margin:0;font-size:20px">${id?'✏️ Editar':'＋ Nova'} campanha</h2><button class="link" id="cev" style="margin-left:auto">◂ voltar</button></div>
     <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:12px;max-width:660px">
-      <label>Nome da campanha ${inp('c_nome',c.nome,'ex.: Desafio HARALD')}</label>
+      <label>Nome da campanha ${inp('c_nome',c.nome,'ex.: Campanha do mês')}</label>
       <label>Fornecedor ${inp('c_forn',c.fornecedor,'ex.: HARALD')}</label>
       <label>Marca(s) que contam (separadas por vírgula) ${inp('c_marcas',(c.marcas||[]).join(', '),'HARALD, MAVALERIO')}</label>
       <div style="display:flex;gap:12px;flex-wrap:wrap"><label style="flex:1">Início ${inp('c_ini',c.ini,'','width:100%')}</label><label style="flex:1">Fim ${inp('c_fim',c.fim,'','width:100%')}</label><label style="flex:1">Mín. p/ participar ${inp('c_min',c.minPart||0,'0','width:100%')}</label></div>
