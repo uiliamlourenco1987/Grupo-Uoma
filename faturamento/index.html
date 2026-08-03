@@ -1312,7 +1312,7 @@ function screenCampProduto(){setBar('');setW('wide');state.view='campproduto';ms
     '<div class="mselbar"><h2 style="margin:0;font-size:20px">\ud83c\udfed Dados de campanha por produto</h2><button class="link" id="cpvolt" style="margin-left:auto">\u25c2 voltar</button></div>'+
     '<div class="card" style="padding:16px;max-width:660px">'+
       '<p class="muted" style="font-size:12.5px;margin:0 0 12px">Alimenta a campanha de um <b>produto/fornecedor</b> (ex.: Sustentare) por vendedor: <b>itens vendidos</b> (unidades), <b>produtos diferentes</b> (mix) e <b>positiva\u00e7\u00e3o de venda</b> (em quantas vendas o produto esteve presente). Depois \u00e9 s\u00f3 criar a campanha com essa marca e escolher o crit\u00e9rio.</p>'+
-      '<div class="field" style="margin-bottom:12px"><label>Marca / fornecedor</label><input class="input" id="cpMarca" value="SUSTENTARE" style="text-transform:uppercase;padding:9px;border:1.5px solid var(--line);border-radius:8px;font-weight:700"></div>'+
+      '<div class="field" style="margin-bottom:12px"><label>Marca / fornecedor <span style="font-weight:500;color:var(--mut)">(tem que ser igual à marca da campanha)</span></label><input class="input" id="cpMarca" value="SUSTENTARE" list="cpMarcaList" style="text-transform:uppercase;padding:9px;border:1.5px solid var(--line);border-radius:8px;font-weight:700"><datalist id="cpMarcaList">'+([].concat.apply([],(METAS.campanhas||[]).map(function(cc){return cc.marcas||[];})).filter(function(x,i,a){return a.indexOf(x)===i;}).map(function(x){return '<option value="'+esc(String(x).toUpperCase())+'">';}).join(''))+'</datalist><div style="font-size:11px;color:var(--mut);margin-top:4px">Escolha uma marca já usada numa campanha (na lista) ou digite a nova.</div></div>'+
       '<div class="field" style="margin-bottom:12px"><label>1) Produtos por vendedor \u2014 VEN430LA (.html)</label><br><input type="file" id="cpProd" accept=".html,.htm"></div>'+
       '<div class="field" style="margin-bottom:12px"><label>2) Ranking com clientes/presen\u00e7a (.csv) \u2014 p/ positiva\u00e7\u00e3o de venda</label><br><input type="file" id="cpCli" accept=".csv,.txt"></div>'+
       '<div id="cpMsg" class="muted" style="font-size:12.5px;margin:8px 0;min-height:16px"></div>'+
@@ -1328,7 +1328,12 @@ function screenCampProduto(){setBar('');setW('wide');state.view='campproduto';ms
     var done=function(){if(pending>0)return;
       if(prodMap&&prodMap.__marca&&(!$('#cpMarca').value.trim()))marca=prodMap.__marca;
       var n=importCampProduto(marca,prodMap,cliMap);syncPushMetas();
-      msg.style.color='#146c37';msg.innerHTML='Importado \u2713 \u2014 <b>'+n+'</b> vendedor(es) atualizados para <b>'+esc(marca.toUpperCase())+'</b>. Agora crie/edite a campanha com marca <b>'+esc(marca.toUpperCase())+'</b> e escolha o crit\u00e9rio (itens vendidos \u00b7 mix \u00b7 positiva\u00e7\u00e3o de venda).';
+      var MK=marca.toUpperCase();
+      var camps=(METAS.campanhas||[]).filter(function(cc){return (cc.marcas||[]).some(function(x){return String(x).toUpperCase()===MK;});});
+      var liga=camps.length
+        ?('<span style="color:#146c37">Estes dados v\u00e3o alimentar a(s) campanha(s) com a marca <b>'+esc(MK)+'</b>: <b>'+camps.map(function(cc){return esc(cc.nome||'\u2014');}).join(', ')+'</b>.</span>')
+        :('<span style="color:#8a5a00">\u26a0\ufe0f Importado, mas <b>nenhuma campanha usa a marca \u201c'+esc(MK)+'\u201d ainda</b>. Crie/edite a campanha e coloque exatamente essa marca \u2014 \u00e9 o nome da marca que liga os dados \u00e0 campanha.</span>');
+      msg.style.color='#146c37';msg.innerHTML='Importado \u2713 \u2014 <b>'+n+'</b> vendedor(es) atualizados para <b>'+esc(MK)+'</b>.<br>'+liga+'<br><span style="color:var(--mut)">Depois escolha o crit\u00e9rio na campanha: itens vendidos \u00b7 mix \u00b7 positiva\u00e7\u00e3o de venda.</span>';
     };
     if(fp){pending++;var r1=new FileReader();r1.onload=function(){try{prodMap=parseCampProdutoTxt(r1.result);}catch(e){}pending--;done();};r1.readAsText(fp,'utf-8');}
     if(fc){pending++;var r2=new FileReader();r2.onload=function(){try{cliMap=parseCampProdutoCSV(r2.result);}catch(e){}pending--;done();};r2.readAsText(fc,'utf-8');}
