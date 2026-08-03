@@ -9,7 +9,7 @@
 <title>Portal Grupo Uoma — Início (mural)</title>
 <script>
 /* auto-update: recarrega sozinho quando há versão nova (fim do ?v na mão) */
-(function(){try{var BUILD="8.4";window.__BUILD=BUILD;var K="uoma_reload";
+(function(){try{var BUILD="8.5";window.__BUILD=BUILD;var K="uoma_reload";
   fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var latest=(j&&j.v)?String(j.v):"";
     if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
@@ -675,6 +675,7 @@
   var APRES={loja:{n:"Loja do Sorveteiro e Confeiteiro",d:"Loja de produtos de panifica\u00e7\u00e3o, sorveteria e confeitaria. H\u00e1 mais de 30 anos no Amap\u00e1."},padoquinha:{n:"Padoquinha",d:"Primeira ind\u00fastria de salgados ultracongelados do Amap\u00e1."},merenda:{n:"Merenda Certa",d:"Alimenta\u00e7\u00e3o e merenda com qualidade e responsabilidade para o dia a dia."}};
   function renderApres(empresas){var box=el("apresEmp");if(!box)return;var keys=(empresas&&empresas.indexOf&&empresas.indexOf("todas")>=0)?["loja","padoquinha","merenda"]:((empresas&&empresas.filter)?empresas.filter(function(k){return APRES[k];}):[]);if(keys.length===1){var a=APRES[keys[0]];box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}else if(keys.length>1){box.innerHTML="<div class=\"al\">As empresas</div>"+keys.map(function(k){var a=APRES[k];return "<div style=\"margin-top:9px\"><b style=\"font-size:13.5px\">"+esc(a.n)+"</b><p style=\"margin:2px 0 0\">"+esc(a.d)+"</p></div>";}).join("");}else{var a=APRES.loja;box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}}
   var VERSIONS=[
+    {v:"v8.5",d:"03/08",desc:"Metas: FECHAMENTO DE MÊS. Botão 🔒 Fechar mês congela a tela daquele mês e salva — ninguém mais edita, planeja ou importa nele. Fica um aviso de 'Mês fechado' e o mês some das edições. Só a diretoria pode 🔓 Reabrir. Serve pra travar o mês depois de apurado, sem risco de bagunçarem os números."},
     {v:"v8.4",d:"03/08",desc:"Metas/Importar planilha: agora é ATUALIZAÇÃO PARCIAL — coluna deixada em branco NÃO apaga o que já está cadastrado (equipe, mix, carteira, positivação ficam preservados); só atualiza o que vier preenchido. Assim dá pra importar só o faturamento agora e ir somando mix/carteira depois, sem estragar nada."},
     {v:"v8.3",d:"03/08",desc:"Folha/Recibo: agora sai a OBSERVAÇÃO no recibo. O que você escrever na coluna Obs. do colaborador (nos Lançamentos) aparece num quadrinho 'Observações' no recibo/holerite dele. Se a Obs. estiver vazia, nada aparece."},
     {v:"v8.2",d:"03/08",desc:"Folha/Lançamentos: cores por natureza da coluna — 🟢 verde = crédito (soma), 🔴 vermelho = desconto, 🟡 amarelo = informativo (ex.: Pago Fora/FGTS), 🔵 azul = forma de pagamento (Banco/Dinheiro/PIX). E a cor SEGUE as Regras: se você mudar o tipo de um item na aba Regras (ex.: virar Desconto ou Fora da folha), a coluna muda de cor sozinha. Legenda no topo da tela."},

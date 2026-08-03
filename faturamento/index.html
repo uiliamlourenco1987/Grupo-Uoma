@@ -371,6 +371,23 @@ function metaEquipe(){if(state.metaRole!=='sup')return null;
 function metaDir(){return state.metaRole==='dir';}                                   // s\u00f3 a diretoria v\u00ea os logs
 function metaRH(){return state.metaRole==='dir'||state.metaRole==='rh';}             // edita REGRAS
 function metaFat(){return state.metaRole==='dir'||state.metaRole==='fat';}           // edita METAS (Planejar)
+function mesFechado(){const m=(typeof mesObj==='function')&&mesObj();return !!(m&&m.status==='fechado');}
+function canEditMes(){return metaEdit()&&!mesFechado();}
+function fecharMes(){const m=mesObj();if(!m)return;if(mesFechado()){toast('Este mês já está fechado.');return;}
+  askConfirm('Fechar o mês <b>'+esc(m.label)+'</b>?<br><br>Isso <b>congela</b> a tela: ninguém edita, importa ou planeja este mês até reabrir.',function(){
+    m.status='fechado';m.fechadoEm=stamp();m.fechadoPor=(state.metaWho||'');
+    try{logChange('Fechamento','Mês '+m.label,'andamento','FECHADO');}catch(e){}
+    try{syncPushMetas();}catch(e){}
+    toast('Mês '+m.label+' fechado e salvo 🔒');screenMetas();
+  },'Fechar mês');}
+function reabrirMes(){const m=mesObj();if(!m)return;if(!mesFechado()){toast('Este mês já está aberto.');return;}
+  if(!metaDir()){toast('Só a diretoria pode reabrir um mês fechado.');return;}
+  askConfirm('Reabrir o mês <b>'+esc(m.label)+'</b> para edição?',function(){
+    m.status='andamento';m.reabertoEm=stamp();m.reabertoPor=(state.metaWho||'');
+    try{logChange('Fechamento','Mês '+m.label,'FECHADO','andamento');}catch(e){}
+    try{syncPushMetas();}catch(e){}
+    toast('Mês '+m.label+' reaberto para edição ✏️');screenMetas();
+  },'Reabrir mês');}
 function metaEdit(){return metaDir()||metaRH()||metaFat();}                          // qualquer editor
 const VENDEDORES=[];
 /* ===== METAS DE VENDAS ===== */
@@ -958,6 +975,7 @@ function baixarModeloMetas(){_dlCSV('modelo-metas.csv',[_mCsvHead(),"FULANO DA S
 function baixarMetasAtuais(){var m=mesObj();if(!m){try{toast('Sem mes de metas.');}catch(e){}return;}var rows=[_mCsvHead()];(m.vend||[]).forEach(function(v){rows.push([_csvEsc(v.nome),_csvEsc(v.grupo),v.objFat||0,v.objMix||0,v.carteira||0,(v.grupo==='INTERNO'?(v.positObj||0):'')].join(','));});_dlCSV('metas-'+curMes()+'.csv',rows.join('\n'));}
 function importMetasCSV(text){
   if(!metaFat()){try{toast('Sem permissao para editar metas.');}catch(e){}return;}
+  if(mesFechado()){try{toast('Mês fechado — reabra para importar.');}catch(e){}return;}
   var m=mesObj();if(!m){METAS.meses[curMes()]={label:curMes(),status:'andamento',diasUteis:0,diasTrab:0,vend:[]};m=mesObj();}
   if(!m.vend)m.vend=[];
   var rows=_parseCSV(text).filter(function(r){return r.length&&r.join('').trim()!=='';});
@@ -1005,15 +1023,17 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);co
       ${metaFat()?'<button class="btnsm" id="mnovo" style="width:auto;padding:8px 12px">\u2795 Novo m\u00eas</button>':''}
       <span class="mtag" style="background:var(--brand-l);color:var(--brand-d)">${state.metaRole==='dir'?'Diretoria':state.metaRole==='rh'?'RH':state.metaRole==='fat'?'Faturamento':'Supervis\u00e3o'}: ${esc(state.metaWho||'')}</span>
       <button class="btnsm" id="mpainel" style="width:auto;padding:8px 14px;margin-left:auto">\ud83d\udcca Painel de Metas</button>
+      ${canEditMes()?'<button class="btnsm" id="mfechar" style="width:auto;padding:8px 14px;background:#8a5a00;color:#fff;border:none;font-weight:700">\ud83d\udd12 Fechar m\u00eas</button>':''}${(mesFechado()&&metaDir())?'<button class="btnsm" id="mreabrir" style="width:auto;padding:8px 14px">\ud83d\udd13 Reabrir m\u00eas</button>':''}
       ${metaRH()?'<button class="btnsm" id="mrh" style="width:auto;padding:8px 14px">\u2699\ufe0f Regras (RH)</button>':''}${metaDir()?'<button class="btnsm" id="mlog" style="width:auto;padding:8px 14px">\ud83d\udcdd Log de altera\u00e7\u00f5es</button>':''}${metaEdit()?'<button class="btnsm" id="mregras" style="width:auto;padding:8px 14px">\ud83d\udccb Regras</button><button class="btnsm" id="mxexp" style="width:auto;padding:8px 14px">\ud83d\udda8\ufe0f Exportar metas (PDF)</button>':''}
       <button class="link" id="msair">sair</button></div>
     <div class="datebar" style="margin-bottom:12px"><span class="muted" style="font-size:12px">Dias \u00fateis: <b>${m.diasUteis}</b> \u00b7 trabalhados: <b>${m.diasTrab}</b>${m.status==='andamento'?' \u00b7 a tend\u00eancia projeta o fechamento no ritmo atual':''}</span></div>
     ${finBanner()}
+    ${mesFechado()?`<div class="banner" style="background:#fff4e5;border:1px solid #f0c98a;color:#8a5a00;margin-bottom:12px">🔒 <b>Mês fechado</b>${m.fechadoEm?(' em '+esc(m.fechadoEm)):''}${m.fechadoPor?(' por '+esc(m.fechadoPor)):''} — dados <b>congelados</b> (só leitura).${metaDir()?' Use “🔓 Reabrir mês” para editar.':''}</div>`:''}
     <div class="kpi"><div class="k"><div class="n">${brMoney(tg.obj)}</div><div class="l">Objetivo geral</div></div>
       <div class="k ok"><div class="n">${brMoney(tg.vend)}</div><div class="l">Vendido</div></div>
       <div class="k sub"><div class="n">${pct(tg.obj>0?tg.vend/tg.obj:0)}</div><div class="l">Atingido</div></div>
       <div class="k falta"><div class="n">${brMoney(tg.bonus)}</div><div class="l">B\u00f4nus previsto</div></div></div>
-    ${metaEdit()?`<div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 8px">${metaFat()?'<button class="btnsm" id="mplan" style="width:auto;padding:9px 16px">\u270f\ufe0f Planejar metas</button>':''}${metaFat()?'<button class="btnsm" id="mimport" style="width:auto;padding:9px 16px">📋 Importar planilha</button><button class="btnsm" id="mmodelo" style="width:auto;padding:9px 16px">⬇️ Modelo</button><button class="btnsm" id="mexport" style="width:auto;padding:9px 16px">⬇️ Metas atuais</button><input type="file" id="mimportF" accept=".csv,.txt" style="display:none">':''}<button class="btnsm" id="mpag" style="width:auto;padding:9px 16px">\ud83d\udcb5 Pagamentos</button>${metaFat()?`<button class="btnsm" id="mcentral" style="width:auto;padding:9px 16px;background:var(--brand,#0a7);color:#fff;border:none;font-weight:700">\ud83d\udce5 Central de Importa\u00e7\u00e3o Di\u00e1ria</button><button class="btnsm" id="mimp" style="width:auto;padding:9px 16px">\ud83d\udce5 Importar realizado (Eco)</button><button class="btnsm" id="mmarca" style="width:auto;padding:9px 16px">\ud83c\udff7\ufe0f Importar marcas (VENDAS PESO)</button><button class="btnsm" id="mprod" style="width:auto;padding:9px 16px">\ud83d\udce6 Importar mix por produto (VEN430LA)</button><button class="btnsm" id="minadv" style="width:auto;padding:9px 16px">\ud83e\uddfe Inadimpl\u00eancia por vendedor (A Receber)</button><button class="btnsm" id="mrec" style="width:auto;padding:9px 16px">\ud83d\udcb5 Recebidos por vendedor (REC408LA)</button><button class="btnsm" id="mfin" style="width:auto;padding:9px 16px">\ud83e\uddfe Financeiro empresa (REC424LA)</button>
+    ${canEditMes()?`<div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 8px">${metaFat()?'<button class="btnsm" id="mplan" style="width:auto;padding:9px 16px">\u270f\ufe0f Planejar metas</button>':''}${metaFat()?'<button class="btnsm" id="mimport" style="width:auto;padding:9px 16px">📋 Importar planilha</button><button class="btnsm" id="mmodelo" style="width:auto;padding:9px 16px">⬇️ Modelo</button><button class="btnsm" id="mexport" style="width:auto;padding:9px 16px">⬇️ Metas atuais</button><input type="file" id="mimportF" accept=".csv,.txt" style="display:none">':''}<button class="btnsm" id="mpag" style="width:auto;padding:9px 16px">\ud83d\udcb5 Pagamentos</button>${metaFat()?`<button class="btnsm" id="mcentral" style="width:auto;padding:9px 16px;background:var(--brand,#0a7);color:#fff;border:none;font-weight:700">\ud83d\udce5 Central de Importa\u00e7\u00e3o Di\u00e1ria</button><button class="btnsm" id="mimp" style="width:auto;padding:9px 16px">\ud83d\udce5 Importar realizado (Eco)</button><button class="btnsm" id="mmarca" style="width:auto;padding:9px 16px">\ud83c\udff7\ufe0f Importar marcas (VENDAS PESO)</button><button class="btnsm" id="mprod" style="width:auto;padding:9px 16px">\ud83d\udce6 Importar mix por produto (VEN430LA)</button><button class="btnsm" id="minadv" style="width:auto;padding:9px 16px">\ud83e\uddfe Inadimpl\u00eancia por vendedor (A Receber)</button><button class="btnsm" id="mrec" style="width:auto;padding:9px 16px">\ud83d\udcb5 Recebidos por vendedor (REC408LA)</button><button class="btnsm" id="mfin" style="width:auto;padding:9px 16px">\ud83e\uddfe Financeiro empresa (REC424LA)</button>
       <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)">Data ref.: <input type="date" id="inadRef" value="${esc(state.inadRef||todayISO())}" style="padding:7px;border:1.5px solid var(--line);border-radius:7px"></span>`:''}
       <input type="file" id="mimpF" accept=".html,.htm" class="hidden"><input type="file" id="mmarcaF" accept=".html,.htm" class="hidden"><input type="file" id="mfinF" accept=".html,.htm" class="hidden"><input type="file" id="minadvF" accept=".html,.htm" class="hidden"><input type="file" id="mprodF" accept=".html,.htm" class="hidden"><input type="file" id="mrecF" accept=".html,.htm" class="hidden"></div>`:'<p class="muted" style="font-size:12px;margin:4px 2px 8px">Somente leitura \u2014 planejamento \u00e9 feito pela diretoria.</p>'}
     ${(!metaEquipe()||metaEquipe()==='EXTERNO')?grp('EQUIPE EXTERNA','ext',ext,te):''}
@@ -1023,6 +1043,8 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);co
   wireWho();
   $('#msair').onclick=()=>screenAreaPick();
   {const pb=$('#mpainel');if(pb)pb.onclick=()=>screenPainelMetas();}
+  {const _fb=$('#mfechar');if(_fb)_fb.onclick=()=>fecharMes();}
+  {const _rb2=$('#mreabrir');if(_rb2)_rb2.onclick=()=>reabrirMes();}
   const xb=$('#mxexp');if(xb)xb.onclick=()=>screenMetasExport();
   const rb=$('#mregras');if(rb)rb.onclick=()=>screenRegras();
   const rhb=$('#mrh');if(rhb)rhb.onclick=()=>screenRegrasRH();
@@ -1251,7 +1273,7 @@ function screenMetasPag(){setBar('');setW('wide');state.view='metaspag';mskin(tr
   const re=$('#recExt');if(re)re.onchange=e=>{const v=parseBR(e.target.value);METAS.recebimentoExterno=(v&&v>0)?v:null;syncPushMetas();setTimeout(screenMetasPag,0);};
   const ri=$('#recInt');if(ri)ri.onchange=e=>{const v=parseBR(e.target.value);METAS.recebimentoInterno=(v&&v>0)?v:null;syncPushMetas();setTimeout(screenMetasPag,0);};
 }
-function screenMetasPlan(){setBar('');setW('wide');state.view='metasplan';mskin(true);if(!metaFat()){screenMetas();return;}const m=mesObj();if(!m.marcaMetas)m.marcaMetas=[];
+function screenMetasPlan(){setBar('');setW('wide');state.view='metasplan';mskin(true);if(!metaFat()){screenMetas();return;}if(mesFechado()){toast('Mês fechado — reabra para planejar.');screenMetas();return;}const m=mesObj();if(!m.marcaMetas)m.marcaMetas=[];
   $('#screen').innerHTML=`<div class="wrap">${whoBar()}
     <div class="mselbar"><h2 style="margin:0;font-size:20px">\u270f\ufe0f Planejar metas \u2014 ${m.label}</h2><button class="link" id="mpvoltar" style="margin-left:auto">\u25c2 voltar</button></div>
     <p class="muted" style="font-size:13px;margin:0 2px 10px">Defina o objetivo de cada vendedor. A meta de positiva\u00e7\u00e3o \u00e9 90% da carteira. S\u00f3 a diretoria v\u00ea e edita esta tela.</p>
