@@ -964,13 +964,21 @@ function importMetasCSV(text){
   if(!rows.length){alert('Planilha vazia.');return;}
   var h=(rows[0]||[]).join(' ').toLowerCase();var start=(h.indexOf('vendedor')>=0||h.indexOf('equipe')>=0)?1:0;
   var seen={},added=0,updated=0;
+  var _has=function(x){return String(x==null?'':x).trim()!=='';};
   for(var r=start;r<rows.length;r++){var c=rows[r];var nome=String(c[0]||'').trim();if(!nome){continue;}
-    var grupo=/INT/i.test(String(c[1]||''))?'INTERNO':'EXTERNO';
-    var objFat=_csvNum(c[2]),objMix=_csvNum(c[3]),carteira=_csvNum(c[4]),positObj=_csvNum(c[5]);
+    var rawG=String(c[1]||'').trim();
     var key=norm(nome);seen[key]=true;
     var ex=m.vend.find(function(v){return norm(v.nome)===key;});
-    if(ex){ex.grupo=grupo;ex.objFat=objFat;ex.objMix=objMix;ex.carteira=carteira;ex.positObj=positObj;updated++;}
-    else{m.vend.push(mv(nome,grupo,objFat,0,objMix,0,carteira,0,0,0,0,positObj));added++;}
+    if(ex){
+      if(rawG)ex.grupo=/INT/i.test(rawG)?'INTERNO':'EXTERNO';
+      if(_has(c[2]))ex.objFat=_csvNum(c[2]);
+      if(_has(c[3]))ex.objMix=_csvNum(c[3]);
+      if(_has(c[4]))ex.carteira=_csvNum(c[4]);
+      if(_has(c[5]))ex.positObj=_csvNum(c[5]);
+      updated++;
+    } else {
+      m.vend.push(mv(nome,(/INT/i.test(rawG)?'INTERNO':'EXTERNO'),_csvNum(c[2]),0,_csvNum(c[3]),0,_csvNum(c[4]),0,0,0,0,_csvNum(c[5])));added++;
+    }
   }
   var absent=m.vend.filter(function(v){return !seen[norm(v.nome)];});var removed=0;
   if(absent.length&&confirm('Importado: '+added+' novo(s), '+updated+' atualizado(s).\n\nRemover '+absent.length+' vendedor(es) que NAO estao na planilha? (limpa exemplos/errados)')){
