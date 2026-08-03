@@ -814,7 +814,7 @@ function screenMinhaMeta(){setBar('');setW('wide');state.view='minhameta';mskin(
   var s=$('#mmsair');if(s)s.onclick=()=>screenAreaPick();}
 
 /* ================= METAS DE VENDAS ================= */
-function mesVigente(){try{var d=new Date();var ck=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');if(METAS.meses&&METAS.meses[ck])return ck;}catch(e){}var ks=Object.keys(METAS.meses||{}).sort();return ks.length?ks[ks.length-1]:METAS.mesAtual;}
+function mesVigente(){try{var ms=METAS.meses||{};var d=new Date();var ck=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');if(ms[ck]&&(ms[ck].vend||[]).length)return ck;var kd=Object.keys(ms).filter(function(k){return (ms[k].vend||[]).length;}).sort();if(kd.length)return kd[kd.length-1];if(ms[ck])return ck;var ks=Object.keys(ms).sort();return ks.length?ks[ks.length-1]:METAS.mesAtual;}catch(e){return METAS.mesAtual;}}
 function curMes(){return state.metaMes||mesVigente();}
 function mesObj(){return METAS.meses[curMes()];}
 /* ==== LOG DE ALTERA\u00c7\u00d5ES (quem mudou qual regra/meta, quando) ==== */
