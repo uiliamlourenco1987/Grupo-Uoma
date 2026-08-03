@@ -896,7 +896,7 @@ function metasCalc(v,m){
   if(mixPart){if(mixHit){bonus+=payVal(B.mix,BT.mix,baseB);bi.push(['Mix',true]);}else bi.push(['Mix',false]);}
   if(positPart){if(positHit){bonus+=payVal(B.posit,BT.posit,baseB);bi.push(['Positiva\u00e7\u00e3o',true]);}else bi.push(['Positiva\u00e7\u00e3o',false]);}
   if(inadPart){if(inadOk){bonus+=payVal(B.inad,BT.inad,baseB);bi.push(['Inadimpl\u00eancia',true]);}else bi.push(['Inadimpl\u00eancia',false]);}
-  const mb=marcaBonusForVend(v,m);bonus+=mb.bonus;
+  const mb=marcaBonusForVend(v,m);bonus+=mb.bonus;if(v.isExtra)bonus=0;
   return {fatPct,tend,tendOk:v.objFat>0&&tend>=v.objFat,falta:Math.max(0,v.objFat-v.vendido),mixPct,positPct,positPart,fatPart,mixPart,fatHit,mixHit,positHit,inad,inadMetaPct,inadGroupPct,inadPart,inadOk,bonus,bi,marcaBonus:mb.bonus,marcaItems:mb.items};
 }
 function inadBarHTML(c,v){
@@ -915,7 +915,14 @@ function pesoBarHTML(v){
   const rkg=peso>0?val/peso:0;
   return `<div class="mrow"><div class="lb"><b>\u2696\ufe0f Peso total vendido</b><span class="pc" style="color:#146c37">${nrBR(Math.round(peso*10)/10)} kg</span></div>
       <div class="sub">indicador de controle (n\u00e3o conta no b\u00f4nus)${val>0?(' \u00b7 valor m\u00e9dio '+brMoney(rkg)+'/kg \u00b7 fat. '+brMoney(val)):''}</div></div>`;}
-function metaCardHTML(v,m,rank,openDefault){const c=metasCalc(v,m);const rkcls=rank===1?'g1':rank===2?'g2':rank===3?'g3':'';
+function metaCardHTML(v,m,rank,openDefault){const c=metasCalc(v,m);
+  if(v.isExtra){return `<details class="mcard"><summary><div class="mh"><h4>🏖️ ${esc(v.nome)}</h4><span class="tend" style="background:#eef2ff;color:#3a4fb8">soma no total · sem bônus</span></div></summary>`+
+    `<div class="mrow"><div class="lb"><b>💰 Faturamento (cobertura)</b><span class="pc" style="color:var(--brand-d)">${brMoney(v.vendido)}</span></div></div>`+
+    `<div class="mrow"><div class="lb"><b>📦 Mix</b><span class="pc" style="color:#1e4bb8">${nrBR(v.mixVend||0)} produtos</span></div></div>`+
+    `<div class="mrow"><div class="lb"><b>🤝 Positivação</b><span class="pc" style="color:#a05a00">${nrBR(v.positivados||0)} clientes</span></div></div>`+
+    `<div class="mrow"><div class="lb"><b>🧾 A receber · vencido</b><span class="pc">${brMoney(v.areceber||0)} · ${brMoney(v.vencido||0)}</span></div></div>`+
+    `<div class="sub" style="padding:6px 2px;color:var(--mut)">Vendas de cobertura de férias / extra (ex.: supervisor). Entram no total da equipe externa; não geram meta nem bônus individual.</div></details>`;}
+  const rkcls=rank===1?'g1':rank===2?'g2':rank===3?'g3':'';
   const bars=`
     <div class="mrow"><div class="lb"><b>\ud83d\udcb0 Faturamento</b><span class="pc" style="color:var(--brand-d)">${pct(c.fatPct)}</span></div>
       <div class="mbar"><span class="bfat" style="width:${Math.min(100,Math.round(c.fatPct*100))}%"></span></div>
@@ -943,6 +950,7 @@ function vendMarcasHTML(v,m){const mb=marcaBonusForVend(v,m||mesObj());if(!mb.it
       <div class="mbar"><span style="width:${Math.min(100,Math.round(p*100))}%;background:${it.hit?'linear-gradient(90deg,#2ea36a,#16833f)':'linear-gradient(90deg,#C4972E,#8a6b1f)'}"></span></div>
       <div class="sub">${fmt(it.real,it.criterio)} de ${fmt(it.metaInd,it.criterio)} (sua parte da meta)</div></div>`;}).join('')}</div>`;}
 function metaTotals(list){return list.reduce((a,v)=>{a.obj+=v.objFat;a.vend+=v.vendido;a.bonus+=metasCalc(v,mesObj()).bonus;return a;},{obj:0,vend:0,bonus:0});}
+function ensureExtraEntry(g){const m=mesObj();if(!m)return null;if(!m.vend)m.vend=[];let e=m.vend.find(v=>v.isExtra&&v.grupo===g);if(!e){e=mv('Férias / Extra',g,0,0,0,0,0,0,0,0,0,0);e.isExtra=true;m.vend.push(e);}return e;}
 function screenPainelMetas(){setBar('');setW('tv');state.view='painelmetas';mskin(true);renderPainelMetas();
   clearInterval(state.pmClock);state.pmClock=setInterval(()=>{if(state.view!=='painelmetas'){clearInterval(state.pmClock);return;}const c=$('#pmclock');if(c)c.textContent=nowClock();},1000);}
 function renderPainelMetas(){const m=mesObj();if(!m){$('#screen').innerHTML='<div class="wrap" style="text-align:center;color:#cbd5e1;padding:40px">Sem metas neste mês. Importe a planilha de metas.</div>';return;}const eq=metaEquipe();const showExt=!eq||eq==='EXTERNO',showInt=!eq||eq==='INTERNO';
@@ -1042,7 +1050,7 @@ function importMetasCSV(text){
       m.vend.push(mv(nome,(/INT/i.test(rawG)?'INTERNO':'EXTERNO'),_csvNum(c[2]),0,_csvNum(c[3]),0,_csvNum(c[4]),0,0,0,0,_csvNum(c[5])));added++;
     }
   }
-  var absent=m.vend.filter(function(v){return !seen[norm(v.nome)];});var removed=0;
+  var absent=m.vend.filter(function(v){return !seen[norm(v.nome)]&&!v.isExtra;});var removed=0;
   if(absent.length&&confirm('Importado: '+added+' novo(s), '+updated+' atualizado(s).\n\nRemover '+absent.length+' vendedor(es) que NAO estao na planilha? (limpa exemplos/errados)')){
     m.vend=m.vend.filter(function(v){return seen[norm(v.nome)];});removed=absent.length;
   }
@@ -1055,7 +1063,7 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);co
   if(!m){$('#screen').innerHTML='<div class="wrap">'+whoBar()+'<div class="banner" style="margin-top:16px">📋 Sem metas neste mês ainda. Use <b>Importar metas (planilha)</b> para começar.</div></div>';wireWho();return;}
   const byFat=(a,b)=>metasCalc(b,m).fatPct-metasCalc(a,m).fatPct;
   const ext=m.vend.filter(v=>v.grupo==='EXTERNO').sort(byFat),intn=m.vend.filter(v=>v.grupo==='INTERNO').sort(byFat);
-  const rankAll=m.vend.slice().sort(byFat);
+  const rankAll=m.vend.filter(v=>!v.isExtra).slice().sort(byFat);
   const rankOf=v=>rankAll.indexOf(v)+1;
   const tg=metaTotals(m.vend),te=metaTotals(ext),ti=metaTotals(intn);
   const grp=(titulo,cls,list,tot)=>`<div class="mgrouphd"><span class="mtag ${cls}">${titulo}</span><span>${list.length} vendedores</span><span class="tot">${brMoney(tot.vend)} / ${brMoney(tot.obj)} \u00b7 ${pct(tot.obj>0?tot.vend/tot.obj:0)} \u00b7 b\u00f4nus ${brMoney(tot.bonus)}</span></div>
@@ -1111,7 +1119,10 @@ function parseProdVend(raw){const txt=String(raw).replace(/<[^>]+>/g,'\n');const
 function pickMixReport(){const inp=document.createElement('input');inp.type='file';inp.accept='.html,.htm';inp.onchange=e=>{if(e.target.files[0])importProdVend(e.target.files[0]);};inp.click();}
 function importProdVend(file){if(!file)return;const rd=new FileReader();const alias={'JOSE ADRIANO':'ADRIANO','ANDERSON SILVA':'ANDERSON'};
   rd.onload=()=>{try{const per=parseProdVend(rd.result);const m=mesObj();let n=0;const teamSet={EXTERNO:new Set(),INTERNO:new Set()};
-    m.vend.forEach(v=>{v.mixVend=0;const key=Object.keys(per).find(k=>{const kn=norm(alias[k.toUpperCase()]||k);return kn===norm(v.nome)||kn.includes(norm(v.nome))||norm(v.nome).includes(kn);});
+    var supExt=(METAS_SUPERV.EXTERNO||'GENIVALDO');
+    var supKey=Object.keys(per).find(k=>{const kn=norm(alias[k.toUpperCase()]||k);return kn===norm(supExt)||kn.includes(norm(supExt))||norm(supExt).includes(kn);});
+    if(supKey)ensureExtraEntry('EXTERNO');
+    m.vend.forEach(v=>{v.mixVend=0;var mn=v.isExtra?supExt:v.nome;const key=Object.keys(per).find(k=>{const kn=norm(alias[k.toUpperCase()]||k);return kn===norm(mn)||kn.includes(norm(mn))||norm(mn).includes(kn);});
       if(key){v.mixVend=per[key].size;n++;per[key].forEach(c=>teamSet[v.grupo].add(c));}});
     if(!m.mixEquipe)m.mixEquipe={};['EXTERNO','INTERNO'].forEach(g=>{m.mixEquipe[g]=Object.assign(m.mixEquipe[g]||{obj:0,real:0},{real:teamSet[g].size});});
     toast(n?('Mix atualizado: '+n+' vend. \u00b7 uni\u00e3o ext '+teamSet.EXTERNO.size+' / int '+teamSet.INTERNO.size+' \u2713'):'Nenhum vendedor bateu com o relat\u00f3rio');syncPushMetas();reRender();}catch(e){toast('Erro ao ler o relat\u00f3rio');}};
@@ -1562,8 +1573,10 @@ function importDesempenho(file){if(!file)return;
     const m=mesObj();
     if(!m){toast('Crie ou selecione o mês antes de importar.');return;}
     if(!m.vend||!m.vend.length){toast('Importe as METAS do mês (📋 planilha) antes do Desempenho.');return;}
-    let n=0;
-    rows.forEach(r=>{const v=metaMatch(r.nome,m.vend);if(v){
+    let n=0;var supExt=(METAS_SUPERV.EXTERNO||'GENIVALDO');
+    rows.forEach(r=>{var v=metaMatch(r.nome,m.vend);
+      if(!v&&metaMatch(r.nome,[{nome:supExt}]))v=ensureExtraEntry('EXTERNO');
+      if(v){
       v.vendido=Math.round(r.vendas*100)/100;
       v.positivados=(v.grupo==='INTERNO')?r.positVendas:r.positClientes;
       if(r.carteira>0)v.carteira=r.carteira;
