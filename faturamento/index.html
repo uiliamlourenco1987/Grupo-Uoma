@@ -376,6 +376,7 @@ function canEditMes(){return metaEdit()&&!mesFechado();}
 function fecharMes(){const m=mesObj();if(!m)return;if(mesFechado()){toast('Este mês já está fechado.');return;}
   askConfirm('Fechar o mês <b>'+esc(m.label)+'</b>?<br><br>Isso <b>congela</b> a tela: ninguém edita, importa ou planeja este mês até reabrir.',function(){
     m.status='fechado';m.fechadoEm=stamp();m.fechadoPor=(state.metaWho||'');
+    try{(state.metaStatusPending=state.metaStatusPending||{})[curMes()]='fechado';}catch(e){}
     try{logChange('Fechamento','Mês '+m.label,'andamento','FECHADO');}catch(e){}
     try{syncPushMetas();}catch(e){}
     toast('Mês '+m.label+' fechado e salvo 🔒');screenMetas();
@@ -384,6 +385,7 @@ function reabrirMes(){const m=mesObj();if(!m)return;if(!mesFechado()){toast('Est
   if(!metaDir()){toast('Só a diretoria pode reabrir um mês fechado.');return;}
   askConfirm('Reabrir o mês <b>'+esc(m.label)+'</b> para edição?',function(){
     m.status='andamento';m.reabertoEm=stamp();m.reabertoPor=(state.metaWho||'');
+    try{(state.metaStatusPending=state.metaStatusPending||{})[curMes()]='andamento';}catch(e){}
     try{logChange('Fechamento','Mês '+m.label,'FECHADO','andamento');}catch(e){}
     try{syncPushMetas();}catch(e){}
     toast('Mês '+m.label+' reaberto para edição ✏️');screenMetas();
@@ -712,7 +714,7 @@ function screenLogin(){setBar('');setWide(false);state.view='login';mskin(false)
       <button class="btn primary" id="enter">Entrar</button></div>
       <p class="muted" style="text-align:center;font-size:11px;margin-top:14px;opacity:.7">${APP_VER}</p></div>`;
   let chosen=null;$('#names').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;[...$('#names').children].forEach(c=>c.classList.remove('on'));b.classList.add('on');chosen=b.dataset.n;});
-  $('#enter').addEventListener('click',()=>{const pin=$('#pin').value.trim();if(!chosen){toast('Escolha seu nome');return;}const a=findAcesso(chosen);if(!a||String(a.pin)!==pin){toast('PIN incorreto');return;}state.conferente=chosen;state.acesso=a;if(wantCampanhas()){try{state.metaRole=(a.perm&&a.perm.metasRole)||'sup';state.metaWho=chosen;state.metaMes=METAS.mesAtual;screenCampanhas();return;}catch(e){}}screenAreaPick();});}
+  $('#enter').addEventListener('click',()=>{const pin=$('#pin').value.trim();if(!chosen){toast('Escolha seu nome');return;}const a=findAcesso(chosen);if(!a||String(a.pin)!==pin){toast('PIN incorreto');return;}state.conferente=chosen;state.acesso=a;if(wantCampanhas()){try{state.metaRole=(a.perm&&a.perm.metasRole)||'sup';state.metaWho=chosen;state.metaMes=mesVigente();screenCampanhas();return;}catch(e){}}screenAreaPick();});}
 
 function screenAreaPick(){setBar('');setW('pick');state.view='areapick';mskin(false);state.area='';
   const ac=state.acesso||findAcesso(state.conferente)||{perm:{sep:true,loja:true,admin:true,painel:true}};const pm=ac.perm||{};
@@ -732,10 +734,10 @@ function screenAreaPick(){setBar('');setW('pick');state.view='areapick';mskin(fa
   wireWho();
   $('#screen').querySelectorAll('.bigpick button').forEach(b=>b.onclick=()=>{const a=b.dataset.a;
     if(a==='ACESSOS'){screenAcessos();return;}
-    if(a==='PAINELMETAS'){state.metaRole=pm.metasRole||'sup';state.metaWho=state.conferente;state.metaMes=METAS.mesAtual;screenPainelMetas();return;}
+    if(a==='PAINELMETAS'){state.metaRole=pm.metasRole||'sup';state.metaWho=state.conferente;state.metaMes=mesVigente();screenPainelMetas();return;}
     if(a==='VEND'){screenVendLogin();return;}
-    if(a==='METAS'){state.metaRole=pm.metasRole||'sup';state.metaWho=state.conferente;state.metaMes=METAS.mesAtual;screenMetas();return;}
-    if(a==='CAMPANHAS'){state.metaRole=pm.metasRole||'sup';state.metaWho=state.conferente;state.metaMes=METAS.mesAtual;screenCampanhas();return;}
+    if(a==='METAS'){state.metaRole=pm.metasRole||'sup';state.metaWho=state.conferente;state.metaMes=mesVigente();screenMetas();return;}
+    if(a==='CAMPANHAS'){state.metaRole=pm.metasRole||'sup';state.metaWho=state.conferente;state.metaMes=mesVigente();screenCampanhas();return;}
     if(a==='PAINEL'){screenPainel();return;}
     state.area=a;state.tab='geral';if(a==='ADMIN')screenAdmin();else screenArea();});}
 function nowClock(){const d=new Date();const p=n=>String(n).padStart(2,'0');return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;}
@@ -812,7 +814,8 @@ function screenMinhaMeta(){setBar('');setW('wide');state.view='minhameta';mskin(
   var s=$('#mmsair');if(s)s.onclick=()=>screenAreaPick();}
 
 /* ================= METAS DE VENDAS ================= */
-function curMes(){return state.metaMes||METAS.mesAtual;}
+function mesVigente(){try{var d=new Date();var ck=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');if(METAS.meses&&METAS.meses[ck])return ck;}catch(e){}var ks=Object.keys(METAS.meses||{}).sort();return ks.length?ks[ks.length-1]:METAS.mesAtual;}
+function curMes(){return state.metaMes||mesVigente();}
 function mesObj(){return METAS.meses[curMes()];}
 /* ==== LOG DE ALTERA\u00c7\u00d5ES (quem mudou qual regra/meta, quando) ==== */
 function nowStampBR(){const d=new Date(),p=n=>String(n).padStart(2,'0');return p(d.getDate())+'/'+p(d.getMonth()+1)+' '+p(d.getHours())+':'+p(d.getMinutes());}
@@ -981,7 +984,7 @@ function screenMetasLogin(){setBar('');setW('');state.view='metaslogin';mskin(tr
     <p class="muted" style="font-size:12px;text-align:center;margin-top:10px">PINs de teste \u2014 DIRETORIA 9999 (planeja) \u00b7 GENIVALDO 1616 (supervis\u00e3o, s\u00f3 v\u00ea)</p>
     <button class="link" style="display:block;margin:12px auto 0" id="mback">\u25c2 voltar</button></div>`;
   let ch=null;$('#mn').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;[...$('#mn').children].forEach(c=>c.classList.remove('on'));b.classList.add('on');ch=METAS_ACCESS.find(a=>a.nome===b.dataset.n);});
-  $('#menter').onclick=()=>{const pin=$('#mpin').value.trim();if(!ch){toast('Escolha o acesso');return;}if(ch.pin!==pin){toast('PIN incorreto');return;}state.metaRole=ch.role;state.metaWho=ch.nome;state.metaMes=METAS.mesAtual;screenMetas();};
+  $('#menter').onclick=()=>{const pin=$('#mpin').value.trim();if(!ch){toast('Escolha o acesso');return;}if(ch.pin!==pin){toast('PIN incorreto');return;}state.metaRole=ch.role;state.metaWho=ch.nome;state.metaMes=mesVigente();screenMetas();};
   $('#mback').onclick=()=>screenAreaPick();}
 /* ===== Metas por PLANILHA (CSV) — só os dados de meta; realizado vem do import diário ===== */
 function _mCsvHead(){return "Vendedor,Equipe,Meta Faturamento,Meta Mix,Carteira,Meta Positivacao (%)";}
@@ -2561,7 +2564,10 @@ function hydrate(d){
   if(d.vendedores&&d.vendedores.length){VENDEDORES.length=0;d.vendedores.forEach(v=>VENDEDORES.push({cod:String(v.cod),nome:String(v.nome),pin:String(v.pin)}));}
   // ---- Metas de vendas (planejamento) ----
   if(d.metas&&d.metas.meses&&Object.keys(d.metas.meses).length){
-    if(state.view!=='metasplan'&&state.view!=='campedit'){if(!d.metas.acessos&&METAS.acessos)d.metas.acessos=METAS.acessos;if(!d.metas.log&&METAS.log)d.metas.log=METAS.log;METAS=d.metas;}   // n\u00e3o sobrescreve enquanto a diretoria edita
+    if(state.view!=='metasplan'&&state.view!=='campedit'){if(!d.metas.acessos&&METAS.acessos)d.metas.acessos=METAS.acessos;if(!d.metas.log&&METAS.log)d.metas.log=METAS.log;METAS=d.metas;
+      // preserva um fechamento/reabertura local at\u00e9 o servidor confirmar (evita o poll de 6s reverter o "Fechar m\u00eas")
+      try{var mp=state.metaStatusPending||{};Object.keys(mp).forEach(function(k){var mm=METAS.meses&&METAS.meses[k];if(!mm)return;if(mm.status===mp[k])delete mp[k];else mm.status=mp[k];});}catch(e){}
+    }   // n\u00e3o sobrescreve enquanto a diretoria edita
   }else{ SYNC._pushMetas=true; }   // planilha ainda sem metas -> mando as atuais uma vez
 }
 function syncRerender(){
@@ -2591,10 +2597,10 @@ function _portalApplyAuth(d){try{
   state.acesso={nome:String((d&&d.nome)||'Portal'),pin:String((d&&d.pin)||''),ativo:true,perm:perm};
   state.conferente=state.acesso.nome;
   state.metaRole=perm.metasRole||'';
-  try{state.metaMes=METAS.mesAtual;}catch(e){}
+  try{state.metaMes=mesVigente();}catch(e){}
   try{persistLocal();}catch(e){}
   var sc=d.screen||'';
-  var _me=function(fn){state.metaRole=perm.metasRole||'sup';state.metaWho=state.conferente;try{state.metaMes=METAS.mesAtual;}catch(e){}fn();};
+  var _me=function(fn){state.metaRole=perm.metasRole||'sup';state.metaWho=state.conferente;try{state.metaMes=mesVigente();}catch(e){}fn();};
   if(sc==='vend'){screenMinhaMeta();return;}
   if(sc==='admin'&&perm.admin){state.area='ADMIN';state.tab='geral';screenAdmin();return;}
   if(sc==='sep'&&perm.sep){state.area='DEPÓSITO';state.tab='geral';screenArea();return;}
