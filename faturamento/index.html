@@ -1033,9 +1033,9 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);co
       <div class="k ok"><div class="n">${brMoney(tg.vend)}</div><div class="l">Vendido</div></div>
       <div class="k sub"><div class="n">${pct(tg.obj>0?tg.vend/tg.obj:0)}</div><div class="l">Atingido</div></div>
       <div class="k falta"><div class="n">${brMoney(tg.bonus)}</div><div class="l">B\u00f4nus previsto</div></div></div>
-    ${canEditMes()?`<div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 8px">${metaFat()?'<button class="btnsm" id="mplan" style="width:auto;padding:9px 16px">\u270f\ufe0f Planejar metas</button>':''}${metaFat()?'<button class="btnsm" id="mimport" style="width:auto;padding:9px 16px">📋 Importar planilha</button><button class="btnsm" id="mmodelo" style="width:auto;padding:9px 16px">⬇️ Modelo</button><button class="btnsm" id="mexport" style="width:auto;padding:9px 16px">⬇️ Metas atuais</button><input type="file" id="mimportF" accept=".csv,.txt" style="display:none">':''}<button class="btnsm" id="mpag" style="width:auto;padding:9px 16px">\ud83d\udcb5 Pagamentos</button>${metaFat()?`<button class="btnsm" id="mcentral" style="width:auto;padding:9px 16px;background:var(--brand,#0a7);color:#fff;border:none;font-weight:700">\ud83d\udce5 Central de Importa\u00e7\u00e3o Di\u00e1ria</button><button class="btnsm" id="mimp" style="width:auto;padding:9px 16px">\ud83d\udce5 Importar realizado (Eco)</button><button class="btnsm" id="mmarca" style="width:auto;padding:9px 16px">\ud83c\udff7\ufe0f Importar marcas (VENDAS PESO)</button><button class="btnsm" id="mprod" style="width:auto;padding:9px 16px">\ud83d\udce6 Importar mix por produto (VEN430LA)</button><button class="btnsm" id="minadv" style="width:auto;padding:9px 16px">\ud83e\uddfe Inadimpl\u00eancia por vendedor (A Receber)</button><button class="btnsm" id="mrec" style="width:auto;padding:9px 16px">\ud83d\udcb5 Recebidos por vendedor (REC408LA)</button><button class="btnsm" id="mfin" style="width:auto;padding:9px 16px">\ud83e\uddfe Financeiro empresa (REC424LA)</button>
+    ${canEditMes()?`<div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 8px">${metaFat()?'<button class="btnsm" id="mplan" style="width:auto;padding:9px 16px">\u270f\ufe0f Planejar metas</button>':''}${metaFat()?'<button class="btnsm" id="mimport" style="width:auto;padding:9px 16px">📋 Importar planilha</button><button class="btnsm" id="mmodelo" style="width:auto;padding:9px 16px">⬇️ Modelo</button><button class="btnsm" id="mexport" style="width:auto;padding:9px 16px">⬇️ Metas atuais</button><input type="file" id="mimportF" accept=".csv,.txt" style="display:none">':''}<button class="btnsm" id="mpag" style="width:auto;padding:9px 16px">\ud83d\udcb5 Pagamentos</button>${metaFat()?`<button class="btnsm" id="mcentral" style="width:auto;padding:9px 16px;background:var(--brand,#0a7);color:#fff;border:none;font-weight:700">\ud83d\udce5 Central de Importa\u00e7\u00e3o Di\u00e1ria</button><button class="btnsm" id="mdesemp" style="width:auto;padding:9px 16px;background:#2f6fed;color:#fff;border:none;font-weight:700">📊 Importar Desempenho (tudo)</button><button class="btnsm" id="mimp" style="width:auto;padding:9px 16px">\ud83d\udce5 Importar realizado (Eco)</button><button class="btnsm" id="mmarca" style="width:auto;padding:9px 16px">\ud83c\udff7\ufe0f Importar marcas (VENDAS PESO)</button><button class="btnsm" id="mprod" style="width:auto;padding:9px 16px">\ud83d\udce6 Importar mix por produto (VEN430LA)</button>
       <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)">Data ref.: <input type="date" id="inadRef" value="${esc(state.inadRef||todayISO())}" style="padding:7px;border:1.5px solid var(--line);border-radius:7px"></span>`:''}
-      <input type="file" id="mimpF" accept=".html,.htm" class="hidden"><input type="file" id="mmarcaF" accept=".html,.htm" class="hidden"><input type="file" id="mfinF" accept=".html,.htm" class="hidden"><input type="file" id="minadvF" accept=".html,.htm" class="hidden"><input type="file" id="mprodF" accept=".html,.htm" class="hidden"><input type="file" id="mrecF" accept=".html,.htm" class="hidden"></div>`:'<p class="muted" style="font-size:12px;margin:4px 2px 8px">Somente leitura \u2014 planejamento \u00e9 feito pela diretoria.</p>'}
+      <input type="file" id="mimpF" accept=".html,.htm" class="hidden"><input type="file" id="mdesempF" accept=".csv,.txt" class="hidden"><input type="file" id="mmarcaF" accept=".html,.htm" class="hidden"><input type="file" id="mprodF" accept=".html,.htm" class="hidden"></div>`:'<p class="muted" style="font-size:12px;margin:4px 2px 8px">Somente leitura \u2014 planejamento \u00e9 feito pela diretoria.</p>'}
     ${(!metaEquipe()||metaEquipe()==='EXTERNO')?grp('EQUIPE EXTERNA','ext',ext,te):''}
     ${(!metaEquipe()||metaEquipe()==='INTERNO')?grp('EQUIPE INTERNA','int',intn,ti):''}
     ${marcasHTML(m)}
@@ -1055,11 +1055,9 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);co
   if(metaFat()){$('#mplan').onclick=()=>screenMetasPlan();{var _im=$('#mimport');if(_im)_im.onclick=()=>$('#mimportF').click();var _imf=$('#mimportF');if(_imf)_imf.onchange=function(e){var f=e.target.files[0];if(f){var rd=new FileReader();rd.onload=function(){importMetasCSV(String(rd.result||''));};rd.readAsText(f);}};var _mo=$('#mmodelo');if(_mo)_mo.onclick=()=>baixarModeloMetas();var _mx=$('#mexport');if(_mx)_mx.onclick=()=>baixarMetasAtuais();}{const _cb=$('#mcentral');if(_cb)_cb.onclick=()=>screenIntake();}
     $('#mimp').onclick=()=>$('#mimpF').click();$('#mimpF').onchange=e=>importMetasEco(e.target.files[0]);
     $('#mmarca').onclick=()=>$('#mmarcaF').click();$('#mmarcaF').onchange=e=>importMarcaPeso(e.target.files[0]);
-    $('#mfin').onclick=()=>$('#mfinF').click();$('#mfinF').onchange=e=>importFinanceiro(e.target.files[0]);
     const rf=$('#inadRef');if(rf)rf.onchange=e=>state.inadRef=e.target.value;
-    $('#minadv').onclick=()=>$('#minadvF').click();$('#minadvF').onchange=e=>{state.inadRef=($('#inadRef')&&$('#inadRef').value)||todayISO();importInadVend(e.target.files[0]);};
     $('#mprod').onclick=()=>$('#mprodF').click();$('#mprodF').onchange=e=>importProdVend(e.target.files[0]);
-    $('#mrec').onclick=()=>$('#mrecF').click();$('#mrecF').onchange=e=>importRecebidos(e.target.files[0]);}
+    $('#mdesemp').onclick=()=>$('#mdesempF').click();$('#mdesempF').onchange=e=>importDesempenho(e.target.files[0]);}
 }
 function parseProdVend(raw){const txt=String(raw).replace(/<[^>]+>/g,'\n');const per={};let cur=null;
   txt.split(/\r?\n/).forEach(ln=>{const s=ln.trim();
@@ -1375,7 +1373,7 @@ function metaMatch(ecoNome,list){const alias={'JOSE ADRIANO':'ADRIANO','ANDERSON
   return list.find(v=>{const vn=norm(v.nome);return vn===n||n.includes(vn)||vn.includes(n);});}
 /* ===== CENTRAL DE IMPORTAÇÃO DIÁRIA ===== */
 var INTAKE_QUEUE=[];var INTAKE_BUSY=false;
-var INTAKE_DAILY=['separacao','prodvend','marcapeso','inadvend','financeiro'];
+var INTAKE_DAILY=['separacao','desemp','prodvend','marcapeso'];
 var IK_CSS='.ikdrop{border:2.5px dashed var(--line,#cbd3e0);border-radius:16px;padding:26px 16px;text-align:center;background:#fff;transition:.15s;margin-bottom:12px}'+
 '.ikdrop.over{border-color:var(--brand,#0a7);background:#f0fbf6}'+
 '.ikdi{font-size:34px;line-height:1;margin-bottom:8px}'+
@@ -1397,6 +1395,7 @@ function intakeTypes(){return [
   {k:'inadvend',  enc:'iso-8859-1', lbl:'Inadimplência / A receber',            grp:'Financeiro', re:/BASE PARA INADIMPL|INADIMPL[ÊE]NCIA/i,          imp:function(f){state.inadRef=intakeRef();importInadVend(f);}},
   {k:'financeiro',enc:'iso-8859-1', lbl:'Financeiro da empresa (REC424LA)',          grp:'Financeiro', re:/REC424LA|DOCUMENTOS\s*\(RECEBIDOS/i,           imp:function(f){importFinanceiro(f);}},
   {k:'recebidos', enc:'iso-8859-1', lbl:'Recebidos por vendedor (REC408LA)',         grp:'Financeiro', re:/REC408LA/i,                                   imp:function(f){importRecebidos(f);}},
+  {k:'desemp',    enc:'utf-8',      lbl:'Desempenho (vendas, positiva\u00e7\u00e3o, carteira, inadimpl\u00eancia)', grp:'Vendas', re:/CARTEIRACLIENTES|CLIENTESATENDIDOS/i, imp:function(f){importDesempenho(f);}},
   {k:'prodvend',  enc:'iso-8859-1', lbl:'Mix por produto (VEN430LA)',                grp:'Vendas',     re:/VEN430LA|PRODUTOS VENDIDOS POR VENDEDOR/i,    imp:function(f){importProdVend(f);}},
   {k:'marcapeso', enc:'utf-8',      lbl:'Marcas por peso (VENDAS PESO)',             grp:'Vendas',     re:/VENDAS\s*PESO/i,                              imp:function(f){importMarcaPeso(f);}},
   {k:'metaseco',  enc:'utf-8',      lbl:'Realizado por vendedor (Eco)',              grp:'Vendas',     re:/\(Eco\)/i,                                    imp:function(f){importMetasEco(f);}},
@@ -1408,6 +1407,7 @@ function intakeCount(k,text){try{
   if(k==='separacao'){var o=parseSeparacao(text);return o&&o.grupos?o.grupos.reduce(function(a,g){return a+g.itens.length;},0):0;}
   if(k==='catalogo')return (parseCatalogo(text)||[]).length;
   if(k==='metaseco')return (parseMetasEco(text)||[]).length;
+  if(k==='desemp')return (parseDesempenho(text)||[]).length;
   if(k==='inadvend'){var iv=parseInadVend(text,new Date(intakeRef()+'T00:00:00'));return iv&&iv.per?Object.keys(iv.per).length:0;}
   if(k==='financeiro'){var r=parseFinanceiro(text);if(!r)return 0;return (typeof r.count==='number')?r.count:(Array.isArray(r)?r.length:1);}
   if(k==='prodvend')return Object.keys(parseProdVend(text)||{}).length;
@@ -1474,6 +1474,40 @@ async function intakeRunAll(){var items=INTAKE_QUEUE.filter(function(q){return q
   try{syncPushMetas();}catch(e){}
   toast(done+' importado(s)'+(fail?(' · '+fail+' com problema'):'')+' ✓');
   setTimeout(function(){INTAKE_BUSY=false;if(state.view==='intake')screenIntake();},1100);}
+function parseDesempenho(text){
+  text=String(text||'').replace(/^﻿/,'');
+  var lines=text.split(/\r?\n/).filter(function(l){return l.trim()!=='';});
+  if(lines.length<2)return [];
+  var split=function(l){return l.split(';').map(function(c){return c.replace(/^"|"$/g,'').trim();});};
+  var head=split(lines[0]).map(function(h){return h.toUpperCase().replace(/[^A-Z]/g,'');});
+  var col=function(nm){return head.indexOf(nm);};
+  var iCod=col('CODIGO'),iNom=col('VENDEDOR'),iVen=col('VENDAS'),iPosV=col('POSITIVACAO'),
+      iCart=col('CARTEIRACLIENTES'),iAtend=col('CLIENTESATENDIDOS'),iPeso=col('PESO'),
+      iArec=col('ARECEBER'),iVenc=col('TOTALVENCIDOS'),iTrans=col('TOTALTRANSITO');
+  if(iNom<0||iCart<0)return [];
+  var out=[];
+  for(var i=1;i<lines.length;i++){var c=split(lines[i]);var nome=(c[iNom]||'').trim();if(!nome)continue;
+    out.push({codigo:iCod>=0?c[iCod]:'',nome:nome,
+      vendas:iVen>=0?_csvNum(c[iVen]):0, positVendas:iPosV>=0?_csvNum(c[iPosV]):0,
+      positClientes:iAtend>=0?_csvNum(c[iAtend]):0, carteira:iCart>=0?_csvNum(c[iCart]):0,
+      peso:iPeso>=0?_csvNum(c[iPeso]):0, areceber:iArec>=0?_csvNum(c[iArec]):0,
+      vencido:iVenc>=0?_csvNum(c[iVenc]):0, transito:iTrans>=0?_csvNum(c[iTrans]):0});}
+  return out;}
+function importDesempenho(file){if(!file)return;
+  if(typeof mesFechado==='function'&&mesFechado()){toast('Mês fechado — reabra para importar.');return;}
+  const rd=new FileReader();
+  rd.onload=()=>{try{const rows=parseDesempenho(rd.result);if(!rows.length){toast('Não reconheci esse CSV de desempenho');return;}
+    const m=mesObj();let n=0;
+    rows.forEach(r=>{const v=metaMatch(r.nome,m.vend);if(v){
+      v.vendido=Math.round(r.vendas*100)/100;
+      v.positivados=(v.grupo==='INTERNO')?r.positVendas:r.positClientes;
+      if(r.carteira>0)v.carteira=r.carteira;
+      v.peso=Math.round(r.peso*10)/10;
+      v.areceber=Math.round(r.areceber*100)/100;v.vencido=Math.round(r.vencido*100)/100;v.transito=Math.round(r.transito*100)/100;
+      n++;}});
+    toast('Desempenho importado: '+n+' vendedores ✓');syncPushMetas();reRender();
+  }catch(e){toast('Erro ao ler o desempenho');}};
+  rd.readAsText(file,'utf-8');}
 function importMetasEco(file){if(!file)return;const rd=new FileReader();
   rd.onload=()=>{try{const rows=parseMetasEco(rd.result);if(!rows.length){toast('N\u00e3o reconheci esse HTML do Eco');return;}
     const m=mesObj();let n=0;rows.forEach(r=>{const v=metaMatch(r.nome,m.vend);if(v){v.vendido=r.vendas;v.mixVend=r.mix;v.carteira=r.carteira;v.positivados=r.atendidos;v.areceber=r.areceber;v.vencido=r.vencido;v.transito=r.transito;n++;}});
