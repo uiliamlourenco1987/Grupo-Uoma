@@ -453,6 +453,14 @@ function inadMetaVal(m,grupo){return regraDe(grupo).inadMeta;}
 function teamInadAgg(m,grupo,excludeDelivery){const list=(m.vend||[]).filter(v=>(!grupo||grupo==='ALL'||v.grupo===grupo)&&(!excludeDelivery||v.nome!=='DELIVERY')&&!v.semTotal&&participa(v,'inad'));
   let venc=0,trans=0,arec=0;list.forEach(v=>{venc+=v.vencido||0;trans+=v.transito||0;arec+=v.areceber||0;});
   const pct=arec>0?Math.max(0,(venc-trans))/arec*100:0;return {venc,trans,arec,pct};}
+function teamInadDetail(m,grupo,excludeDelivery){
+  const all=(m.vend||[]).filter(v=>(!grupo||grupo==='ALL'||v.grupo===grupo)&&(!excludeDelivery||v.nome!=='DELIVERY')&&!v.semTotal);
+  const part=[],excl=[];
+  all.forEach(v=>{ if(participa(v,'inad')) part.push(v); else if((v.areceber||0)>0||(v.vencido||0)>0) excl.push(v); });
+  const sum=arr=>arr.reduce((a,v)=>({venc:a.venc+(v.vencido||0),trans:a.trans+(v.transito||0),arec:a.arec+(v.areceber||0)}),{venc:0,trans:0,arec:0});
+  const P=sum(part),A=sum(all);
+  const pct=P.arec>0?Math.max(0,(P.venc-P.trans))/P.arec*100:0;
+  return {venc:P.venc,trans:P.trans,arec:P.arec,pct,arecAll:A.arec,excl:excl};}
 // inadimpl\u00eancia do GRUPO interno (sem Delivery) e se bateu a meta interna
 function internalInadAgg(m){return teamInadAgg(m,'INTERNO',true);}
 function internalInadOk(m){const a=internalInadAgg(m);return a.arec>0&&a.pct<inadMetaVal(m,'INTERNO');}
@@ -1151,6 +1159,11 @@ function finBanner(){const m=mesObj();
   return `<div class="card" style="padding:14px 16px;margin-bottom:14px">
     <div style="font-size:11px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px">\ud83e\uddfe Inadimpl\u00eancia \u2014 (Vencido \u2212 Em tr\u00e2nsito dos \u00faltimos 3 dias) \u00f7 A receber</div>
     <div style="display:flex;flex-wrap:wrap;gap:16px 22px">${tile('Venda externa',ext,metaE)}${tile('Venda interna',int,metaI)}${tile('Geral (empresa)',ger,null)}</div>
+    ${(()=>{const eD=teamInadDetail(m,'EXTERNO',false);if(!(eD.arecAll>0))return '';const nm=eD.excl.map(v=>esc(v.nome)).join(', ');const pctS=nrBR(Math.round(eD.pct*100)/100);
+      return `<div style="font-size:10.5px;color:var(--mut);margin-top:10px;line-height:1.65;background:#f7f9fc;border:1px solid #eef1f6;border-radius:9px;padding:9px 11px">
+        <b style="color:#37474f">Venda externa \u00b7 como chega no ${pctS}%:</b><br>
+        A receber (todos): <b>${brMoney(eD.arecAll)}</b>${eD.excl.length?(' \u2212 n\u00e3o participam ('+nm+'): '+brMoney(eD.arecAll-eD.arec)+' = a receber considerado <b>'+brMoney(eD.arec)+'</b>'):''}<br>
+        Vencido <b>${brMoney(eD.venc)}</b> \u2212 em tr\u00e2nsito <b>${brMoney(eD.trans)}</b> = ${brMoney(Math.max(0,eD.venc-eD.trans))} \u00f7 ${brMoney(eD.arec)} = <b style="color:#37474f">${pctS}%</b></div>`;})()}
     <div class="muted" style="font-size:10.5px;margin-top:8px">A interna exclui o Delivery (n\u00e3o participa do indicador). A geral inclui todos. As metas de % s\u00e3o cadastr\u00e1veis em Planejar.</div></div>`;}
 function parseFinanceiro(t){const doc=new DOMParser().parseFromString(t,'text/html');let txt=(doc.body.textContent||'').replace(/[ \t\r\n]+/g,' ');
   const re=/\d{2}\/\d{2}\/\d{2}\s+\d{2}\/\d{2}\/\d{2}\s+(-?\d+)\s+[A-Z]{1,4}\s+(?:[\d.]*\d,\d{2}\s+){7}([\d.]*\d,\d{2})/g;
