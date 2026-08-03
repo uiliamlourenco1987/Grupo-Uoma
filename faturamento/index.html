@@ -438,6 +438,7 @@ function positAlvoDe(g){return regraDe(g).positAlvo/100;}
 // por pessoa: participa (true por padr\u00e3o) de cada indicador \u2014 fat, mix, posit, inad (chave = nome)
 function participaMap(){return (typeof METAS!=='undefined'&&METAS.participa)||{};}
 function participa(v,ind){const nm=typeof v==='string'?v:(v&&v.nome);const p=participaMap()[nm]||(v&&v.participa);return !(p&&p[ind]===false);}
+function participaExpl(v,ind){const nm=typeof v==='string'?v:(v&&v.nome);const p=participaMap()[nm]||(v&&v.participa);return !!(p&&p[ind]===true);}
 const METAS_ACCESS=[];
 const METAS_SUPERV={EXTERNO:"GENIVALDO",INTERNO:"TATIANA"};
 function syncSuperv(){try{if(typeof METAS!=="undefined"&&METAS.superv){if(METAS.superv.EXTERNO!=null)METAS_SUPERV.EXTERNO=METAS.superv.EXTERNO;if(METAS.superv.INTERNO!=null)METAS_SUPERV.INTERNO=METAS.superv.INTERNO;}}catch(e){}}
@@ -884,11 +885,11 @@ function metasCalc(v,m){
   // participa\u00e7\u00e3o por pessoa (RH liga/desliga) + regra autom\u00e1tica de carteira p/ posit e inad
   const fatPart=participa(v,'fat'), mixPart=participa(v,'mix');
   const fatHit=fatPart&&v.objFat>0&&fatPct>=1, mixHit=mixPart&&v.objMix>0&&mixPct>=1;
-  const positPart=participa(v,'posit')&&carteiraOk(v);
+  const positPart=participa(v,'posit')&&(carteiraOk(v)||participaExpl(v,'posit'));
   const positHit=positPart&&(isExt?(v.carteira>0&&positPct>=alvoPos):((v.positObj||0)>0&&positPct>=alvoPos));
   const inad=inadDe(v);
   const inadMetaPct=inadMetaVal(m,v.grupo);
-  const inadPart=participa(v,'inad')&&carteiraOk(v);
+  const inadPart=participa(v,'inad')&&(carteiraOk(v)||participaExpl(v,'inad'));
   // externa: individual  \u00b7  interna: s\u00f3 ganha se o GRUPO interno (sem Delivery) bater a meta
   const inadGroupPct=isExt?inad:internalInadAgg(m).pct;
   const inadOk=inadPart&&(isExt?(inad<inadMetaPct):internalInadOk(m));
