@@ -439,7 +439,8 @@ function positAlvoDe(g){return regraDe(g).positAlvo/100;}
 function participaMap(){return (typeof METAS!=='undefined'&&METAS.participa)||{};}
 function participa(v,ind){const nm=typeof v==='string'?v:(v&&v.nome);const p=participaMap()[nm]||(v&&v.participa);return !(p&&p[ind]===false);}
 const METAS_ACCESS=[];
-const METAS_SUPERV={EXTERNO:"",INTERNO:""};
+const METAS_SUPERV={EXTERNO:"GENIVALDO",INTERNO:"TATIANA"};
+function syncSuperv(){try{if(typeof METAS!=="undefined"&&METAS.superv){if(METAS.superv.EXTERNO!=null)METAS_SUPERV.EXTERNO=METAS.superv.EXTERNO;if(METAS.superv.INTERNO!=null)METAS_SUPERV.INTERNO=METAS.superv.INTERNO;}}catch(e){}}
 // vend: nome, grupo, objFat, vendido, objMix, mixVend, carteira, positivados, areceber, vencido, transito, positObj
 // inadimpl\u00eancia = (vencido - transito) / areceber  \u2192 em tr\u00e2nsito = boletos vencidos nos \u00faltimos 3 dias
 function mv(nome,grupo,objFat,vendido,objMix,mixVend,carteira,positivados,areceber,vencido,transito,positObj){return {nome,grupo,objFat,vendido,objMix,mixVend,carteira,positivados,areceber:areceber||0,vencido:vencido||0,transito:transito||0,positObj:positObj||0,marcas:[]};}
@@ -1059,7 +1060,7 @@ function importMetasCSV(text){
   screenMetas();
 }
 
-function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);const m=mesObj();const dir=metaEdit();
+function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);syncSuperv();const m=mesObj();const dir=metaEdit();
   if(!m){$('#screen').innerHTML='<div class="wrap">'+whoBar()+'<div class="banner" style="margin-top:16px">📋 Sem metas neste mês ainda. Use <b>Importar metas (planilha)</b> para começar.</div></div>';wireWho();return;}
   const byFat=(a,b)=>metasCalc(b,m).fatPct-metasCalc(a,m).fatPct;
   const ext=m.vend.filter(v=>v.grupo==='EXTERNO').sort(byFat),intn=m.vend.filter(v=>v.grupo==='INTERNO').sort(byFat);
@@ -1348,7 +1349,7 @@ function screenMetasPag(){setBar('');setW('wide');state.view='metaspag';mskin(tr
   const re=$('#recExt');if(re)re.onchange=e=>{const v=parseBR(e.target.value);METAS.recebimentoExterno=(v&&v>0)?v:null;syncPushMetas();setTimeout(screenMetasPag,0);};
   const ri=$('#recInt');if(ri)ri.onchange=e=>{const v=parseBR(e.target.value);METAS.recebimentoInterno=(v&&v>0)?v:null;syncPushMetas();setTimeout(screenMetasPag,0);};
 }
-function screenMetasPlan(){setBar('');setW('wide');state.view='metasplan';mskin(true);if(!metaFat()){screenMetas();return;}if(mesFechado()){toast('Mês fechado — reabra para planejar.');screenMetas();return;}const m=mesObj();if(!m.marcaMetas)m.marcaMetas=[];
+function screenMetasPlan(){setBar('');setW('wide');state.view='metasplan';mskin(true);if(!metaFat()){screenMetas();return;}if(mesFechado()){toast('Mês fechado — reabra para planejar.');screenMetas();return;}syncSuperv();const m=mesObj();if(!m.marcaMetas)m.marcaMetas=[];
   $('#screen').innerHTML=`<div class="wrap">${whoBar()}
     <div class="mselbar"><h2 style="margin:0;font-size:20px">\u270f\ufe0f Planejar metas \u2014 ${m.label}</h2><button class="link" id="mpvoltar" style="margin-left:auto">\u25c2 voltar</button></div>
     <p class="muted" style="font-size:13px;margin:0 2px 10px">Defina o objetivo de cada vendedor. A meta de positiva\u00e7\u00e3o \u00e9 90% da carteira. S\u00f3 a diretoria v\u00ea e edita esta tela.</p>
@@ -1364,7 +1365,7 @@ function screenMetasPlan(){setBar('');setW('wide');state.view='metasplan';mskin(
         <td><input data-i="${i}" data-f="carteira" type="number" value="${v.carteira}"></td>
         <td>${v.grupo==='INTERNO'?`<input data-i="${i}" data-f="positObj" type="number" value="${v.positObj||0}">`:'<span class="muted">90% carteira</span>'}</td></tr>`).join('')}
       ${['EXTERNO','INTERNO'].map(g=>{const vs=m.vend.filter(v=>v.grupo===g);const sumFat=vs.reduce((a,v)=>a+(v.objFat||0),0);const sumCart=vs.reduce((a,v)=>a+(v.carteira||0),0);const sumPos=vs.reduce((a,v)=>a+(v.positObj||0),0);const mxObj=((m.mixEquipe||{})[g]||{}).obj||0;const mxReal=((m.mixEquipe||{})[g]||{}).real||0;
-        return `<tr style="background:#fff8e6"><td>\ud83e\uddd1\u200d\ud83d\udcbc ${esc(METAS_SUPERV[g])}<div style="font-size:10px;color:var(--mut);font-weight:500">supervisor(a)</div></td><td><span class="mtag ${g==='EXTERNO'?'ext':'int'}">${g==='EXTERNO'?'Externa':'Interna'}</span></td>
+        return `<tr style="background:#fff8e6"><td>\ud83e\uddd1\u200d\ud83d\udcbc <input class="supnome" data-g="${g}" value="${esc(METAS_SUPERV[g]||'')}" placeholder="quem \u00e9?" style="width:118px;font-weight:700;padding:5px 7px;border:1.5px solid var(--line);border-radius:7px"><div style="font-size:10px;color:var(--mut);font-weight:500">supervisor(a) \u00b7 digite o nome</div></td><td><span class="mtag ${g==='EXTERNO'?'ext':'int'}">${g==='EXTERNO'?'Externa':'Interna'}</span></td>
           <td><span class="muted" title="soma dos subordinados">${brMoney(sumFat)}</span><div style="font-size:9px;color:var(--mut)">soma auto</div></td>
           <td><input class="supmix" data-g="${g}" type="number" value="${mxObj}" placeholder="meta" title="meta de mix da equipe (produtos distintos)" style="width:88px"><div style="font-size:10px;color:var(--mut);margin-top:3px">real <b style="color:#1e4bb8">${mxReal||'\u2014'}</b> \u00b7 <button type="button" class="mixImp" style="background:none;border:none;color:var(--brand);cursor:pointer;font-size:10px;padding:0;text-decoration:underline">\ud83d\udce6 importar</button></div></td>
           <td><span class="muted">${nrBR(sumCart)}</span><div style="font-size:9px;color:var(--mut)">soma auto</div></td>
@@ -1406,6 +1407,8 @@ function screenMetasPlan(){setBar('');setW('wide');state.view='metasplan';mskin(
     m2.diasUteis=+$('#mDU').value||m2.diasUteis;m2.diasTrab=+$('#mDT').value||0;
     // mix da equipe (editado na linha do supervisor)
     if(!m2.mixEquipe)m2.mixEquipe={};document.querySelectorAll('#vmetas .supmix').forEach(inp=>{const g=inp.dataset.g;(m2.mixEquipe[g]=m2.mixEquipe[g]||{obj:0,real:0}).obj=parseBR(inp.value)||0;});
+    // nome do supervisor (editavel + persistente)
+    METAS.superv=METAS.superv||{};document.querySelectorAll('#vmetas .supnome').forEach(inp=>{const g=inp.dataset.g;const nm=(inp.value||'').trim();METAS.superv[g]=nm;METAS_SUPERV[g]=nm;});
     // comiss\u00e3o de sal\u00e1rio por vendedor (individual) + modo + regra de equipe
     document.querySelectorAll('.csm').forEach(sel=>{const i=+sel.dataset.i;if(m2.vend[i])m2.vend[i].comMode=sel.value;});
     document.querySelectorAll('.csp').forEach(inp=>{const i=+inp.dataset.i;if(m2.vend[i]){m2.vend[i].comissao=m2.vend[i].comissao||{};m2.vend[i].comissao.pct=parseFloat(String(inp.value).replace(',','.'))||0;}});
