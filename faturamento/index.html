@@ -2713,6 +2713,7 @@ function syncRerender(){
   if(state.view==='admin'){if(document.querySelector('#syncUrl')===document.activeElement)return;screenAdmin();return;}
   // metas: atualiza as telas de visualiza\u00e7\u00e3o ao vivo (menos as de edi\u00e7\u00e3o, pra n\u00e3o perder o que est\u00e1 digitando)
   if(state.view==='metas'){screenMetas();return;}
+  if(state.view==='camp'){screenCampanhas();return;}   // campanhas também atualiza ao vivo quando os dados chegam (não deixa "apagada")
   if(state.view==='metaspag'){screenMetasPag();return;}
   if(state.view==='regras'){screenRegras();return;}
   if(state.view==='regrasrh'){const ae=document.activeElement;if(ae&&ae.classList&&(ae.classList.contains('rhs')||ae.classList.contains('rhp')||ae.classList.contains('rht')||ae.classList.contains('ceq')))return;screenRegrasRH();return;}
