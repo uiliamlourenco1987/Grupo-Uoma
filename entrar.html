@@ -9,7 +9,7 @@
 <title>Entrar — Portal Grupo Uoma</title>
 <script>
 /* auto-update: recarrega sozinho quando há versão nova */
-(function(){try{var BUILD="9.20";window.__BUILD=BUILD;var K="uoma_reload";
+(function(){try{var BUILD="9.21";window.__BUILD=BUILD;var K="uoma_reload";
   fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var latest=(j&&j.v)?String(j.v):"";
     if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
@@ -109,6 +109,29 @@
   var SB_KEY='sb_publishable_PtttNHZXuxyuV224G5qhQw_ONYW8soj';
   var sb=window.supabase.createClient(SB_URL,SB_KEY);
   var $=function(id){return document.getElementById(id);};
+  // ---- Recuperação de senha: quando o colaborador clica no link do e-mail, cai aqui com type=recovery ----
+  var isRecovery=/type=recovery/.test(location.hash||'')||/type=recovery/.test(location.search||'');
+  function showNovaSenha(){
+    if(document.getElementById('novaSenhaOvl'))return;
+    var ov=document.createElement('div');ov.id='novaSenhaOvl';ov.style.cssText='position:fixed;inset:0;background:rgba(10,20,40,.6);display:flex;align-items:center;justify-content:center;z-index:99999;padding:18px;font-family:system-ui,-apple-system,sans-serif';
+    ov.innerHTML='<div style="background:#fff;border-radius:14px;max-width:400px;width:100%;padding:22px">'+
+      '<h3 style="margin:0 0 6px">Definir nova senha</h3>'+
+      '<p style="font-size:13px;color:#5b6470;margin:0 0 12px">Digite sua nova senha (mínimo 6 caracteres).</p>'+
+      '<input id="nsPass" type="password" placeholder="nova senha" style="width:100%;padding:11px;border:1.5px solid #dce1ea;border-radius:9px;margin-bottom:10px">'+
+      '<div id="nsMsg" style="font-size:12.5px;margin-bottom:10px"></div>'+
+      '<button id="nsSave" style="width:100%;padding:12px;border:none;border-radius:9px;background:#12294C;color:#fff;font-weight:700;cursor:pointer">Salvar e entrar</button>'+
+    '</div>';
+    document.body.appendChild(ov);
+    ov.querySelector('#nsSave').onclick=async function(){
+      var p=ov.querySelector('#nsPass').value||'';var m=ov.querySelector('#nsMsg');m.style.color='#B42318';
+      if(p.length<6){m.textContent='Mínimo 6 caracteres.';return;}
+      var b=ov.querySelector('#nsSave');b.disabled=true;b.textContent='Salvando…';
+      try{var r=await sb.auth.updateUser({password:p});if(r.error){m.textContent='Não consegui: '+(r.error.message||'tente de novo');b.disabled=false;b.textContent='Salvar e entrar';return;}
+        m.style.color='#146c37';m.textContent='Senha atualizada ✓';setTimeout(function(){location.href='home.html?v='+(window.__BUILD||'');},900);
+      }catch(e){m.textContent='Erro ao salvar.';b.disabled=false;b.textContent='Salvar e entrar';}
+    };
+  }
+  try{sb.auth.onAuthStateChange(function(ev){if(ev==='PASSWORD_RECOVERY')showNovaSenha();});}catch(e){}
   function showMsg(t,cls){var m=$('msg');m.textContent=t;m.className='msg '+cls;}
   function clearMsg(){var m=$('msg');m.className='msg';m.textContent='';}
   async function showOk(user){
@@ -149,6 +172,7 @@
   }
 
   async function checkSession(){
+    if(isRecovery){showNovaSenha();return;}   // veio do link de recuperação — não pula pra home, deixa definir a senha
     try{var r=await sb.auth.getSession();if(r.data&&r.data.session&&r.data.session.user){location.href='home.html?v='+(window.__BUILD||'');}}catch(e){}
   }
   checkSession();
@@ -174,9 +198,9 @@
     var email=($('email').value||'').trim();
     if(!email){showMsg('Digite seu e-mail acima primeiro, aí clico o reset.','err');return;}
     try{
-      var res=await sb.auth.resetPasswordForEmail(email);
+      var res=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
       if(res.error){showMsg('Não consegui enviar o reset agora.','err');return;}
-      showMsg('Se este e-mail existir, enviei um link de recuperação. 📧','ok');
+      showMsg('Se este e-mail existir, enviei um link de recuperação. 📧 (Confira também o spam.)','ok');
     }catch(e){showMsg('Não consegui enviar o reset agora.','err');}
   };
 
