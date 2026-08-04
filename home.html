@@ -9,7 +9,7 @@
 <title>Portal Grupo Uoma — Início (mural)</title>
 <script>
 /* auto-update: recarrega sozinho quando há versão nova (fim do ?v na mão) */
-(function(){try{var BUILD="9.21";window.__BUILD=BUILD;var K="uoma_reload";
+(function(){try{var BUILD="9.22";window.__BUILD=BUILD;var K="uoma_reload";
   fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var latest=(j&&j.v)?String(j.v):"";
     if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
@@ -435,6 +435,16 @@
             <div id="nc_msg"></div>
           </div>
         </details>
+        <details class="acnew" style="border-color:var(--navy)">
+          <summary>&#128273; Criar logins em lote (ativos com e-mail)</summary>
+          <div class="acnewbox">
+            <div style="font-size:12px;color:var(--mut)">Cria login do portal para os colaboradores <b>ATIVOS que j&aacute; t&ecirc;m e-mail</b> no cadastro do RH. <b>Pula quem j&aacute; tem login</b> (ex.: Loja do Sorveteiro). Quem est&aacute; sem e-mail fica de fora.</div>
+            <input id="bulk_senha" placeholder="Senha inicial para todos (m&iacute;n. 6)" autocomplete="new-password">
+            <select id="bulk_cargo"><option value="colaborador">Colaborador</option><option value="producao">Produ&ccedil;&atilde;o</option><option value="rh">RH</option><option value="vendedor">Vendedor</option><option value="supervisao">Supervis&atilde;o</option><option value="faturamento">Faturamento</option><option value="financeiro">Financeiro</option><option value="compradores">Compradores</option><option value="diretoria">Diretoria</option></select>
+            <div style="display:flex;gap:8px"><button id="bulk_prev" style="flex:1;background:#fff;border:1.5px solid var(--line);border-radius:9px;padding:9px;font-weight:700;cursor:pointer">Pr&eacute;via</button><button id="bulk_go" style="flex:1;background:var(--navy);color:#fff;border:none;border-radius:9px;padding:9px;font-weight:700;cursor:pointer">Criar logins</button></div>
+            <div id="bulk_out" style="font-size:12.5px"></div>
+          </div>
+        </details>
         <details class="acnew" style="display:none">
           <summary>&#128203; Pr&eacute;-cadastro em massa (planilha do RH)</summary>
           <div class="acnewbox">
@@ -671,10 +681,51 @@
   function wireAcessos(){el("acList").querySelectorAll(".acrow").forEach(function(row){if(!row.querySelector(".sv"))return;var labels=row.querySelectorAll(".emps label");labels.forEach(function(lb){lb.onclick=function(){var k=lb.dataset.k;if(k==="todas"){var willOn=!lb.classList.contains("on");labels.forEach(function(x){x.classList.toggle("on",(x.dataset.k==="todas")?willOn:false);});}else{lb.classList.toggle("on");var t=row.querySelector(".emps label[data-k=todas]");if(t)t.classList.remove("on");}};});var _cg=row.querySelector(".aperfil");if(_cg)_cg.onchange=function(){applyCargoDefaults(row,_cg.value);};row.querySelector(".sv").onclick=async function(){var btn=this,id=row.dataset.id;var sel=[];row.querySelectorAll(".emps label.on").forEach(function(x){sel.push(x.dataset.k);});var emp=(sel.indexOf("todas")>=0)?"todas":sel.join(",");var permObj={};row.querySelectorAll(".pmod").forEach(function(s){if(s.value)permObj[s.dataset.k]=s.value;});var _pf=row.querySelector(".aperfil");if(_pf&&_pf.value)permObj.perfil=_pf.value;var _fap={};var _m=row.querySelector(".fapm");if(_m&&_m.value&&_m.value!=="nao")_fap.metas=_m.value;row.querySelectorAll(".fack").forEach(function(c){if(c.checked)_fap[c.dataset.k]=true;});var _eq=row.querySelector(".faeq");if(_eq&&_eq.value)_fap.equipe=_eq.value;if(Object.keys(_fap).length)permObj.fat_app=_fap;var _sp=row.querySelector(".fapin");if(_sp&&_sp.value.trim())permObj.sep_pin=_sp.value.trim();btn.disabled=true;btn.textContent="Salvando&hellip;";var role=deriveRole(permObj.perfil||"",permObj);var _em=row.dataset.email||"",_nm=row.dataset.nome||"";var r=await sb.rpc("portal_criar_usuario",{p_id:id,p_email:_em,p_nome:_nm,p_empresas:emp,p_role:role,p_permissoes:permObj});if(r.error){btn.disabled=false;btn.textContent="Salvar";alert("N\u00e3o consegui salvar. Verifique a permiss\u00e3o.");return;}btn.textContent="Salvo \u2713";setTimeout(function(){btn.disabled=false;btn.textContent="Salvar";},1400);if(id===ME.id){ME.role=role;ME.empresas=parseEmp(emp);ME.permissoes=permObj;renderLogos(ME.role,ME.empresas);renderMenu(ME.role);el("url").textContent=role;}};});}
   function wireNovo(){var labels=document.querySelectorAll(".ncemps label");labels.forEach(function(lb){lb.onclick=function(){var k=lb.dataset.k;if(k==="todas"){var on=!lb.classList.contains("on");labels.forEach(function(x){x.classList.toggle("on",(x.dataset.k==="todas")?on:false);});}else{lb.classList.toggle("on");var t=document.querySelector(".ncemps label[data-k=todas]");if(t)t.classList.remove("on");}};});var btn=el("nc_add");if(!btn)return;btn.onclick=async function(){var nome=(el("nc_nome").value||"").trim(),email=(el("nc_email").value||"").trim(),senha=(el("nc_senha").value||"").trim();var cargo=el("nc_cargo").value;var pin=((el("nc_pin")&&el("nc_pin").value)||"").trim();var sel=[];document.querySelectorAll(".ncemps label.on").forEach(function(x){sel.push(x.dataset.k);});var emp=(sel.indexOf("todas")>=0)?"todas":sel.join(",");var msg=el("nc_msg");msg.style.color="#B42318";if(!nome||!email||senha.length<6){msg.textContent="Preencha nome, e-mail e senha (m\u00ednimo 6 caracteres).";return;}btn.disabled=true;btn.textContent="Adicionando\u2026";msg.textContent="";try{var sbAuth=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false,storageKey:"uoma_signup"}});var res=await sbAuth.auth.signUp({email:email,password:senha});var nid=res.data&&res.data.user&&res.data.user.id;if(res.error||!nid){var si=await sbAuth.auth.signInWithPassword({email:email,password:senha});if(si.error){throw (res.error||si.error);}nid=si.data&&si.data.user&&si.data.user.id;}if(!nid)throw new Error("Sem ID de usu\u00e1rio (verifique se o cadastro por e-mail est\u00e1 habilitado).");var permObj=cargoDefaults(cargo);permObj.perfil=cargo;if(pin)permObj.sep_pin=pin;var ins=await sb.rpc("portal_criar_usuario",{p_id:nid,p_email:email,p_nome:nome,p_empresas:emp,p_role:deriveRole(cargo,permObj),p_permissoes:permObj});if(ins.error)throw ins.error;msg.style.color="#146c37";msg.textContent="Colaborador adicionado \u2713";el("nc_nome").value="";el("nc_email").value="";el("nc_senha").value="";if(el("nc_pin"))el("nc_pin").value="";setTimeout(function(){openAcessos();},700);}catch(e){msg.style.color="#B42318";msg.textContent="N\u00e3o consegui: "+(e.message||e);}btn.disabled=false;btn.textContent="Adicionar colaborador";};}
   (function(){var c=el("acClose");if(c)c.onclick=function(){el("acOvl").classList.remove("show");};var ov=el("acOvl");if(ov)ov.addEventListener("click",function(e){if(e.target===ov)ov.classList.remove("show");});})();
+  // ---- Criar logins em lote (ativos com e-mail) ----
+  function _empKeyFrom(raw){raw=(raw||"").toLowerCase();if(/grupo/.test(raw))return "todas";return /sorvet|loja/.test(raw)?"loja":(/pado/.test(raw)?"padoquinha":(/merenda/.test(raw)?"merenda":""));}
+  async function _bulkList(){
+    var r=await sb.from("colaboradores").select("nome,empresa,situacao,email").order("empresa").order("nome");
+    if(r.error)throw new Error("Não consegui ler o cadastro de colaboradores (permissão de RH?).");
+    var col=(r.data||[]).filter(function(c){return String(c.situacao||"ATIVO").toUpperCase()==="ATIVO"&&c.email&&String(c.email).trim();});
+    var u=await sb.from("usuarios").select("email");var have={};(u.data||[]).forEach(function(x){if(x.email)have[String(x.email).trim().toLowerCase()]=true;});
+    var novos=[],jatem=[];col.forEach(function(c){var e=String(c.email).trim().toLowerCase();(have[e]?jatem:novos).push(c);});
+    return {novos:novos,jatem:jatem,total:col.length};
+  }
+  (function(){
+    var pv=el("bulk_prev"),go=el("bulk_go");
+    function out(html,color){var o=el("bulk_out");if(o){o.style.color=color||"var(--ink)";o.innerHTML=html;}}
+    if(pv)pv.onclick=async function(){out("Verificando…","var(--mut)");try{var L=await _bulkList();var lst=L.novos.slice(0,80).map(function(c){return "• "+esc(c.nome)+" <span style=\"color:var(--mut)\">("+esc(c.empresa||"—")+")</span>";}).join("<br>");out("<b>"+L.novos.length+"</b> ser&atilde;o criados · <b>"+L.jatem.length+"</b> j&aacute; t&ecirc;m login <span style=\"color:var(--mut)\">(de "+L.total+" ativos com e-mail)</span>.<div style=\"margin-top:8px;max-height:220px;overflow:auto;line-height:1.6\">"+(lst||"nenhum novo")+(L.novos.length>80?"<br>… (+"+(L.novos.length-80)+")":"")+"</div>","var(--ink)");}catch(e){out("Erro: "+((e&&e.message)||e),"#B42318");}};
+    if(go)go.onclick=async function(){
+      var senha=(el("bulk_senha").value||"").trim(),cargo=el("bulk_cargo").value;
+      if(senha.length<6){out("Defina a senha inicial (m&iacute;n. 6 caracteres).","#B42318");return;}
+      var L;try{L=await _bulkList();}catch(e){out("Erro: "+((e&&e.message)||e),"#B42318");return;}
+      if(!L.novos.length){out("Nada a criar — todos os ativos com e-mail j&aacute; t&ecirc;m login.","#146c37");return;}
+      if(!confirm("Criar "+L.novos.length+" logins com o cargo \""+cargo+"\" e a senha inicial? (pula os "+L.jatem.length+" que j&aacute; t&ecirc;m login)"))return;
+      go.disabled=true;pv.disabled=true;var okc=0,skip=L.jatem.length,fail=[];
+      for(var i=0;i<L.novos.length;i++){var c=L.novos[i],email=String(c.email).trim();
+        out("Criando "+(i+1)+"/"+L.novos.length+": "+esc(c.nome)+"&hellip;","var(--mut)");
+        try{
+          var sbAuth=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:false,autoRefreshToken:false,storageKey:"uoma_bulk"}});
+          var res=await sbAuth.auth.signUp({email:email,password:senha});var nid=res.data&&res.data.user&&res.data.user.id;
+          if(res.error||!nid){var si=await sbAuth.auth.signInWithPassword({email:email,password:senha});if(si.error){skip++;continue;}nid=si.data&&si.data.user&&si.data.user.id;}
+          if(!nid)throw new Error("sem id de usuário");
+          var permObj=cargoDefaults(cargo);permObj.perfil=cargo;var emp=_empKeyFrom(c.empresa)||"todas";
+          var ins=await sb.rpc("portal_criar_usuario",{p_id:nid,p_email:email,p_nome:c.nome,p_empresas:emp,p_role:deriveRole(cargo,permObj),p_permissoes:permObj});
+          if(ins.error)throw ins.error;okc++;
+        }catch(e){fail.push(esc(c.nome)+" — "+((e&&e.message)||e));}
+        await new Promise(function(rs){setTimeout(rs,350);});
+      }
+      go.disabled=false;pv.disabled=false;
+      var msg="<b>Conclu&iacute;do.</b> ✅ "+okc+" criados · ⏭️ "+skip+" j&aacute; existiam";
+      if(fail.length)msg+=" · ❌ "+fail.length+" falharam<div style=\"margin-top:6px;color:#B42318;max-height:160px;overflow:auto\">"+fail.join("<br>")+"</div><div style=\"margin-top:6px;color:var(--mut)\">Pode clicar em <b>Criar logins</b> de novo pra tentar os que falharam (os criados s&atilde;o pulados).</div>";
+      out(msg,fail.length?"#B42318":"#146c37");
+    };
+  })();
   var OWNER_EMAIL="uiliamcesar@hotmail.com";
   var APRES={loja:{n:"Loja do Sorveteiro e Confeiteiro",d:"Loja de produtos de panifica\u00e7\u00e3o, sorveteria e confeitaria. H\u00e1 mais de 30 anos no Amap\u00e1."},padoquinha:{n:"Padoquinha",d:"Primeira ind\u00fastria de salgados ultracongelados do Amap\u00e1."},merenda:{n:"Merenda Certa",d:"Alimenta\u00e7\u00e3o e merenda com qualidade e responsabilidade para o dia a dia."}};
   function renderApres(empresas){var box=el("apresEmp");if(!box)return;var keys=(empresas&&empresas.indexOf&&empresas.indexOf("todas")>=0)?["loja","padoquinha","merenda"]:((empresas&&empresas.filter)?empresas.filter(function(k){return APRES[k];}):[]);if(keys.length===1){var a=APRES[keys[0]];box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}else if(keys.length>1){box.innerHTML="<div class=\"al\">As empresas</div>"+keys.map(function(k){var a=APRES[k];return "<div style=\"margin-top:9px\"><b style=\"font-size:13.5px\">"+esc(a.n)+"</b><p style=\"margin:2px 0 0\">"+esc(a.d)+"</p></div>";}).join("");}else{var a=APRES.loja;box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}}
   var VERSIONS=[
+    {v:"v9.22",d:"04/08",desc:"Controle de Acessos: novo '🔑 Criar logins em lote' — cria login de portal para todos os colaboradores ATIVOS que já têm e-mail no cadastro do RH, pulando quem já tem login. Tem Prévia (mostra quem será criado, sem criar), campo de senha inicial e cargo (padrão Colaborador = sem acesso a app, só as próprias notas e colocação). Empresa 'GRUPO' vira 'Todas (grupo)'. Requer o envio de e-mail (confirmação) DESLIGADO no Supabase."},
     {v:"v9.21",d:"03/08",desc:"Recuperação de senha: fluxo completo pronto — o link do e-mail volta pro portal e abre a tela 'Definir nova senha'. IMPORTANTE: o e-mail só é enviado depois de ligar o envio (SMTP) no Supabase (Authentication → Emails/SMTP) — enquanto isso o link não chega. Feito isso, o 'Esqueci minha senha' funciona de ponta a ponta."},
     {v:"v9.20",d:"03/08",desc:"Campanhas pelo menu lateral à prova de falha: se a tela abrir antes dos dados chegarem, ela força a busca na hora e mostra 'Carregando campanhas…' até preencher — não fica mais vazia/apagada. O importador (🏭) e o botão de campanha ficam nessa mesma tela."},
     {v:"v9.19",d:"03/08",desc:"Campanhas pelo menu lateral vinham 'apagadas' (vazias) — a tela abria antes dos dados chegarem e não se atualizava sozinha quando eles chegavam (só Metas se atualizava). Agora Campanhas também atualiza ao vivo e aparece completa."},
