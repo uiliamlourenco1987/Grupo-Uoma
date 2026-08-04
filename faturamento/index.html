@@ -1796,13 +1796,15 @@ function campCardHTML(c,dir){const crs=campCriterios(c);const multi=crs.length>1
     ${campMarcos(c).length?`<div style="margin-top:6px;background:#FBFAF6;border:1px solid var(--gold-soft);border-radius:10px;padding:10px 14px"><div style="font-weight:800;font-size:12px;color:var(--brand-d);margin-bottom:6px">🏁 MARCOS — adiantamentos pro líder</div>${campMarcos(c).map(mk=>`<div style="font-size:12.5px;margin:3px 0">Aos <b>${mk.dias} dias</b> → líder leva <b>${brMoney(mk.valor)}</b></div>`).join('')}<div class="muted" style="font-size:11px;margin-top:4px">Confirmado na data de cada marco. Prêmio final apurado em ${esc(c.fim)}.</div></div>`:''}
     </div>`;}
 function screenCampanhas(){setBar('');setW('wide');state.view='camp';mskin(true);const dir=metaRH();const camps=METAS.campanhas||[];
+  // se abriu sem dados (ainda sincronizando), for\u00e7a uma busca na hora e mostra "Carregando" em vez de vazio
+  var loading=false;if(!camps.length&&syncOn()){var _now=Date.now();if(!state._campPullT||(_now-state._campPullT)>4000){state._campPullT=_now;loading=true;try{syncPull(true);}catch(e){}}}
   $('#screen').innerHTML=`<div class="wrap">${whoBar()}
     <div class="mselbar"><h2 style="margin:0;font-size:20px">\ud83c\udfc6 Campanhas</h2>
       ${dir?'<button class="btnsm" id="ccampprod" style="width:auto;padding:9px 16px;margin-left:auto">\ud83c\udfed Importar dados (produto)</button>':''}
       ${dir?'<button class="btnsm" id="cnew" style="width:auto;padding:9px 16px">\uff0b Nova campanha</button>':''}
       <button class="link" id="cvoltar" ${dir?'':'style="margin-left:auto"'}>\u25c2 voltar</button></div>
     <p class="muted" style="font-size:13px;margin:0 2px 12px">Campanhas de fornecedor \u2014 usam as mesmas vendas do faturamento. O ranking \u00e9 autom\u00e1tico (interno \u00b7 externo \u00b7 geral) a partir das vendas por marca.</p>
-    ${camps.length?camps.map(c=>campCardHTML(c,dir)).join(''):'<div class="banner">Nenhuma campanha ainda.'+(dir?' Clique em \u201cNova campanha\u201d.':'')+'</div>'}</div>`;
+    ${camps.length?camps.map(c=>campCardHTML(c,dir)).join(''):(loading?'<div class="banner">Carregando campanhas\u2026</div>':'<div class="banner">Nenhuma campanha ainda.'+(dir?' Clique em \u201cNova campanha\u201d.':'')+'</div>')}</div>`;
   wireWho();$('#cvoltar').onclick=()=>sairApp();
   if(dir){const nb=$('#cnew');if(nb)nb.onclick=()=>editCampanha(null);
     {const cp=$('#ccampprod');if(cp)cp.onclick=()=>screenCampProduto();}
