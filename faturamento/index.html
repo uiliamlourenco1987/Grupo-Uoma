@@ -2930,6 +2930,8 @@ function _portalApplyAuth(d){try{
   if(sc==='campanhas'&&perm.metas){_me(screenCampanhas);return;}
   if(sc==='painelmetas'&&perm.metas){_me(screenPainelMetas);return;}
   if(sc==='painel'&&perm.painel){screenPainel();return;}
+  if(sc==='erros'){_me(screenErros);return;}
+  if(sc==='versao'){_me(screenVersao);return;}
   screenAreaPick();
 }catch(e){try{screenLogin();}catch(_){}}}
 window.addEventListener('message',function(e){try{

@@ -9,7 +9,7 @@
 <title>Portal Grupo Uoma — Início (mural)</title>
 <script>
 /* auto-update: recarrega sozinho quando há versão nova (fim do ?v na mão) */
-(function(){try{var BUILD="9.40";window.__BUILD=BUILD;var K="uoma_reload";
+(function(){try{var BUILD="9.41";window.__BUILD=BUILD;var K="uoma_reload";
   fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var latest=(j&&j.v)?String(j.v):"";
     if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
@@ -626,7 +626,9 @@
       {e:"💵",l:"Financeiro",show:(dir||!!P.financeiro),go:function(){alert("O módulo \"Financeiro\" entra aqui em breve. 🚧");}},
       {e:"🛡️",l:"Avaliações (RH)",show:(dir||PF==="rh"||!!P.rh),go:function(){openAvaliacao();}},
       {e:"💰",l:"Folha",show:(dir||PF==="rh"||!!P.folha),go:function(){openFolha();}},
-      {e:"👥",l:"Acessos",show:(dir||PF==="rh"),go:function(){openAcessos();}}
+      {e:"👥",l:"Acessos",show:(dir||PF==="rh"),go:function(){openAcessos();}},
+      {e:"🧾",l:"Logs",show:dir,go:function(){openFatScreen("erros");}},
+      {e:"ℹ️",l:"Versão",show:dir,go:function(){openFatScreen("versao");}}
     ];
     var html="<a class=\"on\"><span class=\"i\">🏠</span> Início</a>";html+="<a data-act=\"fale\"><span class=\"i\">💬</span> Fale com a diretoria</a>";html+="<a data-act=\"solucoes\"><span class=\"i\">💡</span> Soluções</a>";if(dir)html+="<a data-act=\"inbox\" id=\"navInbox\"><span class=\"i\">🚨</span> Erro Zero</a>";
     ITEMS.forEach(function(it,ix){if(it.show)html+="<a data-i=\""+ix+"\"><span class=\"i\">"+it.e+"</span> "+it.l+"</a>";});
@@ -732,6 +734,7 @@
   var APRES={loja:{n:"Loja do Sorveteiro e Confeiteiro",d:"Loja de produtos de panifica\u00e7\u00e3o, sorveteria e confeitaria. H\u00e1 mais de 30 anos no Amap\u00e1."},padoquinha:{n:"Padoquinha",d:"Primeira ind\u00fastria de salgados ultracongelados do Amap\u00e1."},merenda:{n:"Merenda Certa",d:"Alimenta\u00e7\u00e3o e merenda com qualidade e responsabilidade para o dia a dia."}};
   function renderApres(empresas){var box=el("apresEmp");if(!box)return;var keys=(empresas&&empresas.indexOf&&empresas.indexOf("todas")>=0)?["loja","padoquinha","merenda"]:((empresas&&empresas.filter)?empresas.filter(function(k){return APRES[k];}):[]);if(keys.length===1){var a=APRES[keys[0]];box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}else if(keys.length>1){box.innerHTML="<div class=\"al\">As empresas</div>"+keys.map(function(k){var a=APRES[k];return "<div style=\"margin-top:9px\"><b style=\"font-size:13.5px\">"+esc(a.n)+"</b><p style=\"margin:2px 0 0\">"+esc(a.d)+"</p></div>";}).join("");}else{var a=APRES.loja;box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}}
   var VERSIONS=[
+    {v:"v9.41",d:"05/08",desc:"🧾 Logs e ℹ️ Versão agora ficam no MENU LATERAL do portal, logo abaixo de Acessos (diretoria) — lugar padrão, sem precisar entrar em Metas. Abrem a mesma tela do app."},
     {v:"v9.40",d:"05/08",desc:"🧾 Novo: tela de Logs e tela de Versão (na área de Metas, para a diretoria). Logs guarda os erros do sistema, avisos do robô e importações deste aparelho — com botão 'Copiar tudo' pra mandar pro suporte. Versão mostra qual versão está carregada, pra confirmar se está na última."},
     {v:"v9.39",d:"05/08",desc:"🤖 O resultado do Puxar do robô agora aparece numa janelinha que FICA na tela até você fechar (antes era um aviso que sumia rápido demais pra ler). Mostra quantos vendedores/mix/campanha entraram — e, se algo não bateu, explica o porquê com calma."},
     {v:"v9.38",d:"05/08",desc:"🏆 Achado o motivo de a campanha zerar na tela normal e funcionar no link do fornecedor: o link procura o MÊS onde o dado existe; a tela normal olhava só o mês corrente. Agora a tela normal também procura o mês certo por campanha — ficou igual ao link do fornecedor. A campanha volta a aparecer."},
