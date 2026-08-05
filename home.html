@@ -9,7 +9,7 @@
 <title>Portal Grupo Uoma — Início (mural)</title>
 <script>
 /* auto-update: recarrega sozinho quando há versão nova (fim do ?v na mão) */
-(function(){try{var BUILD="9.42";window.__BUILD=BUILD;var K="uoma_reload";
+(function(){try{var BUILD="9.43";window.__BUILD=BUILD;var K="uoma_reload";
   fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var latest=(j&&j.v)?String(j.v):"";
     if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
@@ -734,6 +734,7 @@
   var APRES={loja:{n:"Loja do Sorveteiro e Confeiteiro",d:"Loja de produtos de panifica\u00e7\u00e3o, sorveteria e confeitaria. H\u00e1 mais de 30 anos no Amap\u00e1."},padoquinha:{n:"Padoquinha",d:"Primeira ind\u00fastria de salgados ultracongelados do Amap\u00e1."},merenda:{n:"Merenda Certa",d:"Alimenta\u00e7\u00e3o e merenda com qualidade e responsabilidade para o dia a dia."}};
   function renderApres(empresas){var box=el("apresEmp");if(!box)return;var keys=(empresas&&empresas.indexOf&&empresas.indexOf("todas")>=0)?["loja","padoquinha","merenda"]:((empresas&&empresas.filter)?empresas.filter(function(k){return APRES[k];}):[]);if(keys.length===1){var a=APRES[keys[0]];box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}else if(keys.length>1){box.innerHTML="<div class=\"al\">As empresas</div>"+keys.map(function(k){var a=APRES[k];return "<div style=\"margin-top:9px\"><b style=\"font-size:13.5px\">"+esc(a.n)+"</b><p style=\"margin:2px 0 0\">"+esc(a.d)+"</p></div>";}).join("");}else{var a=APRES.loja;box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}}
   var VERSIONS=[
+    {v:"v9.43",d:"05/08",desc:"Corrigido: ao sair do Metas (ou Separação) pelo '← Voltar ao portal', ficava uma tela quase branca com um ✕ que obrigava a fechar de novo. Agora o 'Voltar ao portal' já volta direto pro menu principal, num toque só."},
     {v:"v9.42",d:"05/08",desc:"🧾 Log CENTRAL: os erros e avisos agora vão para uma tabela única no banco (app_log), juntando TODOS os aparelhos — e o portal também manda os erros dele pra lá. A tela de Logs (menu lateral, diretoria) mostra o log central. Botões de Logs/Versão saíram do menu de Metas (ficam só na lateral). Requer rodar o SQL sql/app_log.sql uma vez no banco do faturamento."},
     {v:"v9.41",d:"05/08",desc:"🧾 Logs e ℹ️ Versão agora ficam no MENU LATERAL do portal, logo abaixo de Acessos (diretoria) — lugar padrão, sem precisar entrar em Metas. Abrem a mesma tela do app."},
     {v:"v9.40",d:"05/08",desc:"🧾 Novo: tela de Logs e tela de Versão (na área de Metas, para a diretoria). Logs guarda os erros do sistema, avisos do robô e importações deste aparelho — com botão 'Copiar tudo' pra mandar pro suporte. Versão mostra qual versão está carregada, pra confirmar se está na última."},
@@ -1415,8 +1416,8 @@ function openFatApp(frameId,boardId,colId,screen){_FAT_AUTH={type:"uoma-portal-a
 function fatOpenTool(){openFatApp("fatFrame","fatBoard","fatColetor","");}
 function openFatFull(){var ov=el("fatOvl");if(!ov)return;ov.classList.add("show");fsInjectCSS();var c=el("fatColetor");if(c)c.style.display="none";var box=el("fatBoard");if(box){box.style.display="block";box.innerHTML='<div style="text-align:center;color:var(--mut);font-size:12.5px;padding:20px">Carregando&hellip;</div>';}ensureFAT().then(function(ok){if(!ok){if(box)box.innerHTML='<div style="text-align:center;color:var(--mut);font-size:12.5px;padding:20px">Não consegui carregar os dados do faturamento.</div>';return;}if(!FATMES)FATMES=curMes();renderFatFull();});}
 function sepOpenTool(){openFatApp("sepFrame","sepBoard","sepColetor","admin");}
-(function(){var bk=el("fatBack");if(bk)bk.onclick=function(){var fr=el("fatFrame");if(fr)fr.src="about:blank";var c=el("fatColetor");if(c){c.style.display="none";c.classList.remove("appfull");}var b=el("fatBoard");if(b)b.style.display="block";};
-  var sbk=el("sepBack");if(sbk)sbk.onclick=function(){var fr=el("sepFrame");if(fr)fr.src="about:blank";var c=el("sepColetor");if(c){c.style.display="none";c.classList.remove("appfull");}var b=el("sepBoard");if(b)b.style.display="block";};
+(function(){var bk=el("fatBack");if(bk)bk.onclick=function(){var fr=el("fatFrame");if(fr)fr.src="about:blank";var c=el("fatColetor");if(c){c.style.display="none";c.classList.remove("appfull");}var b=el("fatBoard");if(b)b.style.display="block";var ov=el("fatOvl");if(ov)ov.classList.remove("show");};
+  var sbk=el("sepBack");if(sbk)sbk.onclick=function(){var fr=el("sepFrame");if(fr)fr.src="about:blank";var c=el("sepColetor");if(c){c.style.display="none";c.classList.remove("appfull");}var b=el("sepBoard");if(b)b.style.display="block";var ov=el("sepOvl");if(ov)ov.classList.remove("show");};
   document.addEventListener("click",function(e){var t=e.target;if(!t)return;var id=(t.dataset&&t.dataset.close)||(t.classList&&t.classList.contains("ovl")?t.id:"");
     if(id==="fatOvl"){var f=el("fatFrame");if(f)f.src="about:blank";if(el("fatColetor")){el("fatColetor").style.display="none";el("fatColetor").classList.remove("appfull");}if(el("fatBoard"))el("fatBoard").style.display="block";}
     if(id==="sepOvl"){var g=el("sepFrame");if(g)g.src="about:blank";if(el("sepColetor")){el("sepColetor").style.display="none";el("sepColetor").classList.remove("appfull");}if(el("sepBoard"))el("sepBoard").style.display="block";}
