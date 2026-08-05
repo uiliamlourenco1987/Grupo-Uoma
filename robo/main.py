@@ -29,7 +29,7 @@ SBH = {"apikey": SB_KEY, "Authorization": f"Bearer {SB_KEY}", "Content-Type": "a
 def drive():
     creds = service_account.Credentials.from_service_account_info(
         json.loads(os.environ["GOOGLE_CREDS_JSON"]),
-        scopes=["https://www.googleapis.com/auth/drive.readonly"])
+        scopes=["https://www.googleapis.com/auth/drive"])
     return build("drive", "v3", credentials=creds, cache_discovery=False)
 
 def sb_get_processados():
@@ -59,14 +59,41 @@ def baixar(svc, a):
     with open(p, "wb") as f: f.write(buf.getvalue())
     return p
 
+def _norm(s):
+    import unicodedata
+    return ''.join(c for c in unicodedata.normalize('NFD', (s or '').lower()) if c.isalnum())
+
+def achar_subpastas(svc):
+    """Descobre subpastas 'Não Processados' (entrada) e 'Processados' (destino)."""
+    res = svc.files().list(
+        q=f"'{FOLDER}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false",
+        fields="files(id,name)", supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
+    inbox = done = None
+    for f in res.get("files", []):
+        n = _norm(f["name"])
+        if n.startswith("nao") or "aprocessar" in n:      # "Não Processados" / "A Processar"
+            inbox = f
+        elif "processad" in n:                            # "Processados"
+            done = f
+    return inbox, done
+
+def mover(svc, fid, de, para):
+    svc.files().update(fileId=fid, addParents=para, removeParents=de,
+                       supportsAllDrives=True, fields="id").execute()
+
 def main():
     svc = drive()
     japroc = sb_get_processados()
-    res = svc.files().list(q=f"'{FOLDER}' in parents and trashed=false",
-                           fields="files(id,name,modifiedTime,mimeType)", pageSize=200,
-                           supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
+    inbox, done = achar_subpastas(svc)
+    src = inbox["id"] if inbox else FOLDER
+    print(f"Lendo de: {inbox['name'] if inbox else 'pasta principal'}"
+          + (f" · movendo processados p/ '{done['name']}'" if done else " · (sem pasta Processados — não vou mover)"))
+    res = svc.files().list(
+        q=f"'{src}' in parents and trashed=false and mimeType!='application/vnd.google-apps.folder'",
+        fields="files(id,name,modifiedTime,mimeType)", pageSize=200,
+        supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
     arquivos = res.get("files", [])
-    print(f"{len(arquivos)} arquivo(s) na pasta · competência {COMP}")
+    print(f"{len(arquivos)} arquivo(s) a processar · competência {COMP}")
     for a in arquivos:
         print(f"   - {a['name']}  [{a.get('mimeType')}]")
     novos = 0
@@ -101,6 +128,12 @@ def main():
                 print(f"  · ignorado (não reconheci o relatório): {nome}")
                 continue
             sb_upsert("robo_arquivos", [{"file_id": fid, "nome": nome, "modificado": mod}], "file_id")
+            if done:
+                try:
+                    mover(svc, fid, src, done["id"])
+                    print(f"    → movido para '{done['name']}'")
+                except Exception as e:
+                    print(f"    (não consegui mover — a conta-robô precisa de acesso de Editor: {e})")
         except Exception as e:
             print(f"  ✗ ERRO em {nome}: {e}")
     print(f"Concluído. {novos} arquivo(s) novo(s) processado(s).")
