@@ -9,15 +9,19 @@ Começa pelo **Desempenho** → grava numa tabela própria `robo_desempenho`
 
 ## SQL — rodar no projeto do FATURAMENTO (kopuvuhmqbpvlwksypgm)
 ```sql
-create table if not exists robo_desempenho (
+-- espelha o relatório de desempenho 1:1 (mesmos nomes de coluna)
+drop table if exists robo_desempenho;
+create table robo_desempenho (
   competencia text not null,
-  vendedor    text not null,
-  codigo      text,
-  vendas numeric, positivacao int, peso numeric, mix int,
-  carteira int, atendidos int,
-  areceber numeric, vencido numeric, transito numeric, inad numeric,
-  arquivo text,
-  importado_em timestamptz default now(),
+  empresa text, codigo text, vendedor text not null,
+  vendas numeric, custo numeric, lucro numeric,
+  positivacao int, vendamedia numeric,
+  peso numeric, mixproduto int,
+  carteiraclientes int, clientesatendidos int, qtddevolucao int,
+  por_clientecompraram numeric, clientesnaocompraram numeric, clientesnovos int,
+  areceber numeric, totalavencer numeric, totalvencidos numeric, totaltransito numeric,
+  inadimplencia numeric,
+  arquivo text, importado_em timestamptz default now(),
   primary key (competencia, vendedor)
 );
 

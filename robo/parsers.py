@@ -39,12 +39,19 @@ def parse_desempenho(path):
             if not d.get('VENDEDOR'):
                 continue
             rows.append({
-                'codigo': d.get('CODIGO'), 'vendedor': d.get('VENDEDOR'),
-                'vendas': num(d.get('VENDAS')), 'positivacao': int(num(d.get('POSITIVACAO'))),
-                'peso': num(d.get('PESO')), 'mix': int(num(d.get('MIXPRODUTO'))),
-                'carteira': int(num(d.get('CARTEIRACLIENTES'))), 'atendidos': int(num(d.get('CLIENTESATENDIDOS'))),
-                'areceber': num(d.get('ARECEBER')), 'vencido': num(d.get('TOTALVENCIDOS')),
-                'transito': num(d.get('TOTALTRANSITO')), 'inad': num(d.get('INADIMPLENCIA')),
+                'empresa': d.get('EMPRESA'), 'codigo': d.get('CODIGO'), 'vendedor': d.get('VENDEDOR'),
+                'vendas': num(d.get('VENDAS')), 'custo': num(d.get('CUSTO')), 'lucro': num(d.get('LUCRO')),
+                'positivacao': int(num(d.get('POSITIVACAO'))), 'vendamedia': num(d.get('VENDAMEDIA')),
+                'peso': num(d.get('PESO')), 'mixproduto': int(num(d.get('MIXPRODUTO'))),
+                'carteiraclientes': int(num(d.get('CARTEIRACLIENTES'))),
+                'clientesatendidos': int(num(d.get('CLIENTESATENDIDOS'))),
+                'qtddevolucao': int(num(d.get('QTDDEVOLUCAO'))),
+                'por_clientecompraram': num(d.get('POR_CLIENTECOMPRARAM')),
+                'clientesnaocompraram': num(d.get('CLIENTESNAOCOMPRARAM')),
+                'clientesnovos': int(num(d.get('CLIENTESNOVOS'))),
+                'areceber': num(d.get('ARECEBER')), 'totalavencer': num(d.get('TOTALAVENCER')),
+                'totalvencidos': num(d.get('TOTALVENCIDOS')), 'totaltransito': num(d.get('TOTALTRANSITO')),
+                'inadimplencia': num(d.get('INADIMPLENCIA')),
             })
     return rows
 
