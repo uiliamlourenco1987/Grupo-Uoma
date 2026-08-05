@@ -1732,13 +1732,12 @@ async function puxarDoRobo(){
   state._roboBusy=true;
   try{
     var des=await sbSel('robo_desempenho','?competencia=eq.'+encodeURIComponent(comp));
-    if(!des||!des.length){toast('Sem dados do robô para '+comp+'. Confira a competência.');return;}
-    // PROTEÇÃO: se o robô veio TODO zerado (o relatório do mês ainda não entrou, ou veio vazio),
-    // NÃO sobrescreve o que já está lançado — só avisa. Assim nunca mais "zera todo mundo".
-    var totVendas=des.reduce(function(a,r){return a+(Number(r.vendas)||0);},0);
-    if(totVendas<=0){toast('🤖 O robô está sem números para '+comp+' (tudo zero) — não vou apagar o que já está lançado. Confira se os relatórios do mês já entraram no robô.');return;}
-    var nD=0,supExt=(METAS_SUPERV.EXTERNO||'GENIVALDO');
-    des.forEach(function(r){
+    // Cada bloco é INDEPENDENTE: desempenho zerado NÃO impede restaurar mix/campanha (e vice-versa),
+    // e nada é sobrescrito com zero — só grava quando o robô traz valor de verdade.
+    var nD=0,nMix=0,nM=0,supExt=(METAS_SUPERV.EXTERNO||'GENIVALDO');
+    var totVendas=(des||[]).reduce(function(a,r){return a+(Number(r.vendas)||0);},0);
+    var desOK=!!(des&&des.length&&totVendas>0);   // só aplica desempenho se houver vendas reais
+    if(desOK)des.forEach(function(r){
       var v=metaMatch(r.vendedor,m.vend);
       if(!v&&metaMatch(r.vendedor,[{nome:supExt}]))v=ensureExtraEntry('EXTERNO');
       if(!v)return;
@@ -1757,7 +1756,6 @@ async function puxarDoRobo(){
     // MIX das METAS = produtos diferentes por vendedor (TODAS as marcas) — NÃO é o da campanha.
     // Só mexe se a view trouxer dados E casar com alguém (senão preserva o mix atual — nunca zera à toa).
     var pv=await sbSel('robo_vendas_produtos_vend','?competencia=eq.'+encodeURIComponent(comp));
-    var nMix=0;
     if(pv&&pv.length){
       var teamSet={EXTERNO:new Set(),INTERNO:new Set()};var mixHits=[];
       pv.forEach(function(r){
@@ -1775,7 +1773,6 @@ async function puxarDoRobo(){
       }
     }
     var marcas=[];(METAS.campanhas||[]).forEach(function(c){(c.marcas||[]).forEach(function(x){var u=String(x).toUpperCase().trim();if(u&&marcas.indexOf(u)<0)marcas.push(u);});});
-    var nM=0;
     for(var i=0;i<marcas.length;i++){
       var MK=marcas[i];
       var vm=await sbSel('robo_vendas_vend_marca','?competencia=eq.'+encodeURIComponent(comp)+'&marca=eq.'+encodeURIComponent(MK));
@@ -1788,7 +1785,12 @@ async function puxarDoRobo(){
         mv[MK]=e;nM++;
       });
     }
-    if(nD===0&&nMix===0&&nM===0){toast('🤖 O robô tem números para '+comp+', mas nenhum bateu com os vendedores do mês (confira os nomes). Nada foi alterado.');return;}
+    if(nD===0&&nMix===0&&nM===0){
+      if(!des||!des.length){toast('🤖 Sem dados do robô para '+comp+'. Confira a competência.');}
+      else if(!desOK){toast('🤖 O robô está sem VENDAS para '+comp+' (desempenho zerado) e também não veio mix/campanha. Nada foi alterado — confira se os relatórios do mês entraram no robô.');}
+      else{toast('🤖 O robô tem números para '+comp+', mas nenhum bateu com os vendedores do mês (confira os nomes). Nada foi alterado.');}
+      return;
+    }
     // ESPERA salvar antes de terminar (senão o poll de 6s pode reverter a campanha)
     try{await apiPost({action:'metas',metas:METAS});SYNC.lastSync=stamp();netRefresh();}
     catch(_e){syncPushMetas();}
