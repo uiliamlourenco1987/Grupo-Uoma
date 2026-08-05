@@ -9,7 +9,7 @@
 <title>Portal Grupo Uoma — Início (mural)</title>
 <script>
 /* auto-update: recarrega sozinho quando há versão nova (fim do ?v na mão) */
-(function(){try{var BUILD="9.32";window.__BUILD=BUILD;var K="uoma_reload";
+(function(){try{var BUILD="9.33";window.__BUILD=BUILD;var K="uoma_reload";
   fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var latest=(j&&j.v)?String(j.v):"";
     if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
@@ -732,6 +732,7 @@
   var APRES={loja:{n:"Loja do Sorveteiro e Confeiteiro",d:"Loja de produtos de panifica\u00e7\u00e3o, sorveteria e confeitaria. H\u00e1 mais de 30 anos no Amap\u00e1."},padoquinha:{n:"Padoquinha",d:"Primeira ind\u00fastria de salgados ultracongelados do Amap\u00e1."},merenda:{n:"Merenda Certa",d:"Alimenta\u00e7\u00e3o e merenda com qualidade e responsabilidade para o dia a dia."}};
   function renderApres(empresas){var box=el("apresEmp");if(!box)return;var keys=(empresas&&empresas.indexOf&&empresas.indexOf("todas")>=0)?["loja","padoquinha","merenda"]:((empresas&&empresas.filter)?empresas.filter(function(k){return APRES[k];}):[]);if(keys.length===1){var a=APRES[keys[0]];box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}else if(keys.length>1){box.innerHTML="<div class=\"al\">As empresas</div>"+keys.map(function(k){var a=APRES[k];return "<div style=\"margin-top:9px\"><b style=\"font-size:13.5px\">"+esc(a.n)+"</b><p style=\"margin:2px 0 0\">"+esc(a.d)+"</p></div>";}).join("");}else{var a=APRES.loja;box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}}
   var VERSIONS=[
+    {v:"v9.33",d:"05/08",desc:"Campanhas: fonte única. Aposentamos a tela de campanha própria do portal (era uma cópia que vivia desencontrando do app). Agora TODO caminho — menu lateral, cartão 'Comece por aqui' e o botão do Painel Diário — abre a MESMA tela do app. Fim das diferenças entre 'Home' e 'menu lateral'."},
     {v:"v9.32",d:"05/08",desc:"Campanhas: a tela do portal (menu lateral) e a do app mostravam critérios diferentes — o portal não conhecia o critério 'Itens vendidos (QTD)' e não casava a marca em maiúsculas. Alinhado ao app: agora os dois leem os MESMOS dados (marca por vendedor) e mostram os mesmos critérios (Faturamento, Peso, Mix/produtos, Itens vendidos, Positivação, Marcas, % da meta)."},
     {v:"v9.31",d:"05/08",desc:"Metas / 🤖 Puxar do robô: corrigido o caso em que a CAMPANHA aparecia 'sem vendas' mesmo com o robô confirmando os dados. Agora o botão ESPERA salvar antes de terminar e trava a sincronização automática durante a importação, então os dados da campanha (marca) não são mais revertidos pelo sync de fundo."},
     {v:"v9.30",d:"05/08",desc:"Correção do número da versão que parecia 'travado na 9.25' — era só o rótulo da lista de novidades desatualizado; o sistema já vinha atualizando por baixo. Agora o rótulo bate com a versão real."},
@@ -1261,7 +1262,9 @@ async function renderMyPanels(){var box=el("myPanels");if(!box)return;vhInjectCS
   if(hasSep){try{var rr=await fetch(FSB_URL+"/rest/v1/enviadas?select=quando&order=quando.desc&limit=200",{headers:{apikey:FSB_KEY,Authorization:"Bearer "+FSB_KEY}});var ev=await rr.json();if(Array.isArray(ev)){var d0=new Date();var td=("0"+d0.getDate()).slice(-2)+"/"+("0"+(d0.getMonth()+1)).slice(-2)+"/"+d0.getFullYear();var n=ev.filter(function(x){return String(x.quando||"").slice(0,10)===td;}).length;var st=el("mp-tz-separacao");if(st){st.innerHTML=n>0?("<b style=\"font-size:15px;color:var(--navy)\">"+n+"</b> separaç"+(n===1?"ão":"ões")+" enviada"+(n===1?"":"s")+" hoje →"):"nenhuma enviada hoje · toque para ver →";}}}catch(e){}}try{var _rav=await fetchAval();box.insertAdjacentHTML("beforeend",avalCardHTML(_rav));}catch(e){}
   if(dir){try{await renderPainelDiario(el("painelDiario"));}catch(e){}}
   }
-  async function openCampanhas(){var ov=el("campOvl");if(!ov)return;ov.classList.add("show");var box=el("campList");box.innerHTML="<div style=\"text-align:center;color:var(--mut);font-size:12.5px;padding:20px\">Carregando campanhas&hellip;</div>";try{var r=await fetch(FSB_URL+"/rest/v1/metas?select=data&id=eq.1",{headers:{apikey:FSB_KEY,Authorization:"Bearer "+FSB_KEY}});var j=await r.json();var data=(j&&j[0]&&j[0].data)||null;if(!data){box.innerHTML="<div style=\"text-align:center;color:var(--mut);font-size:12.5px;padding:20px\">N&atilde;o consegui carregar as campanhas.</div>";return;}FAT=data;renderCamps();}catch(e){box.innerHTML="<div style=\"text-align:center;color:var(--mut);font-size:12.5px;padding:20px\">N&atilde;o consegui carregar as campanhas agora.</div>";}}
+  // APOSENTADO: a campanha agora tem UMA tela só — a do app (fonte única).
+  // Assim o portal e o app nunca mais divergem. A antiga tela nativa (renderCamps/editCampanha/#campOvl) fica inerte.
+  function openCampanhas(){openFatScreen("campanhas");}
   (function(){var c=el("campClose");if(c)c.onclick=function(){el("campOvl").classList.remove("show");};var ov=el("campOvl");if(ov)ov.addEventListener("click",function(e){if(e.target===ov)ov.classList.remove("show");});})();
 
 
