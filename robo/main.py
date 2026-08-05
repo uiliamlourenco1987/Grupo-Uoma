@@ -42,7 +42,8 @@ def sb_upsert(table, rows, on_conflict):
     h = dict(SBH); h["Prefer"] = "resolution=merge-duplicates"
     r = requests.post(f"{SB_URL}/rest/v1/{table}?on_conflict={on_conflict}",
                       headers=h, data=json.dumps(rows), timeout=60)
-    r.raise_for_status()
+    if r.status_code >= 300:
+        raise RuntimeError(f"{r.status_code}: {r.text[:400]}")
 
 def baixar(svc, a):
     fid, nome, mime = a["id"], a["name"], a.get("mimeType", "")
@@ -81,7 +82,7 @@ def mover(svc, fid, de, para):
     svc.files().update(fileId=fid, addParents=para, removeParents=de,
                        supportsAllDrives=True, fields="id").execute()
 
-ROBO_VERSAO = "v6 (move já-processados)"
+ROBO_VERSAO = "v7 (erro detalhado)"
 
 def main():
     print(f"== robô {ROBO_VERSAO} ==")
