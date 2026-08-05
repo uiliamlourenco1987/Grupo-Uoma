@@ -103,6 +103,12 @@ def main():
             continue
         if japroc.get(fid) == mod:
             print(f"  = já processado (sem mudança): {nome}")
+            if done:
+                try:
+                    mover(svc, fid, src, done["id"])
+                    print(f"    → movido para '{done['name']}'")
+                except Exception as e:
+                    print(f"    (não consegui mover: {e})")
             continue
         try:
             p = baixar(svc, a)
