@@ -1,5 +1,15 @@
 # Leitores dos relatórios padronizados (validados nos arquivos reais).
-import re, csv, html
+import re, csv, html, io
+
+def _text(path):
+    """Lê o arquivo tentando utf-8 (exportado do Google) e latin-1 (original)."""
+    data = open(path, "rb").read()
+    for enc in ("utf-8-sig", "utf-8", "latin-1"):
+        try:
+            return data.decode(enc)
+        except UnicodeDecodeError:
+            continue
+    return data.decode("latin-1", errors="replace")
 
 def num(s):
     s = (s or '').strip().strip('"').strip()
@@ -19,9 +29,9 @@ def num(s):
 def parse_desempenho(path):
     """relatorio_de_desempenho.csv -> lista de vendedores com os KPIs do mês."""
     rows = []
-    with open(path, encoding='latin-1') as f:
-        rd = csv.reader(f, delimiter=';')
-        head = [h.strip().strip('"') for h in next(rd)]
+    rd = csv.reader(io.StringIO(_text(path)), delimiter=';')
+    head = [h.strip().strip('"') for h in next(rd)]
+    if True:
         for r in rd:
             if not r or not any(x.strip().strip('"') for x in r):
                 continue
@@ -41,9 +51,9 @@ def parse_desempenho(path):
 def parse_marcas(path):
     """vendas_marca_peso.csv -> {vendedor: {marca: {kilos, vendas}}}"""
     agg = {}
-    with open(path, encoding='latin-1') as f:
-        rd = csv.reader(f, delimiter=';')
-        next(rd)
+    rd = csv.reader(io.StringIO(_text(path)), delimiter=';')
+    next(rd)
+    if True:
         for r in rd:
             if not r or not any(x.strip().strip('"') for x in r):
                 continue
@@ -54,7 +64,7 @@ def parse_marcas(path):
 
 def parse_ven430(path):
     """VEN430LA_xxx.html -> {vendedor: {produtos, itens, valor}} + periodo."""
-    raw = open(path, encoding='latin-1').read()
+    raw = _text(path)
     m = re.search(r'<PRE>(.*?)</PRE>', raw, re.S | re.I)
     txt = html.unescape(m.group(1)) if m else raw
     per = re.search(r'PER\S*ODO DE\s*(\d{2}/\d{2}/\d{4})\s*A\s*(\d{2}/\d{2}/\d{4})', txt)

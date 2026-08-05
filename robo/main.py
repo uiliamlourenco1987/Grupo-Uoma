@@ -44,13 +44,18 @@ def sb_upsert(table, rows, on_conflict):
                       headers=h, data=json.dumps(rows), timeout=60)
     r.raise_for_status()
 
-def baixar(svc, fid, nome):
-    req = svc.files().get_media(fileId=fid, supportsAllDrives=True)
+def baixar(svc, a):
+    fid, nome, mime = a["id"], a["name"], a.get("mimeType", "")
+    if mime == "application/vnd.google-apps.spreadsheet":
+        req = svc.files().export_media(fileId=fid, mimeType="text/csv")   # CSV virou planilha Google
+    else:
+        req = svc.files().get_media(fileId=fid, supportsAllDrives=True)
     buf = io.BytesIO(); dl = MediaIoBaseDownload(buf, req)
     done = False
     while not done:
         _, done = dl.next_chunk()
-    p = os.path.join(tempfile.gettempdir(), nome)
+    fname = nome if "." in nome else nome + ".csv"
+    p = os.path.join(tempfile.gettempdir(), fname)
     with open(p, "wb") as f: f.write(buf.getvalue())
     return p
 
@@ -58,26 +63,29 @@ def main():
     svc = drive()
     japroc = sb_get_processados()
     res = svc.files().list(q=f"'{FOLDER}' in parents and trashed=false",
-                           fields="files(id,name,modifiedTime)", pageSize=200,
+                           fields="files(id,name,modifiedTime,mimeType)", pageSize=200,
                            supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
     arquivos = res.get("files", [])
     print(f"{len(arquivos)} arquivo(s) na pasta · competência {COMP}")
+    for a in arquivos:
+        print(f"   - {a['name']}  [{a.get('mimeType')}]")
     novos = 0
     for a in arquivos:
         fid, nome, mod = a["id"], a["name"], a.get("modifiedTime")
         low = nome.lower()
         if japroc.get(fid) == mod:
-            continue  # já processado (e não mudou)
+            print(f"  = já processado (sem mudança): {nome}")
+            continue
         try:
-            if "desempenho" in low and low.endswith(".csv"):
-                p = baixar(svc, fid, nome)
+            if "desempenho" in low:
+                p = baixar(svc, a)
                 rows = parsers.parse_desempenho(p)
                 payload = [dict(r, competencia=COMP, arquivo=nome) for r in rows]
                 sb_upsert("robo_desempenho", payload, "competencia,vendedor")
                 print(f"  ✓ {nome}: {len(payload)} vendedores gravados")
                 novos += 1
             else:
-                print(f"  · ignorado (sem handler ainda): {nome}")
+                print(f"  · ignorado (nome não tem 'desempenho'): {nome}")
                 continue
             sb_upsert("robo_arquivos", [{"file_id": fid, "nome": nome, "modificado": mod}], "file_id")
         except Exception as e:
