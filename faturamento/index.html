@@ -1733,35 +1733,46 @@ async function puxarDoRobo(){
   try{
     var des=await sbSel('robo_desempenho','?competencia=eq.'+encodeURIComponent(comp));
     if(!des||!des.length){toast('Sem dados do robô para '+comp+'. Confira a competência.');return;}
+    // PROTEÇÃO: se o robô veio TODO zerado (o relatório do mês ainda não entrou, ou veio vazio),
+    // NÃO sobrescreve o que já está lançado — só avisa. Assim nunca mais "zera todo mundo".
+    var totVendas=des.reduce(function(a,r){return a+(Number(r.vendas)||0);},0);
+    if(totVendas<=0){toast('🤖 O robô está sem números para '+comp+' (tudo zero) — não vou apagar o que já está lançado. Confira se os relatórios do mês já entraram no robô.');return;}
     var nD=0,supExt=(METAS_SUPERV.EXTERNO||'GENIVALDO');
     des.forEach(function(r){
       var v=metaMatch(r.vendedor,m.vend);
       if(!v&&metaMatch(r.vendedor,[{nome:supExt}]))v=ensureExtraEntry('EXTERNO');
-      if(v){
-        v.vendido=Math.round((r.vendas||0)*100)/100;
-        v.positivados=(v.grupo==='INTERNO')?(r.positivacao||0):(r.clientesatendidos||0);
-        if((r.carteiraclientes||0)>0)v.carteira=r.carteiraclientes;
-        v.peso=Math.round((r.peso||0)*10)/10;
-        v.areceber=Math.round((r.areceber||0)*100)/100;
-        v.vencido=Math.round((r.totalvencidos||0)*100)/100;
-        v.transito=Math.round((r.totaltransito||0)*100)/100;
-        nD++;
-      }
+      if(!v)return;
+      var vd=Math.round((Number(r.vendas)||0)*100)/100;
+      if(vd<=0)return;   // linha sem venda: preserva o que já tem desse vendedor (não zera)
+      v.vendido=vd;
+      var pos=(v.grupo==='INTERNO')?(Number(r.positivacao)||0):(Number(r.clientesatendidos)||0);
+      if(pos>0)v.positivados=pos;
+      if((Number(r.carteiraclientes)||0)>0)v.carteira=Number(r.carteiraclientes);
+      var pk=Math.round((Number(r.peso)||0)*10)/10;if(pk>0)v.peso=pk;
+      var ar=Math.round((Number(r.areceber)||0)*100)/100;if(ar>0)v.areceber=ar;
+      v.vencido=Math.round((Number(r.totalvencidos)||0)*100)/100;
+      v.transito=Math.round((Number(r.totaltransito)||0)*100)/100;
+      nD++;
     });
-    // MIX das METAS = produtos diferentes por vendedor (TODAS as marcas) — NÃO é o da campanha
-    // Só mexe se a view trouxer dados de verdade (senão preserva o mix atual).
+    // MIX das METAS = produtos diferentes por vendedor (TODAS as marcas) — NÃO é o da campanha.
+    // Só mexe se a view trouxer dados E casar com alguém (senão preserva o mix atual — nunca zera à toa).
     var pv=await sbSel('robo_vendas_produtos_vend','?competencia=eq.'+encodeURIComponent(comp));
     var nMix=0;
     if(pv&&pv.length){
-      var teamSet={EXTERNO:new Set(),INTERNO:new Set()};
-      m.vend.forEach(function(v){v.mixVend=0;});
+      var teamSet={EXTERNO:new Set(),INTERNO:new Set()};var mixHits=[];
       pv.forEach(function(r){
         var v=metaMatch(r.vendedor,m.vend);
         if(!v&&metaMatch(r.vendedor,[{nome:supExt}]))v=ensureExtraEntry('EXTERNO');
-        if(v){var prods=r.produtos||[];v.mixVend=prods.length;nMix++;if(teamSet[v.grupo])prods.forEach(function(c){teamSet[v.grupo].add(c);});}
+        if(!v)return;
+        var prods=r.produtos;var cnt=Array.isArray(prods)?prods.length:(Number(prods)||0);
+        mixHits.push({v:v,cnt:cnt});nMix++;
+        if(teamSet[v.grupo]&&Array.isArray(prods))prods.forEach(function(c){teamSet[v.grupo].add(c);});
       });
-      if(!m.mixEquipe)m.mixEquipe={};
-      ['EXTERNO','INTERNO'].forEach(function(g){m.mixEquipe[g]=Object.assign(m.mixEquipe[g]||{obj:0,real:0},{real:teamSet[g].size});});
+      if(nMix>0){   // só aplica se ALGUÉM casou
+        mixHits.forEach(function(h){h.v.mixVend=h.cnt;});
+        if(!m.mixEquipe)m.mixEquipe={};
+        ['EXTERNO','INTERNO'].forEach(function(g){if(teamSet[g].size>0)m.mixEquipe[g]=Object.assign(m.mixEquipe[g]||{obj:0,real:0},{real:teamSet[g].size});});
+      }
     }
     var marcas=[];(METAS.campanhas||[]).forEach(function(c){(c.marcas||[]).forEach(function(x){var u=String(x).toUpperCase().trim();if(u&&marcas.indexOf(u)<0)marcas.push(u);});});
     var nM=0;
@@ -1770,12 +1781,14 @@ async function puxarDoRobo(){
       var vm=await sbSel('robo_vendas_vend_marca','?competencia=eq.'+encodeURIComponent(comp)+'&marca=eq.'+encodeURIComponent(MK));
       (vm||[]).forEach(function(r){
         var v=metaMatch(r.vendedor,m.vend);if(!v)return;
+        var prod=Number(r.produtos)||0,it=Math.round(Number(r.itens)||0),vl=Math.round((Number(r.vendas)||0)*100)/100;
+        if(prod<=0&&it<=0&&vl<=0)return;   // linha vazia dessa marca: não apaga o que já tem
         var mv=(v.marcaVendas=v.marcaVendas||{}),e=Object.assign({},mv[MK]||{});
-        e.produtos=r.produtos||0;e.itens=Math.round(r.itens||0);e.vendas=Math.round((r.vendas||0)*100)/100;
-        e.positivados=r.positivados||0;e.peso=Math.round((r.peso||0)*10)/10;
+        e.produtos=prod;e.itens=it;e.vendas=vl;e.positivados=Number(r.positivados)||0;e.peso=Math.round((Number(r.peso)||0)*10)/10;
         mv[MK]=e;nM++;
       });
     }
+    if(nD===0&&nMix===0&&nM===0){toast('🤖 O robô tem números para '+comp+', mas nenhum bateu com os vendedores do mês (confira os nomes). Nada foi alterado.');return;}
     // ESPERA salvar antes de terminar (senão o poll de 6s pode reverter a campanha)
     try{await apiPost({action:'metas',metas:METAS});SYNC.lastSync=stamp();netRefresh();}
     catch(_e){syncPushMetas();}
