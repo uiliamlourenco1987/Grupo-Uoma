@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Painel do Robô — Grupo Uoma</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--navy:#12294C;--gold:#C79A3B;--ink:#1b2430;--mut:#7a8698;--line:#e6ebf2;--bg:#f4f7fb}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);padding:18px;max-width:1100px;margin:0 auto}
+  h1{font-size:20px;color:var(--navy);display:flex;align-items:center;gap:8px}
+  .sub{color:var(--mut);font-size:12.5px;margin:2px 0 16px}
+  .bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+  select,button{font:inherit;padding:8px 12px;border:1.5px solid var(--line);border-radius:9px;background:#fff}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:16px}
+  .card h2{font-size:15px;color:var(--navy);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{background:var(--navy);color:#fff;text-align:left;padding:8px 10px;font-size:11.5px;font-weight:600;white-space:nowrap}
+  th.n,td.n{text-align:right}
+  td{padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  .tbwrap{overflow-x:auto;border-radius:10px;border:1px solid var(--line)}
+  .muted{color:var(--mut);font-size:12.5px;padding:14px;text-align:center}
+  .pill{background:#eef3fa;border-radius:8px;padding:2px 8px;font-size:11px;color:var(--navy)}
+  .foot{color:var(--mut);font-size:11.5px;text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+  <h1>📊 Painel do Robô</h1>
+  <div class="sub">Dados importados automaticamente dos relatórios (Desempenho e Vendas detalhado) — atualizados pelo robô.</div>
+
+  <div class="bar">
+    <label>Competência</label>
+    <select id="comp"></select>
+    <button id="reload">↻ Atualizar</button>
+    <span id="status" class="pill"></span>
+  </div>
+
+  <div class="card">
+    <h2>🎯 Desempenho por vendedor</h2>
+    <div id="desemp" class="tbwrap"><div class="muted">Carregando…</div></div>
+  </div>
+
+  <div class="card">
+    <h2>🏭 Vendas por marca</h2>
+    <div id="marcas" class="tbwrap"><div class="muted">Carregando…</div></div>
+  </div>
+
+  <div class="card">
+    <h2>🧑‍💼 Vendas / mix / peso por vendedor</h2>
+    <div id="vend" class="tbwrap"><div class="muted">Carregando…</div></div>
+  </div>
+
+  <div class="foot">Fonte: robô de relatórios · projeto do faturamento</div>
+
+<script>
+  var SB_URL="https://kopuvuhmqbpvlwksypgm.supabase.co";
+  var SB_KEY="sb_publishable_flmTo5yyGUafV5OwkeYijQ_HvBbDWBr";
+  var sb=window.supabase.createClient(SB_URL,SB_KEY);
+  var $=function(id){return document.getElementById(id);};
+  function brMoney(v){return (v==null?0:Number(v)).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});}
+  function nrBR(v,d){return (v==null?0:Number(v)).toLocaleString("pt-BR",{minimumFractionDigits:d||0,maximumFractionDigits:d||0});}
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];});}
+  function tabela(box,cols,rows){
+    if(!rows||!rows.length){box.innerHTML='<div class="muted">Sem dados nesta competência.</div>';return;}
+    var th=cols.map(function(c){return '<th class="'+(c.n?"n":"")+'">'+c.t+'</th>';}).join("");
+    var body=rows.map(function(r){
+      return "<tr>"+cols.map(function(c){return '<td class="'+(c.n?"n":"")+'">'+c.f(r)+'</td>';}).join("")+"</tr>";
+    }).join("");
+    box.innerHTML='<table><thead><tr>'+th+'</tr></thead><tbody>'+body+'</tbody></table>';
+  }
+  async function carregarComps(){
+    var r=await sb.from("robo_vendas_por_vendedor").select("competencia").order("competencia",{ascending:false});
+    var set=[]; (r.data||[]).forEach(function(x){if(set.indexOf(x.competencia)<0)set.push(x.competencia);});
+    if(!set.length){ // fallback pelo desempenho
+      var d=await sb.from("robo_desempenho_v").select("competencia").order("competencia",{ascending:false});
+      (d.data||[]).forEach(function(x){if(set.indexOf(x.competencia)<0)set.push(x.competencia);});
+    }
+    $("comp").innerHTML=set.map(function(c){return '<option>'+esc(c)+'</option>';}).join("")||'<option value="">(sem dados)</option>';
+  }
+  async function carregar(){
+    var comp=$("comp").value; if(!comp){return;}
+    $("status").textContent="carregando…";
+    // desempenho
+    var de=await sb.from("robo_desempenho_v").select("*").eq("competencia",comp).order("vendas",{ascending:false});
+    tabela($("desemp"),[
+      {t:"Vendedor",f:function(r){return esc(r.vendedor);}},
+      {t:"Vendas",n:1,f:function(r){return brMoney(r.vendas);}},
+      {t:"Positivação",n:1,f:function(r){return nrBR(r.positivacao);}},
+      {t:"Mix",n:1,f:function(r){return nrBR(r.mixproduto);}},
+      {t:"Carteira",n:1,f:function(r){return nrBR(r.carteiraclientes);}},
+      {t:"Inadimpl.",n:1,f:function(r){return nrBR(r.inadimplencia,2)+"%";}}
+    ],de.data);
+    // marcas
+    var ma=await sb.from("robo_vendas_por_marca").select("*").eq("competencia",comp).order("valor",{ascending:false});
+    tabela($("marcas"),[
+      {t:"Marca",f:function(r){return esc(r.marca);}},
+      {t:"Valor",n:1,f:function(r){return brMoney(r.valor);}},
+      {t:"Peso (kg)",n:1,f:function(r){return nrBR(r.peso,1);}},
+      {t:"Produtos dif.",n:1,f:function(r){return nrBR(r.produtos);}},
+      {t:"Itens",n:1,f:function(r){return nrBR(r.itens);}}
+    ],ma.data);
+    // vendedores
+    var ve=await sb.from("robo_vendas_por_vendedor").select("*").eq("competencia",comp).order("valor",{ascending:false});
+    tabela($("vend"),[
+      {t:"Cód",f:function(r){return esc(r.codvendedor);}},
+      {t:"Vendedor",f:function(r){return esc(r.vendedor);}},
+      {t:"Valor",n:1,f:function(r){return brMoney(r.valor);}},
+      {t:"Peso (kg)",n:1,f:function(r){return nrBR(r.peso,1);}},
+      {t:"Mix (produtos dif.)",n:1,f:function(r){return nrBR(r.produtos);}}
+    ],ve.data);
+    $("status").textContent="ok · "+comp;
+  }
+  $("comp").onchange=carregar;
+  $("reload").onclick=carregar;
+  (async function(){
+    try{ await carregarComps(); await carregar(); }
+    catch(e){ $("status").textContent="erro: "+(e.message||e); }
+  })();
+</script>
+</body>
+</html>
