@@ -1729,6 +1729,7 @@ async function puxarDoRobo(){
   if(!m.vend||!m.vend.length){toast('Importe as METAS do mês (📋 planilha) antes de puxar.');return;}
   var comp=curMes();
   toast('🤖 Puxando do robô ('+comp+')…');
+  state._roboBusy=true;
   try{
     var des=await sbSel('robo_desempenho','?competencia=eq.'+encodeURIComponent(comp));
     if(!des||!des.length){toast('Sem dados do robô para '+comp+'. Confira a competência.');return;}
@@ -1775,9 +1776,13 @@ async function puxarDoRobo(){
         mv[MK]=e;nM++;
       });
     }
-    syncPushMetas();reRender();
+    // ESPERA salvar antes de terminar (senão o poll de 6s pode reverter a campanha)
+    try{await apiPost({action:'metas',metas:METAS});SYNC.lastSync=stamp();netRefresh();}
+    catch(_e){syncPushMetas();}
+    reRender();
     toast('🤖 Robô: '+nD+' vend · mix '+nMix+(marcas.length?' · camp '+nM+' ['+marcas.join(', ')+']':'')+' ✓');
   }catch(e){toast('Erro ao puxar do robô: '+((e&&e.message)||e));}
+  finally{state._roboBusy=false;}
 }
 function importMetasEco(file){if(!file)return;const rd=new FileReader();
   rd.onload=()=>{try{const rows=parseMetasEco(rd.result);if(!rows.length){toast('N\u00e3o reconheci esse HTML do Eco');return;}
@@ -2757,7 +2762,7 @@ function hydrate(d){
   if(d.vendedores&&d.vendedores.length){VENDEDORES.length=0;d.vendedores.forEach(v=>VENDEDORES.push({cod:String(v.cod),nome:String(v.nome),pin:String(v.pin)}));}
   // ---- Metas de vendas (planejamento) ----
   if(d.metas&&d.metas.meses&&Object.keys(d.metas.meses).length){
-    if(state.view!=='metasplan'&&state.view!=='campedit'){if(!d.metas.acessos&&METAS.acessos)d.metas.acessos=METAS.acessos;if(!d.metas.log&&METAS.log)d.metas.log=METAS.log;METAS=d.metas;
+    if(state.view!=='metasplan'&&state.view!=='campedit'&&!state._roboBusy){if(!d.metas.acessos&&METAS.acessos)d.metas.acessos=METAS.acessos;if(!d.metas.log&&METAS.log)d.metas.log=METAS.log;METAS=d.metas;
       // preserva um fechamento/reabertura local at\u00e9 o servidor confirmar (evita o poll de 6s reverter o "Fechar m\u00eas")
       try{var mp=state.metaStatusPending||{};Object.keys(mp).forEach(function(k){var mm=METAS.meses&&METAS.meses[k];if(!mm)return;if(mm.status===mp[k])delete mp[k];else mm.status=mp[k];});}catch(e){}
     }   // n\u00e3o sobrescreve enquanto a diretoria edita
