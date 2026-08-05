@@ -84,3 +84,33 @@ def parse_ven430(path):
         if mt and vend:
             out[vend] = {'produtos': int(mt.group(1)), 'itens': num(mt.group(2)), 'valor': num(mt.group(3))}
     return {'periodo': (per.group(1), per.group(2)) if per else None, 'vendedores': out}
+
+
+# ---- Vendas item a item (export da query do Firebird; tem MARCA) ----
+_VENDAS_NUM = {'fator','quantidade','peso','vlrliquido','valor','custofinal','custoreposicao',
+               'customediounit','customediototal','custofinal_1','lucroliquidoobtido','qtdtotr'}
+
+def parse_vendas(path):
+    """CODPRO;DATA;DOC;...;MARCA;QUANTIDADE;PESO;VLRLIQUIDO;...;GRUPO;SUBGRUPO;QTDTOTR"""
+    rd = csv.reader(io.StringIO(_text(path)), delimiter=';')
+    head = [h.strip().strip('"').lower() for h in next(rd)]
+    out = []
+    for r in rd:
+        if not r or not any(c.strip().strip('"') for c in r):
+            continue
+        d = dict(zip(head, [c.strip().strip('"') for c in r]))
+        rec = {}
+        for k in head:
+            if not k:
+                continue
+            v = d.get(k, '')
+            if k in _VENDAS_NUM:
+                rec[k] = num(v)
+            elif k == 'data':
+                mm = re.match(r'(\d{2})/(\d{2})/(\d{4})', v or '')
+                rec[k] = f"{mm.group(3)}-{mm.group(2)}-{mm.group(1)}" if mm else None
+            else:
+                rec[k] = v
+        if rec.get('identificador'):
+            out.append(rec)
+    return out

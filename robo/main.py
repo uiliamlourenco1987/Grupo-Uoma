@@ -79,7 +79,7 @@ def main():
             continue
         try:
             p = baixar(svc, a)
-            head = open(p, "rb").read(600).decode("latin-1", "replace").upper()
+            head = open(p, "rb").read(2000).decode("latin-1", "replace").upper()
             # reconhece pelo CONTEÚDO (colunas), não pelo nome do arquivo
             if "POSITIVACAO" in head and "INADIMPLENCIA" in head:
                 rows = parsers.parse_desempenho(p)
@@ -87,8 +87,18 @@ def main():
                 sb_upsert("robo_desempenho", payload, "competencia,vendedor")
                 print(f"  ✓ Desempenho '{nome}': {len(payload)} vendedores gravados")
                 novos += 1
+            elif "CODPRO" in head and "IDENTIFICADOR" in head and "MARCA" in head:
+                rows = parsers.parse_vendas(p)
+                from collections import Counter
+                meses = Counter(r["data"][:7] for r in rows if r.get("data"))
+                comp = meses.most_common(1)[0][0] if meses else COMP
+                payload = [dict(r, competencia=comp, arquivo=nome) for r in rows]
+                for i in range(0, len(payload), 500):
+                    sb_upsert("robo_vendas", payload[i:i + 500], "identificador")
+                print(f"  ✓ Vendas '{nome}': {len(payload)} itens (competência {comp})")
+                novos += 1
             else:
-                print(f"  · ignorado (não reconheci como Desempenho): {nome}")
+                print(f"  · ignorado (não reconheci o relatório): {nome}")
                 continue
             sb_upsert("robo_arquivos", [{"file_id": fid, "nome": nome, "modificado": mod}], "file_id")
         except Exception as e:

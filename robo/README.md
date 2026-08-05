@@ -41,3 +41,22 @@ create table if not exists robo_arquivos (
 
 ## Rodar
 Automático a cada 15 min, ou manual em Actions → robo-relatorios → Run workflow.
+
+## Tabela robo_vendas (venda item a item — export da query do Firebird)
+```sql
+create table if not exists robo_vendas (
+  competencia text,
+  identificador text primary key,
+  codpro text, data date, doc text, emp text, empdesc text, fator numeric,
+  descpro text, embalagem text, referencia text,
+  codcli text, nomecli text, marca text,
+  vendedor text,                       -- reservado p/ quando a query trouxer o vendedor
+  quantidade numeric, peso numeric, vlrliquido numeric,
+  tipooperacao text, valor numeric,
+  custofinal numeric, custoreposicao numeric, customediounit numeric, customediototal numeric,
+  tipovenda text, custofinal_1 numeric,
+  lucroliquidoobtido numeric,
+  natureza text, natdesc text, grupoicms text, grupo text, subgrupo text, qtdtotr numeric,
+  arquivo text, importado_em timestamptz default now()
+);
+```
