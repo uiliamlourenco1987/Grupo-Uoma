@@ -1721,6 +1721,31 @@ function importDesempenho(file){if(!file)return;
     toast('Desempenho importado: '+n+' vendedores ✓');syncPushMetas();reRender();
   }catch(e){toast('Erro ao ler o desempenho');}};
   rd.readAsText(file,'utf-8');}
+// CAMPANHA: puxa as linhas de venda de uma MARCA no PERÍODO da campanha, direto do robo_vendas
+// (independe da 'competencia', que o robô carimba pela data das notas — por isso a campanha zerava).
+// Pagina o resultado e agrega por vendedor. Se o robo_vendas não servir, devolve null (o chamador usa a view).
+async function roboMarcaNoPeriodo(MK,ini,fim,vendList){
+  if(!ini||!fim)return null;
+  var base='?select=*&marca=ilike.'+encodeURIComponent(MK)+'&data=gte.'+encodeURIComponent(ini)+'&data=lte.'+encodeURIComponent(fim)+'&order=identificador';
+  var all=[],from=0;
+  for(var p=0;p<80;p++){
+    var chunk=await sbSel('robo_vendas',base+'&limit=1000&offset='+from);
+    if(!chunk||!chunk.length)break;
+    all=all.concat(chunk);
+    if(chunk.length<1000)break;
+    from+=1000;
+  }
+  if(!all.length)return null;   // sem linha crua no período -> o chamador tenta a view antiga
+  var agg={};
+  all.forEach(function(r){
+    var v=metaMatch(r.vendedor,vendList);if(!v)return;
+    var a=agg[v.nome]||(agg[v.nome]={v:v,prod:{},doc:{},itens:0,peso:0,vendas:0});
+    if(r.codpro!=null&&r.codpro!=='')a.prod[String(r.codpro)]=1;
+    if(r.doc!=null&&r.doc!=='')a.doc[String(r.doc)]=1;
+    a.itens+=Number(r.quantidade)||0;a.peso+=Number(r.peso)||0;a.vendas+=Number(r.vlrliquido)||0;
+  });
+  return agg;
+}
 async function puxarDoRobo(){
   if(typeof mesFechado==='function'&&mesFechado()){toast('Mês fechado — reabra para importar.');return;}
   if(!sbOn()){toast('Sem conexão com o banco.');return;}
@@ -1772,18 +1797,36 @@ async function puxarDoRobo(){
         ['EXTERNO','INTERNO'].forEach(function(g){if(teamSet[g].size>0)m.mixEquipe[g]=Object.assign(m.mixEquipe[g]||{obj:0,real:0},{real:teamSet[g].size});});
       }
     }
-    var marcas=[];(METAS.campanhas||[]).forEach(function(c){(c.marcas||[]).forEach(function(x){var u=String(x).toUpperCase().trim();if(u&&marcas.indexOf(u)<0)marcas.push(u);});});
-    for(var i=0;i<marcas.length;i++){
-      var MK=marcas[i];
-      var vm=await sbSel('robo_vendas_vend_marca','?competencia=eq.'+encodeURIComponent(comp)+'&marca=eq.'+encodeURIComponent(MK));
-      (vm||[]).forEach(function(r){
-        var v=metaMatch(r.vendedor,m.vend);if(!v)return;
-        var prod=Number(r.produtos)||0,it=Math.round(Number(r.itens)||0),vl=Math.round((Number(r.vendas)||0)*100)/100;
-        if(prod<=0&&it<=0&&vl<=0)return;   // linha vazia dessa marca: não apaga o que já tem
-        var mv=(v.marcaVendas=v.marcaVendas||{}),e=Object.assign({},mv[MK]||{});
-        e.produtos=prod;e.itens=it;e.vendas=vl;e.positivados=Number(r.positivados)||0;e.peso=Math.round((Number(r.peso)||0)*10)/10;
-        mv[MK]=e;nM++;
-      });
+    // CAMPANHA: por campanha, lê as vendas da(s) marca(s) NO PERÍODO dela (direto do robo_vendas).
+    // Assim não depende da 'competencia' (que o robô carimba pela data das notas) — fim do "campanha zerada".
+    var camps2=(METAS.campanhas||[]);var seenMK={};var marcas=[];
+    for(var ci=0;ci<camps2.length;ci++){
+      var c2=camps2[ci];var iniC=String(c2.ini||'').slice(0,10),fimC=String(c2.fim||'').slice(0,10);
+      var mksC=(c2.marcas||[]).map(function(x){return String(x).toUpperCase().trim();}).filter(Boolean);
+      for(var mj=0;mj<mksC.length;mj++){
+        var MK=mksC[mj];if(marcas.indexOf(MK)<0)marcas.push(MK);
+        var kk=MK+'|'+iniC+'|'+fimC;if(seenMK[kk])continue;seenMK[kk]=1;
+        var agg=await roboMarcaNoPeriodo(MK,iniC,fimC,m.vend);
+        if(agg){
+          Object.keys(agg).forEach(function(nm){var a=agg[nm];var v=a.v;
+            var prod=Object.keys(a.prod).length,it=Math.round(a.itens),vl=Math.round(a.vendas*100)/100;
+            if(prod<=0&&it<=0&&vl<=0)return;
+            var mv=(v.marcaVendas=v.marcaVendas||{}),e=Object.assign({},mv[MK]||{});
+            e.produtos=prod;e.itens=it;e.vendas=vl;e.positivados=Object.keys(a.doc).length;e.peso=Math.round(a.peso*10)/10;
+            mv[MK]=e;nM++;});
+        }else{
+          // fallback: view agregada por competência do mês atual (comportamento antigo)
+          var vm=await sbSel('robo_vendas_vend_marca','?competencia=eq.'+encodeURIComponent(comp)+'&marca=eq.'+encodeURIComponent(MK));
+          (vm||[]).forEach(function(r){
+            var v=metaMatch(r.vendedor,m.vend);if(!v)return;
+            var prod=Number(r.produtos)||0,it=Math.round(Number(r.itens)||0),vl=Math.round((Number(r.vendas)||0)*100)/100;
+            if(prod<=0&&it<=0&&vl<=0)return;
+            var mv=(v.marcaVendas=v.marcaVendas||{}),e=Object.assign({},mv[MK]||{});
+            e.produtos=prod;e.itens=it;e.vendas=vl;e.positivados=Number(r.positivados)||0;e.peso=Math.round((Number(r.peso)||0)*10)/10;
+            mv[MK]=e;nM++;
+          });
+        }
+      }
     }
     if(nD===0&&nMix===0&&nM===0){
       if(!des||!des.length){toast('🤖 Sem dados do robô para '+comp+'. Confira a competência.');}

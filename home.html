@@ -9,7 +9,7 @@
 <title>Portal Grupo Uoma — Início (mural)</title>
 <script>
 /* auto-update: recarrega sozinho quando há versão nova (fim do ?v na mão) */
-(function(){try{var BUILD="9.35";window.__BUILD=BUILD;var K="uoma_reload";
+(function(){try{var BUILD="9.36";window.__BUILD=BUILD;var K="uoma_reload";
   fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var latest=(j&&j.v)?String(j.v):"";
     if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
@@ -732,6 +732,7 @@
   var APRES={loja:{n:"Loja do Sorveteiro e Confeiteiro",d:"Loja de produtos de panifica\u00e7\u00e3o, sorveteria e confeitaria. H\u00e1 mais de 30 anos no Amap\u00e1."},padoquinha:{n:"Padoquinha",d:"Primeira ind\u00fastria de salgados ultracongelados do Amap\u00e1."},merenda:{n:"Merenda Certa",d:"Alimenta\u00e7\u00e3o e merenda com qualidade e responsabilidade para o dia a dia."}};
   function renderApres(empresas){var box=el("apresEmp");if(!box)return;var keys=(empresas&&empresas.indexOf&&empresas.indexOf("todas")>=0)?["loja","padoquinha","merenda"]:((empresas&&empresas.filter)?empresas.filter(function(k){return APRES[k];}):[]);if(keys.length===1){var a=APRES[keys[0]];box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}else if(keys.length>1){box.innerHTML="<div class=\"al\">As empresas</div>"+keys.map(function(k){var a=APRES[k];return "<div style=\"margin-top:9px\"><b style=\"font-size:13.5px\">"+esc(a.n)+"</b><p style=\"margin:2px 0 0\">"+esc(a.d)+"</p></div>";}).join("");}else{var a=APRES.loja;box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}}
   var VERSIONS=[
+    {v:"v9.36",d:"05/08",desc:"🏆 Campanha corrigida na raiz: ela puxava pela 'competência' (mês), mas o robô guarda as vendas com a competência da DATA das notas — então o dado existia no banco mas numa gaveta diferente da que a campanha abria (por isso zerava). Agora a campanha lê direto as vendas da MARCA no PERÍODO da campanha (independe da competência) e soma por vendedor. Fim da campanha zerada quando o dado está lá."},
     {v:"v9.35",d:"05/08",desc:"🤖 Puxar do robô: desempenho, mix e campanha agora são independentes. Antes, se o desempenho viesse zerado, o botão parava ali e não restaurava a campanha. Agora a campanha volta a ser preenchida pelos dados de venda por marca do robô mesmo que o desempenho esteja vazio."},
     {v:"v9.34",d:"05/08",desc:"🤖 Puxar do robô agora é à prova de zerar: se o robô estiver sem números do mês (tudo zero), ele NÃO sobrescreve — avisa e preserva o que já está lançado. E grava campo a campo só quando o robô traz valor de verdade. Corrige o caso em que uma importação com o robô vazio zerava todo mundo."},
     {v:"v9.33",d:"05/08",desc:"Campanhas: fonte única. Aposentamos a tela de campanha própria do portal (era uma cópia que vivia desencontrando do app). Agora TODO caminho — menu lateral, cartão 'Comece por aqui' e o botão do Painel Diário — abre a MESMA tela do app. Fim das diferenças entre 'Home' e 'menu lateral'."},
