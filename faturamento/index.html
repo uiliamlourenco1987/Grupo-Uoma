@@ -722,8 +722,23 @@ function logEvent(tipo,msg){
     var e={t:new Date().toISOString(),tipo:String(tipo||'info'),msg:String(msg==null?'':msg).slice(0,600),quem:quem,ver:appBuild()};
     APP_LOGS.unshift(e);if(APP_LOGS.length>300)APP_LOGS.length=300;
     try{localStorage.setItem('uoma_logs',JSON.stringify(APP_LOGS));}catch(_){ }
+    try{logPush(e);}catch(_){ }   // espelha no log central (banco do faturamento), se a tabela existir
   }catch(_){ }
 }
+// grava 1 evento na tabela central app_log (banco do faturamento). Best-effort: se falhar, desliga até a próxima leitura.
+function logPush(e){try{
+  if(typeof SB_URL==='undefined'||!SB_URL)return;
+  if(typeof sbOn!=='function'||!sbOn())return;
+  if(typeof state!=='undefined'&&state&&state._logSbOff)return;
+  fetch(SB_URL+'/rest/v1/app_log',{method:'POST',headers:sbH({Prefer:'return=minimal'}),body:JSON.stringify([{t:e.t,tipo:e.tipo,msg:e.msg,quem:e.quem,ver:e.ver,aparelho:(navigator.userAgent||'').slice(0,140),origem:'app'}])})
+    .then(function(r){if(!r.ok&&state)state._logSbOff=true;}).catch(function(){if(state)state._logSbOff=true;});
+}catch(_){ }}
+async function loadCentralLogs(){try{
+  if(typeof SB_URL==='undefined'||!SB_URL||typeof sbOn!=='function'||!sbOn())return null;
+  var r=await fetch(SB_URL+'/rest/v1/app_log?select=*&order=t.desc&limit=300',{headers:sbH()});
+  if(!r.ok){if(state)state._logSbOff=true;return null;}
+  if(state)state._logSbOff=false;return await r.json();
+}catch(e){return null;}}
 if(typeof window!=='undefined'){
   window.addEventListener('error',function(ev){try{if(!ev||!ev.message)return;logEvent('erro',ev.message+(ev.filename?(' @'+String(ev.filename).split('/').pop()+(ev.lineno?(':'+ev.lineno):'')):''));}catch(_){ }});
   window.addEventListener('unhandledrejection',function(ev){try{var r=ev&&ev.reason;logEvent('erro','promessa: '+((r&&r.message)||r||'rejei\u00e7\u00e3o'));}catch(_){ }});
@@ -1113,7 +1128,7 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);sy
       <span class="mtag" style="background:var(--brand-l);color:var(--brand-d)">${state.metaRole==='dir'?'Diretoria':state.metaRole==='rh'?'RH':state.metaRole==='fat'?'Faturamento':'Supervis\u00e3o'}: ${esc(state.metaWho||'')}</span>
       <button class="btnsm" id="mpainel" style="width:auto;padding:8px 14px;margin-left:auto">\ud83d\udcca Painel de Metas</button>
       ${canEditMes()?'<button class="btnsm" id="mfechar" style="width:auto;padding:8px 14px;background:#8a5a00;color:#fff;border:none;font-weight:700">\ud83d\udd12 Fechar m\u00eas</button>':''}${(mesFechado()&&metaDir())?'<button class="btnsm" id="mreabrir" style="width:auto;padding:8px 14px">\ud83d\udd13 Reabrir m\u00eas</button>':''}
-      ${metaRH()?'<button class="btnsm" id="mrh" style="width:auto;padding:8px 14px">\u2699\ufe0f Regras (RH)</button>':''}${metaDir()?'<button class="btnsm" id="mlog" style="width:auto;padding:8px 14px">\ud83d\udcdd Log de altera\u00e7\u00f5es</button><button class="btnsm" id="merros" style="width:auto;padding:8px 14px">\ud83e\uddfe Logs (erros)</button><button class="btnsm" id="mver" style="width:auto;padding:8px 14px">\u2139\ufe0f Vers\u00e3o</button>':''}${metaEdit()?'<button class="btnsm" id="mregras" style="width:auto;padding:8px 14px">\ud83d\udccb Regras</button><button class="btnsm" id="mxexp" style="width:auto;padding:8px 14px">\ud83d\udda8\ufe0f Exportar metas (PDF)</button>':''}
+      ${metaRH()?'<button class="btnsm" id="mrh" style="width:auto;padding:8px 14px">\u2699\ufe0f Regras (RH)</button>':''}${metaDir()?'<button class="btnsm" id="mlog" style="width:auto;padding:8px 14px">\ud83d\udcdd Log de altera\u00e7\u00f5es</button>':''}${metaEdit()?'<button class="btnsm" id="mregras" style="width:auto;padding:8px 14px">\ud83d\udccb Regras</button><button class="btnsm" id="mxexp" style="width:auto;padding:8px 14px">\ud83d\udda8\ufe0f Exportar metas (PDF)</button>':''}
       <button class="link" id="msair">sair</button></div>
     <div class="datebar" style="margin-bottom:12px"><span class="muted" style="font-size:12px">Dias \u00fateis: <b>${m.diasUteis}</b> \u00b7 trabalhados: <b>${m.diasTrab}</b>${m.status==='andamento'?' \u00b7 a tend\u00eancia projeta o fechamento no ritmo atual':''}</span></div>
     ${finBanner()}
@@ -1146,24 +1161,35 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);sy
     const rf=$('#inadRef');if(rf)rf.onchange=e=>state.inadRef=e.target.value;
     $('#mprod').onclick=()=>$('#mprodF').click();$('#mprodF').onchange=e=>importProdVend(e.target.files[0]);
     $('#mdesemp').onclick=()=>$('#mdesempF').click();$('#mdesempF').onchange=e=>importDesempenho(e.target.files[0]);{var _rb=$('#mrobo');if(_rb)_rb.onclick=()=>puxarDoRobo();}}
-  {var _eb=$('#merros');if(_eb)_eb.onclick=()=>screenErros();var _vb=$('#mver');if(_vb)_vb.onclick=()=>screenVersao();}
 }
 function fmtLogT(iso){try{var d=new Date(iso),p=function(n){return String(n).padStart(2,'0');};return p(d.getDate())+'/'+p(d.getMonth()+1)+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());}catch(e){return String(iso||'');}}
-function screenErros(){setBar('');setW('wide');state.view='erros';mskin(true);
+async function screenErros(){setBar('');setW('wide');state.view='erros';mskin(true);
   var filt=state._logFilt||'tudo';
-  var badge=function(tp){var c={erro:'#b42318',aviso:'#8a6d00',info:'#5b6470'}[tp]||'#5b6470';return '<span style="display:inline-block;font-size:10px;font-weight:800;color:#fff;background:'+c+';border-radius:6px;padding:1px 7px;text-transform:uppercase">'+esc(tp)+'</span>';};
-  var list=APP_LOGS.filter(function(e){return filt==='tudo'?true:e.tipo===filt;});
+  var badge=function(tp){var c={erro:'#b42318',aviso:'#8a6d00',info:'#5b6470'}[tp]||'#5b6470';return '<span style="display:inline-block;font-size:10px;font-weight:800;color:#fff;background:'+c+';border-radius:6px;padding:1px 7px;text-transform:uppercase">'+esc(tp||'info')+'</span>';};
+  $('#screen').innerHTML='<div class="wrap">'+whoBar()+'<div class="mselbar"><h2 style="margin:0;font-size:20px">🧾 Logs</h2><button class="link" id="lgvolt0" style="margin-left:auto">◂ voltar</button></div><div class="card" style="padding:22px;text-align:center;color:var(--mut)">Carregando logs…</div></div>';
+  wireWho();{var _v0=$('#lgvolt0');if(_v0)_v0.onclick=function(){screenMetas();};}
+  var central=null;try{central=await loadCentralLogs();}catch(e){}
+  var todos=[],seen={};
+  (central||[]).forEach(function(e){todos.push({t:e.t,tipo:e.tipo||'info',msg:e.msg||'',quem:e.quem||'',ver:e.ver||'',origem:e.origem||'app',src:'central'});});
+  APP_LOGS.forEach(function(e){todos.push({t:e.t,tipo:e.tipo,msg:e.msg,quem:e.quem,ver:e.ver,origem:'app',src:'local'});});
+  todos.sort(function(a,b){return String(b.t||'').localeCompare(String(a.t||''));});
+  var uniq=[];todos.forEach(function(e){var k=(e.t||'')+'|'+(e.msg||'');if(seen[k])return;seen[k]=1;uniq.push(e);});
+  var central_on=(central!==null);
+  var list=uniq.filter(function(e){return filt==='tudo'?true:e.tipo===filt;});
   var chips=[['tudo','Tudo'],['erro','Só erros'],['aviso','Avisos']].map(function(c){return '<button class="btnsm logf" data-f="'+c[0]+'" style="width:auto;padding:7px 13px;'+(filt===c[0]?'background:var(--brand-d,#12294C);color:#fff;border:none;font-weight:700':'')+'">'+c[1]+'</button>';}).join('');
-  var rows=list.length?list.map(function(e){return '<div style="border-bottom:1px solid var(--line);padding:9px 4px;display:flex;gap:10px;align-items:flex-start"><span style="font-size:11px;color:var(--mut);white-space:nowrap;min-width:82px">'+fmtLogT(e.t)+'</span>'+badge(e.tipo)+'<span style="font-size:12.5px;flex:1;word-break:break-word">'+esc(e.msg)+(e.ver?(' <span style="color:var(--mut);font-size:10.5px">v'+esc(e.ver)+'</span>'):'')+'</span></div>';}).join(''):'<div class="muted" style="text-align:center;padding:24px">Nenhum registro'+(filt!=='tudo'?' nesse filtro':' ainda')+'.</div>';
+  var rows=list.length?list.map(function(e){return '<div style="border-bottom:1px solid var(--line);padding:9px 4px;display:flex;gap:10px;align-items:flex-start"><span style="font-size:11px;color:var(--mut);white-space:nowrap;min-width:82px">'+fmtLogT(e.t)+'</span>'+badge(e.tipo)+'<span style="font-size:12.5px;flex:1;word-break:break-word">'+esc(e.msg)+(e.quem?(' <span style="color:var(--mut);font-size:10.5px">· '+esc(e.quem)+'</span>'):'')+(e.ver?(' <span style="color:var(--mut);font-size:10.5px">v'+esc(e.ver)+'</span>'):'')+'</span></div>';}).join(''):'<div class="muted" style="text-align:center;padding:24px">Nenhum registro'+(filt!=='tudo'?' nesse filtro':' ainda')+'.</div>';
+  var fonte=central_on?('<span style="color:#12543a">● central (todos os aparelhos) — '+(central||[]).length+' + '+APP_LOGS.length+' deste</span>'):('<span style="color:#8a5a00">● só deste aparelho — a tabela central <b>app_log</b> ainda não existe (rode o SQL)</span>');
   $('#screen').innerHTML='<div class="wrap">'+whoBar()+
-    '<div class="mselbar"><h2 style="margin:0;font-size:20px">🧾 Logs (erros e avisos)</h2><button class="link" id="lgvolt" style="margin-left:auto">◂ voltar</button></div>'+
-    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">'+chips+'<span style="flex:1"></span><button class="btnsm" id="lgcopy" style="width:auto;padding:7px 13px">📋 Copiar tudo</button><button class="btnsm" id="lglimpar" style="width:auto;padding:7px 13px;color:var(--falta)">🗑️ Limpar</button></div>'+
+    '<div class="mselbar"><h2 style="margin:0;font-size:20px">🧾 Logs</h2><button class="link" id="lgvolt" style="margin-left:auto">◂ voltar</button></div>'+
+    '<div style="font-size:11.5px;margin:-4px 2px 10px">'+fonte+'</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">'+chips+'<span style="flex:1"></span><button class="btnsm" id="lgatu" style="width:auto;padding:7px 13px">🔄 Atualizar</button><button class="btnsm" id="lgcopy" style="width:auto;padding:7px 13px">📋 Copiar tudo</button><button class="btnsm" id="lglimpar" style="width:auto;padding:7px 13px;color:var(--falta)">🗑️ Limpar (aparelho)</button></div>'+
     '<div class="card" style="padding:8px 12px">'+rows+'</div>'+
-    '<p class="muted" style="font-size:11px;margin-top:10px">Registros <b>deste aparelho</b> ('+APP_LOGS.length+'/300). Guarda erros do sistema, avisos do robô e importações. Use “Copiar tudo” pra me enviar.</p></div>';
+    '<p class="muted" style="font-size:11px;margin-top:10px">Guarda erros do sistema, avisos do robô e importações. Use “Copiar tudo” pra enviar ao suporte.</p></div>';
   wireWho();var vb=$('#lgvolt');if(vb)vb.onclick=function(){screenMetas();};
   $('#screen').querySelectorAll('.logf').forEach(function(b){b.onclick=function(){state._logFilt=b.dataset.f;screenErros();};});
-  var cp=$('#lgcopy');if(cp)cp.onclick=function(){var txt='LOGS '+(appBuild()||'')+' · '+APP_LOGS.length+' registros\n'+APP_LOGS.map(function(e){return fmtLogT(e.t)+' ['+e.tipo+'] '+e.msg+(e.ver?(' (v'+e.ver+')'):'');}).join('\n');if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast('Copiado ✓');},function(){notify('Copie o texto abaixo:<br><br><textarea style=\"width:100%;height:180px;font-size:11px\">'+esc(txt)+'</textarea>');});}else{notify('Copie o texto abaixo:<br><br><textarea style=\"width:100%;height:180px;font-size:11px\">'+esc(txt)+'</textarea>');}};
-  var lp=$('#lglimpar');if(lp)lp.onclick=function(){askConfirm('Limpar todos os registros de log <b>deste aparelho</b>?',function(){APP_LOGS.length=0;try{localStorage.setItem('uoma_logs','[]');}catch(_){ }screenErros();},'Limpar');};
+  {var at=$('#lgatu');if(at)at.onclick=function(){screenErros();};}
+  var cp=$('#lgcopy');if(cp)cp.onclick=function(){var txt='LOGS '+(appBuild()||'')+' · '+list.length+' registros'+(central_on?' (central)':' (local)')+'\n'+list.map(function(e){return fmtLogT(e.t)+' ['+e.tipo+'] '+e.msg+(e.quem?(' — '+e.quem):'')+(e.ver?(' (v'+e.ver+')'):'');}).join('\n');if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast('Copiado ✓');},function(){notify('Copie o texto abaixo:<br><br><textarea style=\"width:100%;height:180px;font-size:11px\">'+esc(txt)+'</textarea>');});}else{notify('Copie o texto abaixo:<br><br><textarea style=\"width:100%;height:180px;font-size:11px\">'+esc(txt)+'</textarea>');}};
+  var lp=$('#lglimpar');if(lp)lp.onclick=function(){askConfirm('Limpar os registros de log guardados <b>neste aparelho</b>? (o log central no banco não é apagado)',function(){APP_LOGS.length=0;try{localStorage.setItem('uoma_logs','[]');}catch(_){ }screenErros();},'Limpar');};
 }
 function screenVersao(){setBar('');setW('wide');state.view='versao';mskin(true);
   var b=appBuild()||'(sem ?v na URL)';
