@@ -72,20 +72,23 @@ def main():
     novos = 0
     for a in arquivos:
         fid, nome, mod = a["id"], a["name"], a.get("modifiedTime")
-        low = nome.lower()
+        if a.get("mimeType") == "application/vnd.google-apps.folder":
+            continue
         if japroc.get(fid) == mod:
             print(f"  = já processado (sem mudança): {nome}")
             continue
         try:
-            if "desempenho" in low:
-                p = baixar(svc, a)
+            p = baixar(svc, a)
+            head = open(p, "rb").read(600).decode("latin-1", "replace").upper()
+            # reconhece pelo CONTEÚDO (colunas), não pelo nome do arquivo
+            if "POSITIVACAO" in head and "INADIMPLENCIA" in head:
                 rows = parsers.parse_desempenho(p)
                 payload = [dict(r, competencia=COMP, arquivo=nome) for r in rows]
                 sb_upsert("robo_desempenho", payload, "competencia,vendedor")
-                print(f"  ✓ {nome}: {len(payload)} vendedores gravados")
+                print(f"  ✓ Desempenho '{nome}': {len(payload)} vendedores gravados")
                 novos += 1
             else:
-                print(f"  · ignorado (nome não tem 'desempenho'): {nome}")
+                print(f"  · ignorado (não reconheci como Desempenho): {nome}")
                 continue
             sb_upsert("robo_arquivos", [{"file_id": fid, "nome": nome, "modificado": mod}], "file_id")
         except Exception as e:
