@@ -50,7 +50,7 @@ create table if not exists robo_vendas (
   codpro text, data date, doc text, emp text, empdesc text, fator numeric,
   descpro text, embalagem text, referencia text,
   codcli text, nomecli text, marca text,
-  vendedor text,                       -- reservado p/ quando a query trouxer o vendedor
+  codvendedor text, vendedor text,     -- vendedor (código + nome) da query
   quantidade numeric, peso numeric, vlrliquido numeric,
   tipooperacao text, valor numeric,
   custofinal numeric, custoreposicao numeric, customediounit numeric, customediototal numeric,
