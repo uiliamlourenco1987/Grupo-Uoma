@@ -81,7 +81,10 @@ def mover(svc, fid, de, para):
     svc.files().update(fileId=fid, addParents=para, removeParents=de,
                        supportsAllDrives=True, fields="id").execute()
 
+ROBO_VERSAO = "v6 (move já-processados)"
+
 def main():
+    print(f"== robô {ROBO_VERSAO} ==")
     svc = drive()
     japroc = sb_get_processados()
     inbox, done = achar_subpastas(svc)
