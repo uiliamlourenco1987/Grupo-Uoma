@@ -658,6 +658,11 @@ function statusA(o,area){const c=countsA(o,area);if(c.tot===0)return{k:'\u2014',
 function peopleA(o,area){const s=new Set();workItems(o,area).forEach(w=>{const e=estate(o,w.it.c,w.scope);if(e.conferente)s.add(e.conferente);});return [...s];}
 
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1600);}
+// aviso que FICA na tela até fechar (pra mensagens importantes que o toast some rápido demais)
+function notify(m,titulo){const ov=document.createElement('div');ov.className='overlay';
+  ov.innerHTML='<div class="sheet"><h3>'+esc(titulo||'🤖 Robô')+'</h3><p style="font-size:14px;margin:0 0 14px;line-height:1.55">'+m+'</p><button class="btn primary" id="nt_ok">Entendi</button></div>';
+  document.body.appendChild(ov);ov.querySelector('#nt_ok').onclick=()=>ov.remove();
+  ov.addEventListener('click',function(e){if(e.target===ov)ov.remove();});}
 // confirma\u00e7\u00e3o antes de a\u00e7\u00e3o cr\u00edtica (usa o mesmo visual das outras janelas)
 function askConfirm(msg,onYes,yesLabel){const ov=document.createElement('div');ov.className='overlay';
   ov.innerHTML=`<div class="sheet"><h3>Confirmar</h3><p style="font-size:14px;margin:0 0 14px;line-height:1.5">${msg}</p>
@@ -1841,17 +1846,18 @@ async function puxarDoRobo(){
       else campNote=' · campanha: 0 vendas no período das marcas ['+marcas.join(', ')+']';
     }
     if(nD===0&&nMix===0&&nM===0){
-      if(campDiag.rows>0){toast('🤖'+campNote+'. Nada foi gravado.');}
-      else if(!des||!des.length){toast('🤖 Sem dados do robô para '+comp+'. Confira a competência.'+campNote);}
-      else if(!desOK){toast('🤖 O robô está sem VENDAS para '+comp+' (desempenho zerado).'+campNote+' Nada foi alterado.');}
-      else{toast('🤖 O robô tem números, mas nenhum bateu com os vendedores do mês (confira os nomes).'+campNote);}
+      if(campDiag.rows>0){notify('<b>'+comp+'</b>'+campNote+'.<br><br>Nada foi gravado.');}
+      else if(!des||!des.length){notify('Sem dados do robô para <b>'+comp+'</b>. Confira a competência.'+campNote);}
+      else if(!desOK){notify('O robô está <b>sem VENDAS</b> para <b>'+comp+'</b> (desempenho zerado).'+campNote+'<br><br>Nada foi alterado.');}
+      else{notify('O robô tem números, mas nenhum bateu com os vendedores do mês (confira os nomes).'+campNote);}
       return;
     }
     // ESPERA salvar antes de terminar (senão o poll de 6s pode reverter a campanha)
     try{await apiPost({action:'metas',metas:METAS});SYNC.lastSync=stamp();netRefresh();}
     catch(_e){syncPushMetas();}
     reRender();
-    toast('🤖 Robô: '+nD+' vend · mix '+nMix+campNote+' ✓');
+    var campLinha=(nM>0)?('<b>'+nM+'</b> vendedor(es) ['+marcas.join(', ')+']'):(campDiag.rows>0?('0 — '+campDiag.rows+' vendas no período, mas '+(campDiag.noname>=campDiag.rows?'SEM vendedor no robô':'os nomes não bateram')):'0');
+    notify('Importado ✓<br><br>Desempenho: <b>'+nD+'</b> vendedor(es)<br>Mix: <b>'+nMix+'</b><br>Campanha: '+campLinha+'<br><br><span style="color:var(--mut);font-size:12.5px">Já salvo no banco ('+esc(comp)+').</span>');
   }catch(e){toast('Erro ao puxar do robô: '+((e&&e.message)||e));}
   finally{state._roboBusy=false;}
 }
