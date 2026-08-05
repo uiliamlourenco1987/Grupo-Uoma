@@ -1725,8 +1725,8 @@ function importDesempenho(file){if(!file)return;
 // (independe da 'competencia', que o robô carimba pela data das notas — por isso a campanha zerava).
 // Pagina o resultado e agrega por vendedor. Se o robo_vendas não servir, devolve null (o chamador usa a view).
 async function roboMarcaNoPeriodo(MK,ini,fim,vendList){
-  if(!ini||!fim)return null;
-  var base='?select=*&marca=ilike.'+encodeURIComponent(MK)+'&data=gte.'+encodeURIComponent(ini)+'&data=lte.'+encodeURIComponent(fim)+'&order=identificador';
+  if(!ini||!fim)return {rows:0,matched:0,noname:0,agg:null};
+  var base='?select=*&marca=ilike.'+encodeURIComponent(MK)+'&data=gte.'+encodeURIComponent(ini)+'&data=lte.'+encodeURIComponent(fim)+'&order=data';
   var all=[],from=0;
   for(var p=0;p<80;p++){
     var chunk=await sbSel('robo_vendas',base+'&limit=1000&offset='+from);
@@ -1735,16 +1735,18 @@ async function roboMarcaNoPeriodo(MK,ini,fim,vendList){
     if(chunk.length<1000)break;
     from+=1000;
   }
-  if(!all.length)return null;   // sem linha crua no período -> o chamador tenta a view antiga
-  var agg={};
+  if(!all.length)return {rows:0,matched:0,noname:0,agg:null};   // sem linha crua no período -> o chamador tenta a view antiga
+  var agg={},noname=0;
   all.forEach(function(r){
-    var v=metaMatch(r.vendedor,vendList);if(!v)return;
+    var nm=r.vendedor||r.VENDEDOR||'';
+    if(!String(nm).trim()){noname++;return;}
+    var v=metaMatch(nm,vendList);if(!v)return;
     var a=agg[v.nome]||(agg[v.nome]={v:v,prod:{},doc:{},itens:0,peso:0,vendas:0});
-    if(r.codpro!=null&&r.codpro!=='')a.prod[String(r.codpro)]=1;
-    if(r.doc!=null&&r.doc!=='')a.doc[String(r.doc)]=1;
-    a.itens+=Number(r.quantidade)||0;a.peso+=Number(r.peso)||0;a.vendas+=Number(r.vlrliquido)||0;
+    var cp=r.codpro||r.CODPRO;if(cp!=null&&cp!=='')a.prod[String(cp)]=1;
+    var dc=r.doc||r.DOC;if(dc!=null&&dc!=='')a.doc[String(dc)]=1;
+    a.itens+=Number(r.quantidade||r.QUANTIDADE)||0;a.peso+=Number(r.peso||r.PESO)||0;a.vendas+=Number(r.vlrliquido||r.VLRLIQUIDO)||0;
   });
-  return agg;
+  return {rows:all.length,matched:Object.keys(agg).length,noname:noname,agg:agg};
 }
 async function puxarDoRobo(){
   if(typeof mesFechado==='function'&&mesFechado()){toast('Mês fechado — reabra para importar.');return;}
@@ -1799,22 +1801,24 @@ async function puxarDoRobo(){
     }
     // CAMPANHA: por campanha, lê as vendas da(s) marca(s) NO PERÍODO dela (direto do robo_vendas).
     // Assim não depende da 'competencia' (que o robô carimba pela data das notas) — fim do "campanha zerada".
-    var camps2=(METAS.campanhas||[]);var seenMK={};var marcas=[];
+    var camps2=(METAS.campanhas||[]);var seenMK={};var marcas=[];var campDiag={rows:0,matched:0,noname:0};
     for(var ci=0;ci<camps2.length;ci++){
       var c2=camps2[ci];var iniC=String(c2.ini||'').slice(0,10),fimC=String(c2.fim||'').slice(0,10);
       var mksC=(c2.marcas||[]).map(function(x){return String(x).toUpperCase().trim();}).filter(Boolean);
       for(var mj=0;mj<mksC.length;mj++){
         var MK=mksC[mj];if(marcas.indexOf(MK)<0)marcas.push(MK);
         var kk=MK+'|'+iniC+'|'+fimC;if(seenMK[kk])continue;seenMK[kk]=1;
-        var agg=await roboMarcaNoPeriodo(MK,iniC,fimC,m.vend);
-        if(agg){
+        var res=await roboMarcaNoPeriodo(MK,iniC,fimC,m.vend);
+        campDiag.rows+=res.rows;campDiag.matched+=res.matched;campDiag.noname+=res.noname;
+        var agg=res.agg;
+        if(agg&&Object.keys(agg).length){
           Object.keys(agg).forEach(function(nm){var a=agg[nm];var v=a.v;
             var prod=Object.keys(a.prod).length,it=Math.round(a.itens),vl=Math.round(a.vendas*100)/100;
             if(prod<=0&&it<=0&&vl<=0)return;
             var mv=(v.marcaVendas=v.marcaVendas||{}),e=Object.assign({},mv[MK]||{});
             e.produtos=prod;e.itens=it;e.vendas=vl;e.positivados=Object.keys(a.doc).length;e.peso=Math.round(a.peso*10)/10;
             mv[MK]=e;nM++;});
-        }else{
+        }else if(!res.rows){
           // fallback: view agregada por competência do mês atual (comportamento antigo)
           var vm=await sbSel('robo_vendas_vend_marca','?competencia=eq.'+encodeURIComponent(comp)+'&marca=eq.'+encodeURIComponent(MK));
           (vm||[]).forEach(function(r){
@@ -1828,17 +1832,26 @@ async function puxarDoRobo(){
         }
       }
     }
+    // diagnóstico da campanha: por que preencheu ou não
+    var campNote='';
+    if(marcas.length){
+      if(nM>0)campNote=' · camp '+nM+' ['+marcas.join(', ')+']';
+      else if(campDiag.rows>0&&campDiag.noname>=campDiag.rows)campNote=' · campanha: '+campDiag.rows+' vendas no período MAS SEM vendedor no robô (reimporte o relatório de vendas COM a coluna VENDEDOR)';
+      else if(campDiag.rows>0)campNote=' · campanha: '+campDiag.rows+' vendas no período, mas os NOMES não bateram ('+campDiag.noname+' sem vendedor) — confira os nomes';
+      else campNote=' · campanha: 0 vendas no período das marcas ['+marcas.join(', ')+']';
+    }
     if(nD===0&&nMix===0&&nM===0){
-      if(!des||!des.length){toast('🤖 Sem dados do robô para '+comp+'. Confira a competência.');}
-      else if(!desOK){toast('🤖 O robô está sem VENDAS para '+comp+' (desempenho zerado) e também não veio mix/campanha. Nada foi alterado — confira se os relatórios do mês entraram no robô.');}
-      else{toast('🤖 O robô tem números para '+comp+', mas nenhum bateu com os vendedores do mês (confira os nomes). Nada foi alterado.');}
+      if(campDiag.rows>0){toast('🤖'+campNote+'. Nada foi gravado.');}
+      else if(!des||!des.length){toast('🤖 Sem dados do robô para '+comp+'. Confira a competência.'+campNote);}
+      else if(!desOK){toast('🤖 O robô está sem VENDAS para '+comp+' (desempenho zerado).'+campNote+' Nada foi alterado.');}
+      else{toast('🤖 O robô tem números, mas nenhum bateu com os vendedores do mês (confira os nomes).'+campNote);}
       return;
     }
     // ESPERA salvar antes de terminar (senão o poll de 6s pode reverter a campanha)
     try{await apiPost({action:'metas',metas:METAS});SYNC.lastSync=stamp();netRefresh();}
     catch(_e){syncPushMetas();}
     reRender();
-    toast('🤖 Robô: '+nD+' vend · mix '+nMix+(marcas.length?' · camp '+nM+' ['+marcas.join(', ')+']':'')+' ✓');
+    toast('🤖 Robô: '+nD+' vend · mix '+nMix+campNote+' ✓');
   }catch(e){toast('Erro ao puxar do robô: '+((e&&e.message)||e));}
   finally{state._roboBusy=false;}
 }
