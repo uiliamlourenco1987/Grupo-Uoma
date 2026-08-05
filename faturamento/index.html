@@ -659,7 +659,8 @@ function peopleA(o,area){const s=new Set();workItems(o,area).forEach(w=>{const e
 
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1600);}
 // aviso que FICA na tela até fechar (pra mensagens importantes que o toast some rápido demais)
-function notify(m,titulo){const ov=document.createElement('div');ov.className='overlay';
+function notify(m,titulo){try{logEvent('aviso',String(m).replace(/<br\s*\/?>/gi,' ').replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim());}catch(_){ }
+  const ov=document.createElement('div');ov.className='overlay';
   ov.innerHTML='<div class="sheet"><h3>'+esc(titulo||'🤖 Robô')+'</h3><p style="font-size:14px;margin:0 0 14px;line-height:1.55">'+m+'</p><button class="btn primary" id="nt_ok">Entendi</button></div>';
   document.body.appendChild(ov);ov.querySelector('#nt_ok').onclick=()=>ov.remove();
   ov.addEventListener('click',function(e){if(e.target===ov)ov.remove();});}
@@ -712,6 +713,21 @@ function rerender(){state.area='';state.metaRole=null;screenAreaPick();}   // ao
 function wantCampanhas(){try{return /campanhas/i.test((location.hash||'')+(location.search||''));}catch(e){return false;}}   // atalho: link do portal com #campanhas cai direto na tela de campanhas ap\u00f3s o login
 
 const APP_VER='v7 \u00b7 26/07/2026 \u00b7 Central de Importa\u00e7\u00e3o Di\u00e1ria';
+/* ===== LOG do app (erros + avisos) \u2014 guarda neste aparelho pra an\u00e1lise ===== */
+var APP_LOGS=[];try{APP_LOGS=JSON.parse(localStorage.getItem('uoma_logs')||'[]')||[];}catch(e){APP_LOGS=[];}
+function appBuild(){try{var m=String(location.search).match(/[?&]v=([^&]+)/);return m?decodeURIComponent(m[1]):'';}catch(e){return '';}}
+function logEvent(tipo,msg){
+  try{
+    var quem='';try{quem=(typeof state!=='undefined'&&state&&((state.acesso&&state.acesso.nome)||state.conferente))||'';}catch(_){ }
+    var e={t:new Date().toISOString(),tipo:String(tipo||'info'),msg:String(msg==null?'':msg).slice(0,600),quem:quem,ver:appBuild()};
+    APP_LOGS.unshift(e);if(APP_LOGS.length>300)APP_LOGS.length=300;
+    try{localStorage.setItem('uoma_logs',JSON.stringify(APP_LOGS));}catch(_){ }
+  }catch(_){ }
+}
+if(typeof window!=='undefined'){
+  window.addEventListener('error',function(ev){try{if(!ev||!ev.message)return;logEvent('erro',ev.message+(ev.filename?(' @'+String(ev.filename).split('/').pop()+(ev.lineno?(':'+ev.lineno):'')):''));}catch(_){ }});
+  window.addEventListener('unhandledrejection',function(ev){try{var r=ev&&ev.reason;logEvent('erro','promessa: '+((r&&r.message)||r||'rejei\u00e7\u00e3o'));}catch(_){ }});
+}
 function screenLogin(){setBar('');setWide(false);state.view='login';mskin(false);state.area='';
   $('#screen').innerHTML=`<div class="center"><div style="text-align:center;margin-bottom:8px"><div style="font-size:44px">\ud83c\udf66</div>
     <h2 style="margin:6px 0 2px">Bem-vindo \u00e0 confer\u00eancia</h2><p class="muted" style="margin:0">Identifique-se para come\u00e7ar</p></div>
@@ -1097,7 +1113,7 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);sy
       <span class="mtag" style="background:var(--brand-l);color:var(--brand-d)">${state.metaRole==='dir'?'Diretoria':state.metaRole==='rh'?'RH':state.metaRole==='fat'?'Faturamento':'Supervis\u00e3o'}: ${esc(state.metaWho||'')}</span>
       <button class="btnsm" id="mpainel" style="width:auto;padding:8px 14px;margin-left:auto">\ud83d\udcca Painel de Metas</button>
       ${canEditMes()?'<button class="btnsm" id="mfechar" style="width:auto;padding:8px 14px;background:#8a5a00;color:#fff;border:none;font-weight:700">\ud83d\udd12 Fechar m\u00eas</button>':''}${(mesFechado()&&metaDir())?'<button class="btnsm" id="mreabrir" style="width:auto;padding:8px 14px">\ud83d\udd13 Reabrir m\u00eas</button>':''}
-      ${metaRH()?'<button class="btnsm" id="mrh" style="width:auto;padding:8px 14px">\u2699\ufe0f Regras (RH)</button>':''}${metaDir()?'<button class="btnsm" id="mlog" style="width:auto;padding:8px 14px">\ud83d\udcdd Log de altera\u00e7\u00f5es</button>':''}${metaEdit()?'<button class="btnsm" id="mregras" style="width:auto;padding:8px 14px">\ud83d\udccb Regras</button><button class="btnsm" id="mxexp" style="width:auto;padding:8px 14px">\ud83d\udda8\ufe0f Exportar metas (PDF)</button>':''}
+      ${metaRH()?'<button class="btnsm" id="mrh" style="width:auto;padding:8px 14px">\u2699\ufe0f Regras (RH)</button>':''}${metaDir()?'<button class="btnsm" id="mlog" style="width:auto;padding:8px 14px">\ud83d\udcdd Log de altera\u00e7\u00f5es</button><button class="btnsm" id="merros" style="width:auto;padding:8px 14px">\ud83e\uddfe Logs (erros)</button><button class="btnsm" id="mver" style="width:auto;padding:8px 14px">\u2139\ufe0f Vers\u00e3o</button>':''}${metaEdit()?'<button class="btnsm" id="mregras" style="width:auto;padding:8px 14px">\ud83d\udccb Regras</button><button class="btnsm" id="mxexp" style="width:auto;padding:8px 14px">\ud83d\udda8\ufe0f Exportar metas (PDF)</button>':''}
       <button class="link" id="msair">sair</button></div>
     <div class="datebar" style="margin-bottom:12px"><span class="muted" style="font-size:12px">Dias \u00fateis: <b>${m.diasUteis}</b> \u00b7 trabalhados: <b>${m.diasTrab}</b>${m.status==='andamento'?' \u00b7 a tend\u00eancia projeta o fechamento no ritmo atual':''}</span></div>
     ${finBanner()}
@@ -1130,6 +1146,34 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);sy
     const rf=$('#inadRef');if(rf)rf.onchange=e=>state.inadRef=e.target.value;
     $('#mprod').onclick=()=>$('#mprodF').click();$('#mprodF').onchange=e=>importProdVend(e.target.files[0]);
     $('#mdesemp').onclick=()=>$('#mdesempF').click();$('#mdesempF').onchange=e=>importDesempenho(e.target.files[0]);{var _rb=$('#mrobo');if(_rb)_rb.onclick=()=>puxarDoRobo();}}
+  {var _eb=$('#merros');if(_eb)_eb.onclick=()=>screenErros();var _vb=$('#mver');if(_vb)_vb.onclick=()=>screenVersao();}
+}
+function fmtLogT(iso){try{var d=new Date(iso),p=function(n){return String(n).padStart(2,'0');};return p(d.getDate())+'/'+p(d.getMonth()+1)+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());}catch(e){return String(iso||'');}}
+function screenErros(){setBar('');setW('wide');state.view='erros';mskin(true);
+  var filt=state._logFilt||'tudo';
+  var badge=function(tp){var c={erro:'#b42318',aviso:'#8a6d00',info:'#5b6470'}[tp]||'#5b6470';return '<span style="display:inline-block;font-size:10px;font-weight:800;color:#fff;background:'+c+';border-radius:6px;padding:1px 7px;text-transform:uppercase">'+esc(tp)+'</span>';};
+  var list=APP_LOGS.filter(function(e){return filt==='tudo'?true:e.tipo===filt;});
+  var chips=[['tudo','Tudo'],['erro','Só erros'],['aviso','Avisos']].map(function(c){return '<button class="btnsm logf" data-f="'+c[0]+'" style="width:auto;padding:7px 13px;'+(filt===c[0]?'background:var(--brand-d,#12294C);color:#fff;border:none;font-weight:700':'')+'">'+c[1]+'</button>';}).join('');
+  var rows=list.length?list.map(function(e){return '<div style="border-bottom:1px solid var(--line);padding:9px 4px;display:flex;gap:10px;align-items:flex-start"><span style="font-size:11px;color:var(--mut);white-space:nowrap;min-width:82px">'+fmtLogT(e.t)+'</span>'+badge(e.tipo)+'<span style="font-size:12.5px;flex:1;word-break:break-word">'+esc(e.msg)+(e.ver?(' <span style="color:var(--mut);font-size:10.5px">v'+esc(e.ver)+'</span>'):'')+'</span></div>';}).join(''):'<div class="muted" style="text-align:center;padding:24px">Nenhum registro'+(filt!=='tudo'?' nesse filtro':' ainda')+'.</div>';
+  $('#screen').innerHTML='<div class="wrap">'+whoBar()+
+    '<div class="mselbar"><h2 style="margin:0;font-size:20px">🧾 Logs (erros e avisos)</h2><button class="link" id="lgvolt" style="margin-left:auto">◂ voltar</button></div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">'+chips+'<span style="flex:1"></span><button class="btnsm" id="lgcopy" style="width:auto;padding:7px 13px">📋 Copiar tudo</button><button class="btnsm" id="lglimpar" style="width:auto;padding:7px 13px;color:var(--falta)">🗑️ Limpar</button></div>'+
+    '<div class="card" style="padding:8px 12px">'+rows+'</div>'+
+    '<p class="muted" style="font-size:11px;margin-top:10px">Registros <b>deste aparelho</b> ('+APP_LOGS.length+'/300). Guarda erros do sistema, avisos do robô e importações. Use “Copiar tudo” pra me enviar.</p></div>';
+  wireWho();var vb=$('#lgvolt');if(vb)vb.onclick=function(){screenMetas();};
+  $('#screen').querySelectorAll('.logf').forEach(function(b){b.onclick=function(){state._logFilt=b.dataset.f;screenErros();};});
+  var cp=$('#lgcopy');if(cp)cp.onclick=function(){var txt='LOGS '+(appBuild()||'')+' · '+APP_LOGS.length+' registros\n'+APP_LOGS.map(function(e){return fmtLogT(e.t)+' ['+e.tipo+'] '+e.msg+(e.ver?(' (v'+e.ver+')'):'');}).join('\n');if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast('Copiado ✓');},function(){notify('Copie o texto abaixo:<br><br><textarea style=\"width:100%;height:180px;font-size:11px\">'+esc(txt)+'</textarea>');});}else{notify('Copie o texto abaixo:<br><br><textarea style=\"width:100%;height:180px;font-size:11px\">'+esc(txt)+'</textarea>');}};
+  var lp=$('#lglimpar');if(lp)lp.onclick=function(){askConfirm('Limpar todos os registros de log <b>deste aparelho</b>?',function(){APP_LOGS.length=0;try{localStorage.setItem('uoma_logs','[]');}catch(_){ }screenErros();},'Limpar');};
+}
+function screenVersao(){setBar('');setW('wide');state.view='versao';mskin(true);
+  var b=appBuild()||'(sem ?v na URL)';
+  var linhas=[['Build interno',APP_VER],['Mês em foco',curMes()],['Conexão',syncOn()?'ligada (banco)':'só neste aparelho'],['Registros de log',String(APP_LOGS.length)],['Aparelho',navigator.userAgent]];
+  $('#screen').innerHTML='<div class="wrap">'+whoBar()+
+    '<div class="mselbar"><h2 style="margin:0;font-size:20px">ℹ️ Versão</h2><button class="link" id="vsvolt" style="margin-left:auto">◂ voltar</button></div>'+
+    '<div class="card" style="padding:16px;max-width:620px"><div style="font-size:13px;color:var(--mut);margin-bottom:4px">Versão carregada</div><div style="font-size:34px;font-weight:800;color:var(--brand-d,#12294C)">'+esc(b)+'</div>'+
+    linhas.map(function(l){return '<div style="display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding:9px 0;font-size:12.5px"><span style="color:var(--mut)">'+esc(l[0])+'</span><span style="text-align:right;word-break:break-word;max-width:70%">'+esc(l[1])+'</span></div>';}).join('')+
+    '<p class="muted" style="font-size:11.5px;margin-top:12px">Se a versão não for a última, recarregue a página (o portal também atualiza sozinho). O histórico completo de novidades fica no portal.</p></div></div>';
+  wireWho();var vb=$('#vsvolt');if(vb)vb.onclick=function(){screenMetas();};
 }
 function parseProdVend(raw){const txt=String(raw).replace(/<[^>]+>/g,'\n');const per={};let cur=null;
   txt.split(/\r?\n/).forEach(ln=>{const s=ln.trim();
@@ -1858,7 +1902,7 @@ async function puxarDoRobo(){
     reRender();
     var campLinha=(nM>0)?('<b>'+nM+'</b> vendedor(es) ['+marcas.join(', ')+']'):(campDiag.rows>0?('0 — '+campDiag.rows+' vendas no período, mas '+(campDiag.noname>=campDiag.rows?'SEM vendedor no robô':'os nomes não bateram')):'0');
     notify('Importado ✓<br><br>Desempenho: <b>'+nD+'</b> vendedor(es)<br>Mix: <b>'+nMix+'</b><br>Campanha: '+campLinha+'<br><br><span style="color:var(--mut);font-size:12.5px">Já salvo no banco ('+esc(comp)+').</span>');
-  }catch(e){toast('Erro ao puxar do robô: '+((e&&e.message)||e));}
+  }catch(e){var em=(e&&e.message)||e;logEvent('erro','Puxar do robô: '+em);notify('Erro ao puxar do robô:<br><br>'+esc(String(em)));}
   finally{state._roboBusy=false;}
 }
 function importMetasEco(file){if(!file)return;const rd=new FileReader();
