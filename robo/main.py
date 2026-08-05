@@ -45,7 +45,7 @@ def sb_upsert(table, rows, on_conflict):
     r.raise_for_status()
 
 def baixar(svc, fid, nome):
-    req = svc.files().get_media(fileId=fid)
+    req = svc.files().get_media(fileId=fid, supportsAllDrives=True)
     buf = io.BytesIO(); dl = MediaIoBaseDownload(buf, req)
     done = False
     while not done:
@@ -58,7 +58,8 @@ def main():
     svc = drive()
     japroc = sb_get_processados()
     res = svc.files().list(q=f"'{FOLDER}' in parents and trashed=false",
-                           fields="files(id,name,modifiedTime)", pageSize=200).execute()
+                           fields="files(id,name,modifiedTime)", pageSize=200,
+                           supportsAllDrives=True, includeItemsFromAllDrives=True).execute()
     arquivos = res.get("files", [])
     print(f"{len(arquivos)} arquivo(s) na pasta · competência {COMP}")
     novos = 0
