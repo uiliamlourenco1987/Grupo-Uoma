@@ -698,8 +698,8 @@ function setBar(html){const b=$('#bottombar');if(!html){b.classList.add('hidden'
 function logEvent(num,etapa,por,em){if(!state.logs[num])state.logs[num]=[];const ev={etapa,por:por||state.conferente||'\u2014',em:em||stamp()};state.logs[num].push(ev);syncPush('log',{numero:num,etapa:ev.etapa,por:ev.por,em:ev.em});persistLocal();}
 function logOnce(num,etapa,por,em){if(!state.logs[num])state.logs[num]=[];if(state.logs[num].some(e=>e.etapa===etapa))return;logEvent(num,etapa,por,em);}
 function areaLbl(a){return a==='LOJA'?'Loja':'Dep\u00f3sito';}
-function whoBar(){return `<div class="whobar"><span class="lbl">Voc\u00ea:</span><b style="color:var(--brand-d)">${esc(state.conferente)}</b><button class="link" id="trocaruser" style="margin-left:auto">\ud83d\udd12 trocar usu\u00e1rio</button></div>`;}
-function wireWho(){const t=$('#trocaruser');if(t)t.onclick=()=>switchUser();}
+function whoBar(){var emb=(typeof embedded==='function'&&embedded());return `<div class="whobar"><span class="lbl">Voc\u00ea:</span><b style="color:var(--brand-d)">${esc(state.conferente)}</b><button class="link" id="trocaruser" style="margin-left:auto">${emb?'\u21a9\ufe0e voltar ao portal':'\ud83d\udd12 trocar usu\u00e1rio'}</button></div>`;}
+function wireWho(){const t=$('#trocaruser');if(t)t.onclick=()=>{if(typeof embedded==='function'&&embedded()){sairApp();}else{switchUser();}};}
 function switchUser(){const ov=document.createElement('div');ov.className='overlay';
   ov.innerHTML=`<div class="sheet"><h3>Trocar usu\u00e1rio</h3><p class="muted" style="font-size:13px;margin:0 0 12px">Escolha o nome e digite o PIN.</p>
     <div class="names" id="ovn">${accessList().filter(a=>a.ativo!==false).map(a=>`<button class="chip" data-n="${esc(a.nome)}">${esc(a.nome)}</button>`).join('')}</div>
