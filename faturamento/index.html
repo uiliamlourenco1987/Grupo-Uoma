@@ -1748,16 +1748,20 @@ async function puxarDoRobo(){
       }
     });
     // MIX das METAS = produtos diferentes por vendedor (TODAS as marcas) — NÃO é o da campanha
+    // Só mexe se a view trouxer dados de verdade (senão preserva o mix atual).
     var pv=await sbSel('robo_vendas_produtos_vend','?competencia=eq.'+encodeURIComponent(comp));
-    var teamSet={EXTERNO:new Set(),INTERNO:new Set()};
-    m.vend.forEach(function(v){v.mixVend=0;});
-    (pv||[]).forEach(function(r){
-      var v=metaMatch(r.vendedor,m.vend);
-      if(!v&&metaMatch(r.vendedor,[{nome:supExt}]))v=ensureExtraEntry('EXTERNO');
-      if(v){var prods=r.produtos||[];v.mixVend=prods.length;if(teamSet[v.grupo])prods.forEach(function(c){teamSet[v.grupo].add(c);});}
-    });
-    if(!m.mixEquipe)m.mixEquipe={};
-    ['EXTERNO','INTERNO'].forEach(function(g){m.mixEquipe[g]=Object.assign(m.mixEquipe[g]||{obj:0,real:0},{real:teamSet[g].size});});
+    var nMix=0;
+    if(pv&&pv.length){
+      var teamSet={EXTERNO:new Set(),INTERNO:new Set()};
+      m.vend.forEach(function(v){v.mixVend=0;});
+      pv.forEach(function(r){
+        var v=metaMatch(r.vendedor,m.vend);
+        if(!v&&metaMatch(r.vendedor,[{nome:supExt}]))v=ensureExtraEntry('EXTERNO');
+        if(v){var prods=r.produtos||[];v.mixVend=prods.length;nMix++;if(teamSet[v.grupo])prods.forEach(function(c){teamSet[v.grupo].add(c);});}
+      });
+      if(!m.mixEquipe)m.mixEquipe={};
+      ['EXTERNO','INTERNO'].forEach(function(g){m.mixEquipe[g]=Object.assign(m.mixEquipe[g]||{obj:0,real:0},{real:teamSet[g].size});});
+    }
     var marcas=[];(METAS.campanhas||[]).forEach(function(c){(c.marcas||[]).forEach(function(x){var u=String(x).toUpperCase().trim();if(u&&marcas.indexOf(u)<0)marcas.push(u);});});
     var nM=0;
     for(var i=0;i<marcas.length;i++){
@@ -1772,7 +1776,7 @@ async function puxarDoRobo(){
       });
     }
     syncPushMetas();reRender();
-    toast('🤖 Robô: '+nD+' vendedores'+(marcas.length?' · '+nM+' em ['+marcas.join(', ')+']':'')+' ✓');
+    toast('🤖 Robô: '+nD+' vend · mix '+nMix+(marcas.length?' · camp '+nM+' ['+marcas.join(', ')+']':'')+' ✓');
   }catch(e){toast('Erro ao puxar do robô: '+((e&&e.message)||e));}
 }
 function importMetasEco(file){if(!file)return;const rd=new FileReader();
