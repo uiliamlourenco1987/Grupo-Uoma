@@ -1079,6 +1079,43 @@ function importMetaVenda(file){if(!file)return;
     screenMetas();
   }catch(e){toast('Erro ao ler o relatório de metas');}};
   rd.readAsText(file,'iso-8859-1');}
+// Importa VÁRIOS meses de uma vez (planilha pessoal convertida): Mes,Vendedor,MetaFat,Vendido,MetaMix,MixVendido,Carteira,ClientesPositivados
+// Casa pelo NOME com os vendedores que já existem — linhas de TOTAL / outras casas são ignoradas sozinhas.
+function importHistoricoPlanilha(text){
+  if(!metaFat()){notify('Sem permissão para editar metas.');return;}
+  var rows=_parseCSV(text);if(!rows||rows.length<2){notify('Arquivo vazio ou não reconhecido.');return;}
+  var head=rows[0].map(function(h){return String(h||'').trim().toLowerCase();});
+  var C=function(n){return head.indexOf(n);};
+  var ci={mes:C('mes'),nome:C('vendedor'),of:C('metafat'),vd:C('vendido'),om:C('metamix'),mv:C('mixvendido'),ct:C('carteira'),cp:C('clientespositivados')};
+  if(ci.mes<0||ci.nome<0){notify('Cabeçalho esperado:<br>Mes, Vendedor, MetaFat, Vendido, MetaMix, MixVendido, Carteira, ClientesPositivados');return;}
+  var baseKey=curMes();
+  if(!METAS.meses[baseKey]||!((METAS.meses[baseKey]||{}).vend||[]).length){var ks=Object.keys(METAS.meses).filter(function(k){return ((METAS.meses[k].vend)||[]).length;}).sort();baseKey=ks.pop();}
+  if(!baseKey){notify('Antes, tenha ao menos um mês com vendedores (importe a planilha de metas de um mês) — é o molde pros meses novos.');return;}
+  var byMes={};
+  for(var i=1;i<rows.length;i++){var r=rows[i];if(!r)continue;var mes=String(r[ci.mes]||'').trim();var nome=String(r[ci.nome]||'').trim();if(!/^\d{4}-\d{2}$/.test(mes)||!nome)continue;(byMes[mes]||(byMes[mes]=[])).push(r);}
+  if(!Object.keys(byMes).length){notify('Não achei linhas com Mês (AAAA-MM) + Vendedor.');return;}
+  var resumo=[],totalMatch=0,novos=0;
+  Object.keys(byMes).sort().forEach(function(mes){
+    if(!METAS.meses[mes]){replicarMes(baseKey,mes,0,{fat:true,mix:true,posit:true,marca:true});novos++;}
+    var mm=METAS.meses[mes];if(!mm||!mm.vend){resumo.push(mes+': sem vendedores');return;}
+    var n=0;
+    byMes[mes].forEach(function(r){
+      var v=metaMatch(String(r[ci.nome]||''),mm.vend);if(!v)return;
+      if(ci.of>=0)v.objFat=_csvNum(r[ci.of]);
+      if(ci.vd>=0)v.vendido=_csvNum(r[ci.vd]);
+      if(ci.om>=0)v.objMix=Math.round(_csvNum(r[ci.om]));
+      if(ci.mv>=0)v.mixVend=Math.round(_csvNum(r[ci.mv]));
+      if(ci.ct>=0)v.carteira=Math.round(_csvNum(r[ci.ct]));
+      if(ci.cp>=0)v.positivados=Math.round(_csvNum(r[ci.cp]));
+      n++;
+    });
+    totalMatch+=n;resumo.push('<b>'+esc(mesLabelDe(mes))+'</b>: '+n+' vendedor(es)');
+  });
+  try{syncPushMetas();}catch(e){}
+  logEvent('info','Histórico planilha: '+totalMatch+' linhas · '+Object.keys(byMes).length+' meses ('+novos+' novos)');
+  notify('📅 Histórico importado ✓<br><br>'+resumo.join('<br>')+'<br><br><span style="color:var(--mut);font-size:12px">Meta + realizado por mês atualizados'+(novos?(' · '+novos+' mês(es) criado(s)'):'')+'. Inadimplência não vem na planilha. Feche cada mês quando quiser congelar.</span>');
+  try{screenMetas();}catch(e){}
+}
 function importMetasCSV(text){
   if(!metaFat()){try{toast('Sem permissao para editar metas.');}catch(e){}return;}
   if(mesFechado()){try{toast('Mês fechado — reabra para importar.');}catch(e){}return;}
@@ -1139,7 +1176,7 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);sy
       <div class="k ok"><div class="n">${brMoney(tg.vend)}</div><div class="l">Vendido</div></div>
       <div class="k sub"><div class="n">${pct(tg.obj>0?tg.vend/tg.obj:0)}</div><div class="l">Atingido</div></div>
       <div class="k falta"><div class="n" style="${mesFechado()?'':'font-size:15px'}">${bonusMoney(tg.bonus)}</div><div class="l">B\u00f4nus ${mesFechado()?'apurado':'(fecha o m\u00eas)'}</div></div></div>
-    ${canEditMes()?`<div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 8px">${metaFat()?'<button class="btnsm" id="mplan" style="width:auto;padding:9px 16px">\u270f\ufe0f Planejar metas</button>':''}${metaFat()?'<button class="btnsm" id="mimport" style="width:auto;padding:9px 16px">📋 Importar planilha</button><button class="btnsm" id="mmodelo" style="width:auto;padding:9px 16px">⬇️ Modelo</button><button class="btnsm" id="mexport" style="width:auto;padding:9px 16px">⬇️ Metas atuais</button><button class="btnsm" id="mano" style="width:auto;padding:9px 16px;background:#146c37;color:#fff;border:none;font-weight:700">🗓️ Metas do ano (VEN481LA)</button><input type="file" id="mimportF" accept=".csv,.txt" style="display:none"><input type="file" id="manoF" accept=".html,.htm" style="display:none">':''}<button class="btnsm" id="mpag" style="width:auto;padding:9px 16px">\ud83d\udcb5 Pagamentos</button>${metaFat()?`<button class="btnsm" id="mcentral" style="width:auto;padding:9px 16px;background:var(--brand,#0a7);color:#fff;border:none;font-weight:700">\ud83d\udce5 Central de Importa\u00e7\u00e3o Di\u00e1ria</button><button class="btnsm" id="mrobo" style="width:auto;padding:9px 16px;background:#7a3fd6;color:#fff;border:none;font-weight:700">🤖 Puxar do robô</button><button class="btnsm" id="mindices" style="width:auto;padding:9px 16px;background:#0f766e;color:#fff;border:none;font-weight:700">🧮 Gerar índices do mês</button><button class="btnsm" id="mdesemp" style="width:auto;padding:9px 16px;background:#2f6fed;color:#fff;border:none;font-weight:700">📊 Importar Desempenho (tudo)</button><button class="btnsm" id="mmarca" style="width:auto;padding:9px 16px">\ud83c\udff7\ufe0f Importar marcas (VENDAS PESO)</button><button class="btnsm" id="mprod" style="width:auto;padding:9px 16px">\ud83d\udce6 Importar mix por produto (VEN430LA)</button>
+    ${canEditMes()?`<div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 8px">${metaFat()?'<button class="btnsm" id="mplan" style="width:auto;padding:9px 16px">\u270f\ufe0f Planejar metas</button>':''}${metaFat()?'<button class="btnsm" id="mimport" style="width:auto;padding:9px 16px">📋 Importar planilha</button><button class="btnsm" id="mmodelo" style="width:auto;padding:9px 16px">⬇️ Modelo</button><button class="btnsm" id="mexport" style="width:auto;padding:9px 16px">⬇️ Metas atuais</button><button class="btnsm" id="mano" style="width:auto;padding:9px 16px;background:#146c37;color:#fff;border:none;font-weight:700">🗓️ Metas do ano (VEN481LA)</button><button class="btnsm" id="mhist" style="width:auto;padding:9px 16px;background:#8a5a00;color:#fff;border:none;font-weight:700">📅 Importar meses (planilha)</button><input type="file" id="mimportF" accept=".csv,.txt" style="display:none"><input type="file" id="manoF" accept=".html,.htm" style="display:none"><input type="file" id="mhistF" accept=".csv,.txt" style="display:none">':''}<button class="btnsm" id="mpag" style="width:auto;padding:9px 16px">\ud83d\udcb5 Pagamentos</button>${metaFat()?`<button class="btnsm" id="mcentral" style="width:auto;padding:9px 16px;background:var(--brand,#0a7);color:#fff;border:none;font-weight:700">\ud83d\udce5 Central de Importa\u00e7\u00e3o Di\u00e1ria</button><button class="btnsm" id="mrobo" style="width:auto;padding:9px 16px;background:#7a3fd6;color:#fff;border:none;font-weight:700">🤖 Puxar do robô</button><button class="btnsm" id="mindices" style="width:auto;padding:9px 16px;background:#0f766e;color:#fff;border:none;font-weight:700">🧮 Gerar índices do mês</button><button class="btnsm" id="mdesemp" style="width:auto;padding:9px 16px;background:#2f6fed;color:#fff;border:none;font-weight:700">📊 Importar Desempenho (tudo)</button><button class="btnsm" id="mmarca" style="width:auto;padding:9px 16px">\ud83c\udff7\ufe0f Importar marcas (VENDAS PESO)</button><button class="btnsm" id="mprod" style="width:auto;padding:9px 16px">\ud83d\udce6 Importar mix por produto (VEN430LA)</button>
       <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)">Data ref.: <input type="date" id="inadRef" value="${esc(state.inadRef||todayISO())}" style="padding:7px;border:1.5px solid var(--line);border-radius:7px"></span>`:''}
       <input type="file" id="mdesempF" accept=".csv,.txt" class="hidden"><input type="file" id="mmarcaF" accept=".html,.htm" class="hidden"><input type="file" id="mprodF" accept=".html,.htm" class="hidden"></div>`:'<p class="muted" style="font-size:12px;margin:4px 2px 8px">Somente leitura \u2014 planejamento \u00e9 feito pela diretoria.</p>'}
     ${(!metaEquipe()||metaEquipe()==='EXTERNO')?grp('EQUIPE EXTERNA','ext',ext,te):''}
@@ -1158,7 +1195,7 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);sy
   $('#mmes').onchange=e=>{state.metaMes=e.target.value;screenMetas();};
   const nb0=$('#mnovo');if(nb0)nb0.onclick=()=>dialogNovoMes();
   {const pgb=$('#mpag');if(pgb)pgb.onclick=()=>screenMetasPag();}
-  if(metaFat()){$('#mplan').onclick=()=>screenMetasPlan();{var _im=$('#mimport');if(_im)_im.onclick=()=>$('#mimportF').click();var _imf=$('#mimportF');if(_imf)_imf.onchange=function(e){var f=e.target.files[0];if(f){var rd=new FileReader();rd.onload=function(){importMetasCSV(String(rd.result||''));};rd.readAsText(f);}};var _mo=$('#mmodelo');if(_mo)_mo.onclick=()=>baixarModeloMetas();var _mx=$('#mexport');if(_mx)_mx.onclick=()=>baixarMetasAtuais();var _ma=$('#mano');if(_ma)_ma.onclick=()=>$('#manoF').click();var _maf=$('#manoF');if(_maf)_maf.onchange=function(e){importMetaVenda(e.target.files[0]);};}{const _cb=$('#mcentral');if(_cb)_cb.onclick=()=>screenIntake();}
+  if(metaFat()){$('#mplan').onclick=()=>screenMetasPlan();{var _im=$('#mimport');if(_im)_im.onclick=()=>$('#mimportF').click();var _imf=$('#mimportF');if(_imf)_imf.onchange=function(e){var f=e.target.files[0];if(f){var rd=new FileReader();rd.onload=function(){importMetasCSV(String(rd.result||''));};rd.readAsText(f);}};var _mo=$('#mmodelo');if(_mo)_mo.onclick=()=>baixarModeloMetas();var _mx=$('#mexport');if(_mx)_mx.onclick=()=>baixarMetasAtuais();var _ma=$('#mano');if(_ma)_ma.onclick=()=>$('#manoF').click();var _maf=$('#manoF');if(_maf)_maf.onchange=function(e){importMetaVenda(e.target.files[0]);};var _mh=$('#mhist');if(_mh)_mh.onclick=()=>$('#mhistF').click();var _mhf=$('#mhistF');if(_mhf)_mhf.onchange=function(e){var f=e.target.files[0];if(f){var rd=new FileReader();rd.onload=function(){importHistoricoPlanilha(String(rd.result||''));};rd.readAsText(f,'utf-8');}};}{const _cb=$('#mcentral');if(_cb)_cb.onclick=()=>screenIntake();}
     $('#mmarca').onclick=()=>$('#mmarcaF').click();$('#mmarcaF').onchange=e=>importMarcaPeso(e.target.files[0]);
     const rf=$('#inadRef');if(rf)rf.onchange=e=>state.inadRef=e.target.value;
     $('#mprod').onclick=()=>$('#mprodF').click();$('#mprodF').onchange=e=>importProdVend(e.target.files[0]);
