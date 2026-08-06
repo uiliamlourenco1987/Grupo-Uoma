@@ -1139,7 +1139,7 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);sy
       <div class="k ok"><div class="n">${brMoney(tg.vend)}</div><div class="l">Vendido</div></div>
       <div class="k sub"><div class="n">${pct(tg.obj>0?tg.vend/tg.obj:0)}</div><div class="l">Atingido</div></div>
       <div class="k falta"><div class="n" style="${mesFechado()?'':'font-size:15px'}">${bonusMoney(tg.bonus)}</div><div class="l">B\u00f4nus ${mesFechado()?'apurado':'(fecha o m\u00eas)'}</div></div></div>
-    ${canEditMes()?`<div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 8px">${metaFat()?'<button class="btnsm" id="mplan" style="width:auto;padding:9px 16px">\u270f\ufe0f Planejar metas</button>':''}${metaFat()?'<button class="btnsm" id="mimport" style="width:auto;padding:9px 16px">📋 Importar planilha</button><button class="btnsm" id="mmodelo" style="width:auto;padding:9px 16px">⬇️ Modelo</button><button class="btnsm" id="mexport" style="width:auto;padding:9px 16px">⬇️ Metas atuais</button><button class="btnsm" id="mano" style="width:auto;padding:9px 16px;background:#146c37;color:#fff;border:none;font-weight:700">🗓️ Metas do ano (VEN481LA)</button><input type="file" id="mimportF" accept=".csv,.txt" style="display:none"><input type="file" id="manoF" accept=".html,.htm" style="display:none">':''}<button class="btnsm" id="mpag" style="width:auto;padding:9px 16px">\ud83d\udcb5 Pagamentos</button>${metaFat()?`<button class="btnsm" id="mcentral" style="width:auto;padding:9px 16px;background:var(--brand,#0a7);color:#fff;border:none;font-weight:700">\ud83d\udce5 Central de Importa\u00e7\u00e3o Di\u00e1ria</button><button class="btnsm" id="mrobo" style="width:auto;padding:9px 16px;background:#7a3fd6;color:#fff;border:none;font-weight:700">🤖 Puxar do robô</button><button class="btnsm" id="mdesemp" style="width:auto;padding:9px 16px;background:#2f6fed;color:#fff;border:none;font-weight:700">📊 Importar Desempenho (tudo)</button><button class="btnsm" id="mmarca" style="width:auto;padding:9px 16px">\ud83c\udff7\ufe0f Importar marcas (VENDAS PESO)</button><button class="btnsm" id="mprod" style="width:auto;padding:9px 16px">\ud83d\udce6 Importar mix por produto (VEN430LA)</button>
+    ${canEditMes()?`<div style="display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 8px">${metaFat()?'<button class="btnsm" id="mplan" style="width:auto;padding:9px 16px">\u270f\ufe0f Planejar metas</button>':''}${metaFat()?'<button class="btnsm" id="mimport" style="width:auto;padding:9px 16px">📋 Importar planilha</button><button class="btnsm" id="mmodelo" style="width:auto;padding:9px 16px">⬇️ Modelo</button><button class="btnsm" id="mexport" style="width:auto;padding:9px 16px">⬇️ Metas atuais</button><button class="btnsm" id="mano" style="width:auto;padding:9px 16px;background:#146c37;color:#fff;border:none;font-weight:700">🗓️ Metas do ano (VEN481LA)</button><input type="file" id="mimportF" accept=".csv,.txt" style="display:none"><input type="file" id="manoF" accept=".html,.htm" style="display:none">':''}<button class="btnsm" id="mpag" style="width:auto;padding:9px 16px">\ud83d\udcb5 Pagamentos</button>${metaFat()?`<button class="btnsm" id="mcentral" style="width:auto;padding:9px 16px;background:var(--brand,#0a7);color:#fff;border:none;font-weight:700">\ud83d\udce5 Central de Importa\u00e7\u00e3o Di\u00e1ria</button><button class="btnsm" id="mrobo" style="width:auto;padding:9px 16px;background:#7a3fd6;color:#fff;border:none;font-weight:700">🤖 Puxar do robô</button><button class="btnsm" id="mindices" style="width:auto;padding:9px 16px;background:#0f766e;color:#fff;border:none;font-weight:700">🧮 Gerar índices do mês</button><button class="btnsm" id="mdesemp" style="width:auto;padding:9px 16px;background:#2f6fed;color:#fff;border:none;font-weight:700">📊 Importar Desempenho (tudo)</button><button class="btnsm" id="mmarca" style="width:auto;padding:9px 16px">\ud83c\udff7\ufe0f Importar marcas (VENDAS PESO)</button><button class="btnsm" id="mprod" style="width:auto;padding:9px 16px">\ud83d\udce6 Importar mix por produto (VEN430LA)</button>
       <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)">Data ref.: <input type="date" id="inadRef" value="${esc(state.inadRef||todayISO())}" style="padding:7px;border:1.5px solid var(--line);border-radius:7px"></span>`:''}
       <input type="file" id="mdesempF" accept=".csv,.txt" class="hidden"><input type="file" id="mmarcaF" accept=".html,.htm" class="hidden"><input type="file" id="mprodF" accept=".html,.htm" class="hidden"></div>`:'<p class="muted" style="font-size:12px;margin:4px 2px 8px">Somente leitura \u2014 planejamento \u00e9 feito pela diretoria.</p>'}
     ${(!metaEquipe()||metaEquipe()==='EXTERNO')?grp('EQUIPE EXTERNA','ext',ext,te):''}
@@ -1162,7 +1162,7 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);sy
     $('#mmarca').onclick=()=>$('#mmarcaF').click();$('#mmarcaF').onchange=e=>importMarcaPeso(e.target.files[0]);
     const rf=$('#inadRef');if(rf)rf.onchange=e=>state.inadRef=e.target.value;
     $('#mprod').onclick=()=>$('#mprodF').click();$('#mprodF').onchange=e=>importProdVend(e.target.files[0]);
-    $('#mdesemp').onclick=()=>$('#mdesempF').click();$('#mdesempF').onchange=e=>importDesempenho(e.target.files[0]);{var _rb=$('#mrobo');if(_rb)_rb.onclick=()=>puxarDoRobo();}}
+    $('#mdesemp').onclick=()=>$('#mdesempF').click();$('#mdesempF').onchange=e=>importDesempenho(e.target.files[0]);{var _rb=$('#mrobo');if(_rb)_rb.onclick=()=>puxarDoRobo();}{var _ix=$('#mindices');if(_ix)_ix.onclick=()=>gerarIndicesMes();}}
 }
 function fmtLogT(iso){try{var d=new Date(iso),p=function(n){return String(n).padStart(2,'0');};return p(d.getDate())+'/'+p(d.getMonth()+1)+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());}catch(e){return String(iso||'');}}
 async function screenErros(){setBar('');setW('wide');state.view='erros';mskin(true);
@@ -1932,6 +1932,64 @@ async function puxarDoRobo(){
     notify('Importado ✓<br><br>Desempenho: <b>'+nD+'</b> vendedor(es)<br>Mix: <b>'+nMix+'</b><br>Campanha: '+campLinha+'<br><br><span style="color:var(--mut);font-size:12.5px">Já salvo no banco ('+esc(comp)+').</span>');
   }catch(e){var em=(e&&e.message)||e;logEvent('erro','Puxar do robô: '+em);notify('Erro ao puxar do robô:<br><br>'+esc(String(em)));}
   finally{state._roboBusy=false;}
+}
+// ===== Banco de índices: gera GERAL + EQUIPE + VENDEDOR do mês a partir do robô e grava em indices_mensais =====
+async function gerarIndicesMes(){
+  if(!sbOn()){notify('Sem conexão com o banco.');return;}
+  var m=mesObj();var comp=curMes();
+  if(!m||!m.vend||!m.vend.length){notify('Importe as METAS do mês antes de gerar os índices.');return;}
+  toast('🧮 Gerando índices ('+comp+')…');
+  try{
+    // 1) lê as vendas do mês (paginado) — notas, produtos por nota, itens, peso
+    var base='?select=vendedor,doc,codpro,quantidade,peso,vlrliquido&competencia=eq.'+encodeURIComponent(comp)+'&order=identificador';
+    var all=[],from=0;
+    for(var p=0;p<150;p++){var chunk=await sbSel('robo_vendas',base+'&limit=1000&offset='+from);if(!chunk||!chunk.length)break;all=all.concat(chunk);if(chunk.length<1000)break;from+=1000;}
+    // 2) agrega por vendedor (casa pelo nome, igual ao resto do app)
+    var PV={};
+    all.forEach(function(r){
+      var v=metaMatch(r.vendedor,m.vend);if(!v)return;
+      var a=PV[v.nome]||(PV[v.nome]={fat:0,peso:0,qty:0,doc:{},prod:{},dp:{}});
+      var doc=String(r.doc||''),cp=String(r.codpro||'');
+      a.fat+=Number(r.vlrliquido)||0;a.peso+=Number(r.peso)||0;a.qty+=Number(r.quantidade)||0;
+      if(cp)a.prod[cp]=1;
+      if(doc){a.doc[doc]=1;(a.dp[doc]||(a.dp[doc]={}));if(cp)a.dp[doc][cp]=1;}
+    });
+    function fin(a){if(!a)return{notas:0,fat:0,peso:0,qty:0,prod:0,sumd:0,prodSet:{}};var notas=Object.keys(a.doc).length,sumd=0;Object.keys(a.dp).forEach(function(d){sumd+=Object.keys(a.dp[d]).length;});return {notas:notas,fat:a.fat,peso:a.peso,qty:a.qty,prod:Object.keys(a.prod).length,sumd:sumd,prodSet:a.prod};}
+    var now=new Date().toISOString(),rows=[];
+    function mk(escopo,chave,o){return {competencia:comp,escopo:escopo,chave:chave,
+      faturamento:Math.round((o.fat||0)*100)/100,notas:o.notas||0,ticket_medio:o.notas>0?Math.round(o.fat/o.notas*100)/100:0,
+      mix_produtos:o.mix||0,mix_por_nota:o.notas>0?Math.round(o.sumd/o.notas*100)/100:0,itens_por_nota:o.notas>0?Math.round(o.qty/o.notas*100)/100:0,
+      posit_pct:Math.round((o.posit||0)*10)/10,clientes_atend:Math.round(o.cli||0),carteira:Math.round(o.cart||0),
+      inad_pct:Math.round((o.inad||0)*100)/100,areceber:Math.round((o.arec||0)*100)/100,vencido:Math.round((o.venc||0)*100)/100,transito:Math.round((o.tran||0)*100)/100,
+      peso:Math.round((o.peso||0)*10)/10,atualizado_em:now};}
+    var team={EXTERNO:{notas:0,qty:0,peso:0,sumd:0,prodSet:{}},INTERNO:{notas:0,qty:0,peso:0,sumd:0,prodSet:{}}};
+    var ger={notas:0,qty:0,peso:0,sumd:0,prodSet:{}};
+    // 3) VENDEDOR
+    m.vend.forEach(function(v){
+      if(v.isExtra||ehSuperv(v.nome))return;
+      var f=fin(PV[v.nome]);var c=metasCalc(v,m);
+      var inadv=(v.areceber>0)?Math.max(0,(v.vencido||0)-(v.transito||0))/v.areceber*100:0;
+      rows.push(mk('VENDEDOR',v.nome,{fat:(v.vendido||f.fat),notas:f.notas,mix:(v.mixVend||f.prod),sumd:f.sumd,qty:f.qty,peso:(v.peso||f.peso),posit:(c.positPct||0)*100,cli:v.positivados||0,cart:(v.grupo==='EXTERNO'?(v.carteira||0):(v.positObj||0)),inad:inadv,arec:v.areceber||0,venc:v.vencido||0,tran:v.transito||0}));
+      var t=team[v.grupo];if(t){t.notas+=f.notas;t.qty+=f.qty;t.peso+=(v.peso||f.peso);t.sumd+=f.sumd;Object.keys(f.prodSet).forEach(function(k){t.prodSet[k]=1;});}
+      ger.notas+=f.notas;ger.qty+=f.qty;ger.peso+=(v.peso||f.peso);ger.sumd+=f.sumd;Object.keys(f.prodSet).forEach(function(k){ger.prodSet[k]=1;});
+    });
+    // 4) EQUIPE
+    ['EXTERNO','INTERNO'].forEach(function(g){
+      var t=team[g],ta=teamAgg(g),ia=teamInadAgg(m,g,false);
+      var posit=ta.positBase>0?ta.positivados/ta.positBase*100:0;
+      rows.push(mk('EQUIPE',g,{fat:ta.vendido,notas:t.notas,mix:Object.keys(t.prodSet).length,sumd:t.sumd,qty:t.qty,peso:t.peso,posit:posit,cli:ta.positivados,cart:ta.positBase,inad:ia.pct,arec:ia.arec,venc:ia.venc,tran:ia.trans}));
+    });
+    // 5) GERAL
+    var te=teamAgg('EXTERNO'),ti=teamAgg('INTERNO'),iaG=teamInadAgg(m,'ALL',false);
+    var gPositN=te.positivados+ti.positivados,gPositB=te.positBase+ti.positBase;
+    rows.push(mk('GERAL','',{fat:te.vendido+ti.vendido,notas:ger.notas,mix:Object.keys(ger.prodSet).length,sumd:ger.sumd,qty:ger.qty,peso:ger.peso,posit:gPositB>0?gPositN/gPositB*100:0,cli:gPositN,cart:gPositB,inad:iaG.pct,arec:iaG.arec,venc:iaG.venc,tran:iaG.trans}));
+    // 6) grava (troca o mês inteiro)
+    await sbDel('indices_mensais','?competencia=eq.'+encodeURIComponent(comp));
+    for(var i=0;i<rows.length;i+=200){await sbUpsert('indices_mensais',rows.slice(i,i+200));}
+    logEvent('info','Índices gerados '+comp+': '+rows.length+' linhas · '+all.length+' vendas lidas');
+    var semNotas=all.length===0;
+    notify('🧮 Índices de <b>'+esc(comp)+'</b> gerados ✓<br><br><b>'+rows.length+'</b> linhas — geral · 2 equipes · '+(rows.length-3)+' vendedores.<br>Vendas lidas do robô: <b>'+all.length+'</b> itens.'+(semNotas?'<br><br><span style="color:#8a5a00">⚠️ Sem itens de venda no robô p/ '+esc(comp)+': ticket/notas ficaram 0. Faturamento e inadimplência vieram das metas.</span>':'')+'<br><br><span style="color:var(--mut);font-size:12px">Guardado em indices_mensais. O painel vai ler daqui.</span>');
+  }catch(e){logEvent('erro','Gerar índices: '+((e&&e.message)||e));notify('Erro ao gerar índices:<br><br>'+esc(String((e&&e.message)||e))+'<br><br><span style="color:var(--mut);font-size:12px">A tabela indices_mensais já foi criada? (rode o SQL no banco do faturamento)</span>');}
 }
 function importMetasEco(file){if(!file)return;const rd=new FileReader();
   rd.onload=()=>{try{const rows=parseMetasEco(rd.result);if(!rows.length){toast('N\u00e3o reconheci esse HTML do Eco');return;}
