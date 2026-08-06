@@ -98,13 +98,22 @@ function paintTabs(){document.querySelectorAll('.tabs button').forEach(function(
 function render(){ if(TAB==='regras')return renderRegras(); if(TAB==='metas')return renderMetas(); return renderCamp(); }
 
 /* ===================== REGRAS (ligado de verdade) ===================== */
-var REG_GROUPS=[
+// Regras comuns aos dois setores (valores diferentes por linha/setor)
+var REG_SHARED=[
   {t:'Bônus por meta (valor por meta batida)',f:[['bonus_fat','Faturamento'],['bonus_mix','Mix'],['bonus_posit','Positivação'],['bonus_inad','Inadimplência']]},
-  {t:'Alvos',f:[['posit_alvo','Positivação — alvo (%)'],['inad_meta','Inadimplência — meta (%)'],['inad_desconta_transito','Descontar o trânsito na inadimplência?','bool']]},
-  {t:'Trava de carteira (posit + inad)',f:[['min_clientes','Mínimo de clientes'],['min_carteira','Mínimo da carteira (R$)']]},
-  {t:'Comissão de salário',f:[['com_individual_pct','Individual — % da base'],['com_equipe_ativo','Comissão de equipe ativa?','bool'],['com_equipe_meta_pct','Equipe — atinge a partir de (%)'],['com_equipe_pct_acima','Equipe — % se atingiu'],['com_equipe_pct_abaixo','Equipe — % se não atingiu']]},
-  {t:'Supervisor (só ganha se a equipe bater)',f:[['sup_base_pct','Externo — comissão base (%)'],['sup_pp_fat','p.p. Faturamento'],['sup_pp_inad','p.p. Inadimplência'],['sup_pp_mix','p.p. Mix'],['sup_pp_posit','p.p. Positivação'],['sup_pp_teto','Teto de p.p.'],['sup_valor_indice','Interno — R$ por índice']]}
+  {t:'Inadimplência',f:[['inad_meta','Meta de inadimplência (%)'],['inad_desconta_transito','Descontar o trânsito na inadimplência?','bool']]},
+  {t:'Comissão de salário',f:[['com_individual_pct','Individual — % da base'],['com_equipe_ativo','Comissão de equipe ativa?','bool'],['com_equipe_meta_pct','Equipe — atinge a partir de (%)'],['com_equipe_pct_acima','Equipe — % se atingiu'],['com_equipe_pct_abaixo','Equipe — % se não atingiu']]}
 ];
+// Regras exclusivas de cada setor (o outro lado não lê nem mostra)
+var REG_BY_SETOR={
+  EXTERNO:[
+    {t:'Positivação e trava de carteira',f:[['posit_alvo','Positivação — alvo (%)'],['min_clientes','Mínimo de clientes'],['min_carteira','Mínimo da carteira (R$)']]},
+    {t:'Supervisor externo (só ganha se a equipe bater)',f:[['sup_base_pct','Comissão base (%)'],['sup_pp_fat','p.p. Faturamento'],['sup_pp_inad','p.p. Inadimplência'],['sup_pp_mix','p.p. Mix'],['sup_pp_posit','p.p. Positivação'],['sup_pp_teto','Teto de p.p.']]}
+  ],
+  INTERNO:[
+    {t:'Supervisor interno — R$ por índice batido pela equipe',f:[['sup_val_fat','Faturamento (R$)'],['sup_val_mix','Mix (R$)'],['sup_val_posit','Positivação (R$)'],['sup_val_inad','Inadimplência (R$)']]}
+  ]
+};
 var _reg={};
 async function renderRegras(){
   var v=el('view');v.innerHTML='<div class="msg">Carregando regras…</div>';
@@ -115,7 +124,8 @@ async function renderRegras(){
   var row=_reg[SETOR];
   var html='<div class="seg"><button id="sgE" onclick="setSetor(\'EXTERNO\')">Externa</button><button id="sgI" onclick="setSetor(\'INTERNO\')">Interna</button></div>'
     +'<span class="gate" style="float:right;margin-top:6px">'+(canEdit?'🔓 você edita':'🔒 só RH/Diretoria')+'</span>';
-  REG_GROUPS.forEach(function(g){
+  var groups=REG_SHARED.concat(REG_BY_SETOR[SETOR]||[]);
+  groups.forEach(function(g){
     html+='<div class="grp"><div class="grph"><h3>'+esc(g.t)+'</h3></div><div class="grpb">';
     g.f.forEach(function(fld){
       var k=fld[0],lab=fld[1],typ=fld[2]||'num';var val=row[k];

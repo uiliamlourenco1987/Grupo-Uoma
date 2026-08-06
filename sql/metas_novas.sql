@@ -66,7 +66,10 @@ create table if not exists public.metas_regras(
   sup_pp_fat numeric default 0.1, sup_pp_inad numeric default 0.1,
   sup_pp_mix numeric default 0.05, sup_pp_posit numeric default 0.05,
   sup_pp_teto numeric default 0.3,
-  sup_valor_indice numeric default 100,           -- interno: R$ por índice batido
+  sup_valor_indice numeric default 100,           -- (legado) interno: R$ por índice único
+  -- interno: R$ por índice batido pela equipe (por indicador)
+  sup_val_fat numeric default 0, sup_val_mix numeric default 0,
+  sup_val_posit numeric default 0, sup_val_inad numeric default 0,
   atualizado_em timestamptz default now()
 );
 insert into public.metas_regras(setor) values ('EXTERNO') on conflict (setor) do nothing;
