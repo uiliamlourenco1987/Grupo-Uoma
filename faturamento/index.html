@@ -863,12 +863,12 @@ function screenMinhaMeta(){setBar('');setW('wide');state.view='minhameta';mskin(
   var s=$('#mmsair');if(s)s.onclick=()=>sairApp();}
 
 /* ================= METAS DE VENDAS ================= */
-function mesVigente(){try{var ms=METAS.meses||{};var d=new Date();var ck=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-  if(ms[ck])return ck;                       // mês atual existe (mesmo vazio) -> SEMPRE cai nele
-  // mês atual ainda não existe: cria vazio, pra sempre abrir no mês certo (e aí você importa/puxa)
-  ms[ck]={label:mesLabelDe(ck),status:'andamento',diasUteis:0,diasTrab:0,vend:[]};METAS.meses=ms;
+function mesVigente(){
+  var ck;try{var d=new Date();ck=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}catch(e){ck=(METAS&&METAS.mesAtual)||'2026-01';}
+  // SEMPRE retorna o mês do calendário. Cria vazio se ainda não existir (nunca pula pra outro mês).
+  try{if(!METAS.meses)METAS.meses={};if(!METAS.meses[ck]){var lbl=ck;try{lbl=mesLabelDe(ck);}catch(_){ }METAS.meses[ck]={label:lbl,status:'andamento',diasUteis:0,diasTrab:0,vend:[]};}}catch(e){}
   return ck;
-}catch(e){return METAS.mesAtual;}}
+}
 function curMes(){return state.metaMes||mesVigente();}
 function mesObj(){return METAS.meses[curMes()];}
 /* ==== LOG DE ALTERA\u00c7\u00d5ES (quem mudou qual regra/meta, quando) ==== */
@@ -1288,8 +1288,8 @@ function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);sy
   if(metaFat()){$('#mplan').onclick=()=>screenMetasPlan();{var _im=$('#mimport');if(_im)_im.onclick=()=>$('#mimportF').click();var _imf=$('#mimportF');if(_imf)_imf.onchange=function(e){var f=e.target.files[0];if(f){var rd=new FileReader();rd.onload=function(){importMetasCSV(String(rd.result||''));};rd.readAsText(f);}};var _mo=$('#mmodelo');if(_mo)_mo.onclick=()=>baixarModeloMetas();var _mx=$('#mexport');if(_mx)_mx.onclick=()=>baixarMetasAtuais();var _ma=$('#mano');if(_ma)_ma.onclick=()=>$('#manoF').click();var _maf=$('#manoF');if(_maf)_maf.onchange=function(e){importMetaVenda(e.target.files[0]);};var _mh=$('#mhist');if(_mh)_mh.onclick=()=>$('#mhistF').click();var _mhf=$('#mhistF');if(_mhf)_mhf.onchange=function(e){var f=e.target.files[0];if(f){var rd=new FileReader();rd.onload=function(){importHistoricoPlanilha(String(rd.result||''));};rd.readAsText(f,'utf-8');}};}{const _cb=$('#mcentral');if(_cb)_cb.onclick=()=>screenIntake();}
     var _mmb=$('#mmarca');if(_mmb)_mmb.onclick=()=>$('#mmarcaF').click();$('#mmarcaF').onchange=e=>importMarcaPeso(e.target.files[0]);
     const rf=$('#inadRef');if(rf)rf.onchange=e=>state.inadRef=e.target.value;
-    $('#mprod').onclick=()=>$('#mprodF').click();$('#mprodF').onchange=e=>importProdVend(e.target.files[0]);
-    $('#mdesemp').onclick=()=>$('#mdesempF').click();$('#mdesempF').onchange=e=>importDesempenho(e.target.files[0]);{var _rb=$('#mrobo');if(_rb)_rb.onclick=()=>puxarDoRobo();}{var _ix=$('#mindices');if(_ix)_ix.onclick=()=>gerarIndicesMes();}{var _pg=$('#mpgeral');if(_pg)_pg.onclick=()=>screenPainelGeral();}}
+    {var _mp=$('#mprod');if(_mp)_mp.onclick=()=>$('#mprodF').click();}{var _mpf=$('#mprodF');if(_mpf)_mpf.onchange=e=>importProdVend(e.target.files[0]);}
+    {var _md=$('#mdesemp');if(_md)_md.onclick=()=>$('#mdesempF').click();}{var _mdf=$('#mdesempF');if(_mdf)_mdf.onchange=e=>importDesempenho(e.target.files[0]);}{var _rb=$('#mrobo');if(_rb)_rb.onclick=()=>puxarDoRobo();}{var _ix=$('#mindices');if(_ix)_ix.onclick=()=>gerarIndicesMes();}{var _pg=$('#mpgeral');if(_pg)_pg.onclick=()=>screenPainelGeral();}}
 }
 function fmtLogT(iso){try{var d=new Date(iso),p=function(n){return String(n).padStart(2,'0');};return p(d.getDate())+'/'+p(d.getMonth()+1)+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());}catch(e){return String(iso||'');}}
 async function screenErros(){setBar('');setW('wide');state.view='erros';mskin(true);
