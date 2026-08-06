@@ -1094,11 +1094,13 @@ async function screenPainelGeral(){
   $('#screen').innerHTML='<div class="wrap pgwrap">'+whoBar()
     +'<div class="mselbar"><h2 style="margin:0;font-size:20px">📊 Painel geral</h2><button class="link" id="pgvolt" style="margin-left:auto">◂ voltar</button></div>'
     +'<div class="pgbar"><label style="font-size:12px;color:var(--mut)">Mês</label><select id="pgmes" style="padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:14px">'+opts+'</select><span style="font-size:11.5px;color:var(--mut)">Δ vs mês anterior ('+esc(mesLabelDe(prev)||prev)+')'+atual+'</span></div>'
+    +'<div class="pgbar" style="margin-top:-4px;flex-wrap:wrap"><label style="font-size:12px;color:var(--mut)">📥 Gerar histórico</label><input type="month" id="pgGerMes" value="'+esc(sel)+'" style="padding:7px 9px;border:1.5px solid var(--line);border-radius:8px;font-size:13px"><button id="pgGerBtn" style="padding:7px 12px;border:none;border-radius:8px;background:var(--brand-d,#12294C);color:#fff;font-size:13px;font-weight:700;cursor:pointer">🧮 Gerar mês do robô</button><span style="font-size:11px;color:var(--mut)">meses antigos (2025, fechados…) — usa só as vendas do robô</span></div>'
     +'<div class="pgtiles">'+tiles+'</div>'
     +'<div class="pgcols">'+col('EXTERNO','ext','EQUIPE EXTERNA')+col('INTERNO','int','EQUIPE INTERNA')+'</div>'
     +'<h3 style="font-size:14px;color:var(--brand-d,#12294C);margin:4px 2px 8px">Por vendedor</h3>'+vtbl
     +'<p class="muted" style="font-size:11px;margin-top:12px">Lê o banco de índices (indices_mensais). Inadimplência só existe a partir do mês com relatório de Desempenho. Gere os índices em cada mês para popular o histórico.</p></div>';
   wireWho();back();var ms=$('#pgmes');if(ms)ms.onchange=function(){state.pgComp=ms.value;screenPainelGeral();};
+  var gb=$('#pgGerBtn');if(gb)gb.onclick=function(){var mm=$('#pgGerMes');var c=(mm&&mm.value)||'';if(!/^\d{4}-\d{2}$/.test(c)){notify('Escolha um mês.');return;}gerarIndicesHistorico(c);};
 }
 function screenMetasLogin(){setBar('');setW('');state.view='metaslogin';mskin(true);state.area='';
   $('#screen').innerHTML=`<div class="center"><div style="text-align:center;margin-bottom:8px"><div style="font-size:42px">\ud83c\udfaf</div><h2 style="margin:6px 0 2px">Metas de Vendas</h2><p class="muted" style="margin:0">Acesso da diretoria e supervis\u00e3o</p></div>
@@ -2117,6 +2119,51 @@ async function gerarIndicesMes(){
     var semNotas=all.length===0;
     notify('🧮 Índices de <b>'+esc(comp)+'</b> gerados ✓<br><br><b>'+rows.length+'</b> linhas — geral · 2 equipes · '+(rows.length-3)+' vendedores.<br>Vendas lidas do robô: <b>'+all.length+'</b> itens.'+(semNotas?'<br><br><span style="color:#8a5a00">⚠️ Sem itens de venda no robô p/ '+esc(comp)+': ticket/notas ficaram 0. Faturamento e inadimplência vieram das metas.</span>':'')+'<br><br><span style="color:var(--mut);font-size:12px">Guardado em indices_mensais. O painel vai ler daqui.</span>');
   }catch(e){logEvent('erro','Gerar índices: '+((e&&e.message)||e));notify('Erro ao gerar índices:<br><br>'+esc(String((e&&e.message)||e))+'<br><br><span style="color:var(--mut);font-size:12px">A tabela indices_mensais já foi criada? (rode o SQL no banco do faturamento)</span>');}
+}
+/* ===== HISTÓRICO: gera índices de QUALQUER mês só com as vendas do robô (2025, meses fechados sem metas) ===== */
+async function gerarIndicesHistorico(comp){
+  if(!sbOn()){notify('Sem conexão com o banco.');return;}
+  if(!/^\d{4}-\d{2}$/.test(comp||'')){notify('Escolha um mês válido.');return;}
+  toast('🧮 Gerando histórico ('+comp+')…');
+  try{
+    var base='?select=vendedor,doc,codpro,quantidade,peso,vlrliquido&competencia=eq.'+encodeURIComponent(comp)+'&order=identificador';
+    var all=[],from=0;
+    for(var p=0;p<300;p++){var chunk=await sbSel('robo_vendas',base+'&limit=1000&offset='+from);if(!chunk||!chunk.length)break;all=all.concat(chunk);if(chunk.length<1000)break;from+=1000;}
+    if(!all.length){notify('Sem vendas do robô para <b>'+esc(comp)+'</b>.<br><br><span style="color:var(--mut);font-size:12px">Confira se o arquivo desse mês subiu no Drive e o robô já processou.</span>');return;}
+    var NG={};Object.keys(METAS.meses||{}).forEach(function(k){((METAS.meses[k]||{}).vend||[]).forEach(function(v){var nn=norm(v.nome);if(nn&&v.grupo&&!NG[nn])NG[nn]=v.grupo;});});
+    var PV={};
+    all.forEach(function(r){
+      var nome=String(r.vendedor||'').trim();if(!nome||ehSuperv(nome))return;
+      var a=PV[nome]||(PV[nome]={fat:0,peso:0,qty:0,doc:{},prod:{},dp:{}});
+      var doc=String(r.doc||''),cp=String(r.codpro||'');
+      a.fat+=Number(r.vlrliquido)||0;a.peso+=Number(r.peso)||0;a.qty+=Number(r.quantidade)||0;
+      if(cp)a.prod[cp]=1;
+      if(doc){a.doc[doc]=1;(a.dp[doc]||(a.dp[doc]={}));if(cp)a.dp[doc][cp]=1;}
+    });
+    var now=new Date().toISOString(),rows=[];
+    function fin(a){if(!a)return{notas:0,fat:0,peso:0,qty:0,prod:0,sumd:0,prodSet:{}};var notas=Object.keys(a.doc).length,sumd=0;Object.keys(a.dp).forEach(function(d){sumd+=Object.keys(a.dp[d]).length;});return {notas:notas,fat:a.fat,peso:a.peso,qty:a.qty,prod:Object.keys(a.prod).length,sumd:sumd,prodSet:a.prod};}
+    function mk(escopo,chave,o){return {competencia:comp,escopo:escopo,chave:chave,
+      faturamento:Math.round((o.fat||0)*100)/100,notas:o.notas||0,ticket_medio:o.notas>0?Math.round(o.fat/o.notas*100)/100:0,
+      mix_produtos:o.mix||0,mix_por_nota:o.notas>0?Math.round(o.sumd/o.notas*100)/100:0,itens_por_nota:o.notas>0?Math.round(o.qty/o.notas*100)/100:0,
+      posit_pct:0,clientes_atend:0,carteira:0,inad_pct:0,areceber:0,vencido:0,transito:0,
+      peso:Math.round((o.peso||0)*10)/10,atualizado_em:now};}
+    var team={EXTERNO:{notas:0,qty:0,peso:0,sumd:0,fat:0,prodSet:{}},INTERNO:{notas:0,qty:0,peso:0,sumd:0,fat:0,prodSet:{}}};
+    var ger={notas:0,qty:0,peso:0,sumd:0,fat:0,prodSet:{}};
+    Object.keys(PV).forEach(function(nome){
+      var f=fin(PV[nome]);var g=NG[norm(nome)]||'EXTERNO';
+      rows.push(mk('VENDEDOR',nome,{fat:f.fat,notas:f.notas,mix:f.prod,sumd:f.sumd,qty:f.qty,peso:f.peso}));
+      var t=team[g]||team.EXTERNO;t.notas+=f.notas;t.qty+=f.qty;t.peso+=f.peso;t.sumd+=f.sumd;t.fat+=f.fat;Object.keys(f.prodSet).forEach(function(k){t.prodSet[k]=1;});
+      ger.notas+=f.notas;ger.qty+=f.qty;ger.peso+=f.peso;ger.sumd+=f.sumd;ger.fat+=f.fat;Object.keys(f.prodSet).forEach(function(k){ger.prodSet[k]=1;});
+    });
+    ['EXTERNO','INTERNO'].forEach(function(g){var t=team[g];rows.push(mk('EQUIPE',g,{fat:t.fat,notas:t.notas,mix:Object.keys(t.prodSet).length,sumd:t.sumd,qty:t.qty,peso:t.peso}));});
+    rows.push(mk('GERAL','',{fat:ger.fat,notas:ger.notas,mix:Object.keys(ger.prodSet).length,sumd:ger.sumd,qty:ger.qty,peso:ger.peso}));
+    await sbDel('indices_mensais','?competencia=eq.'+encodeURIComponent(comp));
+    for(var i=0;i<rows.length;i+=200){await sbUpsert('indices_mensais',rows.slice(i,i+200));}
+    logEvent('info','Histórico gerado '+comp+': '+rows.length+' linhas · '+all.length+' vendas (só robô)');
+    state.pgComp=comp;
+    notify('🧮 Histórico de <b>'+esc(comp)+'</b> gerado ✓<br><br><b>'+all.length+'</b> itens de venda lidos · <b>'+(rows.length-3)+'</b> vendedores.<br><br><span style="color:var(--mut);font-size:12px">Modo histórico: faturamento, ticket, nº de notas, mix e peso vêm das notas. Positivação e inadimplência ficam em branco (esse mês não tem metas/desempenho).</span>');
+    if(state.view==='painelgeral')screenPainelGeral();
+  }catch(e){logEvent('erro','Gerar histórico: '+((e&&e.message)||e));notify('Erro ao gerar histórico:<br><br>'+esc(String((e&&e.message)||e)));}
 }
 function importMetasEco(file){if(!file)return;const rd=new FileReader();
   rd.onload=()=>{try{const rows=parseMetasEco(rd.result);if(!rows.length){toast('N\u00e3o reconheci esse HTML do Eco');return;}
