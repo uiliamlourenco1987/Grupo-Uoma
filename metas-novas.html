@@ -1,0 +1,214 @@
+<!doctype html><html lang="pt-BR"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#173A61">
+<title>METAS NOVAS — Grupo Uoma</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--ground:#FAF8F4;--surface:#FFFFFF;--surface-2:#F3F0EA;--field:#FFFFFF;--ink:#182333;--muted:#5F6A78;--line:#E5E0D6;--line-2:#D8D2C6;--navy:#173A61;--navy-soft:#E9EFF6;--gold:#A9791F;--gold-soft:#F6ECD4;--good:#1C7A49;--good-soft:#E4F2EA;--radius:13px;--shadow:0 1px 2px rgba(20,30,45,.05),0 10px 26px rgba(20,30,45,.06)}
+  @media (prefers-color-scheme:dark){:root{--ground:#0E141C;--surface:#161F2B;--surface-2:#1B2531;--field:#101822;--ink:#E9EDF3;--muted:#9BA6B4;--line:#26313F;--line-2:#33404F;--navy:#7CA3D6;--navy-soft:#1A2A3D;--gold:#D7B15C;--gold-soft:#2A2413;--good:#54BE88;--good-soft:#13291E;--shadow:0 1px 2px rgba(0,0,0,.3),0 12px 30px rgba(0,0,0,.4)}}
+  *{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--ground);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.45}
+  .num{font-variant-numeric:tabular-nums}
+  .wrap{max-width:900px;margin:0 auto;padding:0 0 90px}
+  .top{background:linear-gradient(135deg,#0F2942,var(--navy));color:#fff;padding:18px 18px 16px}
+  .top .brand{display:flex;align-items:center;gap:9px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.9}
+  .top .logo{width:30px;height:30px;border-radius:8px;background:#fff;display:grid;place-items:center;font-size:16px}
+  .top h1{margin:10px 0 2px;font-size:22px}
+  .top .who{font-size:12.5px;opacity:.9}
+  .tabs{position:sticky;top:0;z-index:10;display:flex;gap:6px;background:var(--ground);border-bottom:1px solid var(--line);padding:10px 14px;overflow-x:auto}
+  .tabs button{flex:none;font-family:inherit;font-size:13px;font-weight:700;padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer}
+  .tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  @media (prefers-color-scheme:dark){.tabs button.on{color:#0c1420}}
+  .pad{padding:16px 16px 0}
+  .seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px;margin:0 0 14px}
+  .seg button{font-family:inherit;font-size:13px;font-weight:700;padding:8px 16px;border:none;border-radius:8px;background:transparent;color:var(--muted);cursor:pointer}
+  .seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+  .grp{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin:0 0 14px;overflow:hidden}
+  .grph{display:flex;align-items:center;gap:9px;padding:13px 15px;border-bottom:1px solid var(--line)}
+  .grph h3{margin:0;font-size:15px;font-weight:800;flex:1}
+  .grpb{padding:6px 15px 15px}
+  .fr{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .fr:last-child{border-bottom:none}
+  .fr .lab{flex:1;font-size:13.5px}
+  .fr .lab .d{font-size:11px;color:var(--muted)}
+  input.f,select.f{font-family:inherit;font-size:14px;font-variant-numeric:tabular-nums;color:var(--ink);background:var(--field);border:1.5px solid var(--line-2);border-radius:9px;padding:8px 10px;width:110px;text-align:right}
+  select.f{text-align:left;width:auto}
+  input.f:focus,select.f:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-soft)}
+  input[type=checkbox]{width:20px;height:20px;accent-color:var(--good)}
+  .subhead{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);font-weight:700;padding:12px 0 2px}
+  .btn{font-family:inherit;font-size:14px;font-weight:800;padding:11px 18px;border-radius:10px;border:none;cursor:pointer;background:var(--navy);color:#fff}
+  @media (prefers-color-scheme:dark){.btn{color:#0c1420}}
+  .btn.sec{background:var(--surface);color:var(--ink);border:1.5px solid var(--line-2)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .fzrow{display:grid;grid-template-columns:1.4fr .9fr .8fr .8fr auto;gap:7px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+  .fzrow input.f,.fzrow select.f{width:100%}
+  .fzh{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
+  .rm{background:transparent;border:none;color:var(--muted);font-size:16px;cursor:pointer}
+  .msg{font-size:12.5px;color:var(--muted);padding:10px 0}
+  .empty{text-align:center;color:var(--muted);font-size:13px;padding:28px;border:1px dashed var(--line);border-radius:12px}
+  .center{max-width:420px;margin:60px auto;padding:0 20px;text-align:center}
+  .savebar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:color-mix(in srgb,var(--ground) 90%,transparent);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:11px 16px;display:flex;gap:12px;align-items:center;max-width:900px;margin:0 auto}
+  .savebar .m{flex:1;font-size:12px;color:var(--muted)}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:74px;background:var(--ink);color:var(--ground);font-size:12.5px;font-weight:600;padding:10px 16px;border-radius:10px;opacity:0;transition:.2s;z-index:40;max-width:88%;text-align:center}
+  .toast.on{opacity:1}
+  .gate{font-size:10.5px;font-weight:700;color:var(--navy);background:var(--navy-soft);padding:4px 9px;border-radius:999px}
+</style></head><body>
+<div id="app"><div class="center"><div style="font-size:34px">⚙️</div><p class="msg">Carregando METAS NOVAS…</p></div></div>
+<div class="toast" id="toast"></div>
+<script>
+"use strict";
+var SB_URL="https://gpgycgkqkzedoyilrsmw.supabase.co";
+var SB_KEY="sb_publishable_PtttNHZXuxyuV224G5qhQw_ONYW8soj";
+var sb=window.supabase.createClient(SB_URL,SB_KEY);
+var ME={id:null,nome:'',perfil:''}, TAB='regras', SETOR='EXTERNO', canEdit=false;
+var el=function(id){return document.getElementById(id);};
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function toast(m){var t=el('toast');t.innerHTML=m;t.classList.add('on');clearTimeout(window._tt);window._tt=setTimeout(function(){t.classList.remove('on');},2600);}
+function n(v){v=parseFloat(String(v==null?'':v).replace(',','.'));return isFinite(v)?v:0;}
+
+async function boot(){
+  try{
+    var s=await sb.auth.getSession();
+    var u=s.data&&s.data.session&&s.data.session.user;
+    if(!u){return gateLogin();}
+    ME.id=u.id;
+    try{var r=await sb.from('usuarios').select('nome,role,permissoes').eq('id',u.id).maybeSingle();
+      if(r.data){ME.nome=r.data.nome||u.email;ME.perfil=(r.data.permissoes&&r.data.permissoes.perfil)||(r.data.role==='diretoria'?'diretoria':'');}}catch(e){}
+    canEdit=(ME.perfil==='diretoria'||ME.perfil==='rh');
+    shell();
+  }catch(e){el('app').innerHTML='<div class="center"><p class="msg">Erro ao iniciar: '+esc(e.message||e)+'</p></div>';}
+}
+function gateLogin(){
+  el('app').innerHTML='<div class="center"><div style="font-size:34px">🔒</div><h2 style="margin:10px 0 4px">Entre pelo portal</h2>'
+    +'<p class="msg">O METAS NOVAS usa o seu login do Grupo Uoma. Abra o portal, faça login e volte aqui.</p>'
+    +'<a class="btn" style="display:inline-block;text-decoration:none;margin-top:8px" href="entrar.html">Ir para o login</a></div>';
+}
+function shell(){
+  el('app').innerHTML=
+    '<div class="top"><div class="brand"><span class="logo">🍦</span>Grupo Uoma · Metas novas</div>'
+    +'<h1>METAS NOVAS</h1><div class="who">'+esc(ME.nome)+(canEdit?' · pode editar valores':' · leitura')+'</div></div>'
+    +'<div class="tabs">'
+    +'<button data-t="regras">⚙️ Regras</button>'
+    +'<button data-t="metas">📋 Metas</button>'
+    +'<button data-t="camp">🏆 Campanhas</button></div>'
+    +'<div class="wrap"><div class="pad" id="view"></div></div>';
+  document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){TAB=b.dataset.t;paintTabs();render();};});
+  paintTabs();render();
+}
+function paintTabs(){document.querySelectorAll('.tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.t===TAB);});}
+function render(){ if(TAB==='regras')return renderRegras(); if(TAB==='metas')return renderMetas(); return renderCamp(); }
+
+/* ===================== REGRAS (ligado de verdade) ===================== */
+var REG_GROUPS=[
+  {t:'Bônus por meta (valor por meta batida)',f:[['bonus_fat','Faturamento'],['bonus_mix','Mix'],['bonus_posit','Positivação'],['bonus_inad','Inadimplência']]},
+  {t:'Alvos',f:[['posit_alvo','Positivação — alvo (%)'],['inad_meta','Inadimplência — meta (%)'],['inad_desconta_transito','Descontar o trânsito na inadimplência?','bool']]},
+  {t:'Trava de carteira (posit + inad)',f:[['min_clientes','Mínimo de clientes'],['min_carteira','Mínimo da carteira (R$)']]},
+  {t:'Comissão de salário',f:[['com_individual_pct','Individual — % da base'],['com_equipe_ativo','Comissão de equipe ativa?','bool'],['com_equipe_meta_pct','Equipe — atinge a partir de (%)'],['com_equipe_pct_acima','Equipe — % se atingiu'],['com_equipe_pct_abaixo','Equipe — % se não atingiu']]},
+  {t:'Supervisor (só ganha se a equipe bater)',f:[['sup_base_pct','Externo — comissão base (%)'],['sup_pp_fat','p.p. Faturamento'],['sup_pp_inad','p.p. Inadimplência'],['sup_pp_mix','p.p. Mix'],['sup_pp_posit','p.p. Positivação'],['sup_pp_teto','Teto de p.p.'],['sup_valor_indice','Interno — R$ por índice']]}
+];
+var _reg={};
+async function renderRegras(){
+  var v=el('view');v.innerHTML='<div class="msg">Carregando regras…</div>';
+  var r=await sb.from('metas_regras').select('*');
+  if(r.error){v.innerHTML='<div class="empty">Não consegui ler as regras.<br>'+esc(r.error.message)+'</div>';return;}
+  _reg={};(r.data||[]).forEach(function(row){_reg[row.setor]=row;});
+  if(!_reg[SETOR]){v.innerHTML='<div class="empty">Regras do setor não encontradas. Rode o SQL do METAS NOVAS.</div>';return;}
+  var row=_reg[SETOR];
+  var html='<div class="seg"><button id="sgE" onclick="setSetor(\'EXTERNO\')">Externa</button><button id="sgI" onclick="setSetor(\'INTERNO\')">Interna</button></div>'
+    +'<span class="gate" style="float:right;margin-top:6px">'+(canEdit?'🔓 você edita':'🔒 só RH/Diretoria')+'</span>';
+  REG_GROUPS.forEach(function(g){
+    html+='<div class="grp"><div class="grph"><h3>'+esc(g.t)+'</h3></div><div class="grpb">';
+    g.f.forEach(function(fld){
+      var k=fld[0],lab=fld[1],typ=fld[2]||'num';var val=row[k];
+      html+='<div class="fr"><div class="lab">'+esc(lab)+'</div>';
+      if(typ==='bool')html+='<input type="checkbox" data-k="'+k+'" '+(val?'checked':'')+' '+(canEdit?'':'disabled')+'>';
+      else html+='<input class="f num" data-k="'+k+'" value="'+esc(val==null?0:val)+'" inputmode="decimal" '+(canEdit?'':'disabled')+'>';
+      html+='</div>';
+    });
+    html+='</div></div>';
+  });
+  // fornecedores
+  html+='<div class="grp"><div class="grph"><h3>Bônus por fornecedor</h3><span class="gate">interno · você paga</span></div><div class="grpb" id="fzbox"><div class="msg">Carregando fornecedores…</div></div></div>';
+  v.innerHTML=html;
+  el('sgE').classList.toggle('on',SETOR==='EXTERNO');el('sgI').classList.toggle('on',SETOR==='INTERNO');
+  saveBar(canEdit?'<button class="btn" id="salvar">Salvar regras ('+(SETOR==='EXTERNO'?'Externa':'Interna')+')</button>':'', 'As regras valem por setor. Edição só RH/Diretoria.');
+  if(canEdit){el('salvar').onclick=salvarRegras;}
+  loadForn();
+}
+window.setSetor=function(s){SETOR=s;renderRegras();};
+async function salvarRegras(){
+  var btn=el('salvar');btn.disabled=true;btn.textContent='Salvando…';
+  var payload={};document.querySelectorAll('#view [data-k]').forEach(function(inp){
+    var k=inp.dataset.k;if(inp.type==='checkbox')payload[k]=inp.checked;else payload[k]=n(inp.value);
+  });
+  payload.atualizado_em=new Date().toISOString();
+  var r=await sb.from('metas_regras').update(payload).eq('setor',SETOR);
+  btn.disabled=false;btn.textContent='Salvar regras ('+(SETOR==='EXTERNO'?'Externa':'Interna')+')';
+  if(r.error){toast('❌ '+esc(r.error.message));}else{toast('✓ Regras salvas ('+SETOR+')');}
+}
+async function loadForn(){
+  var box=el('fzbox');if(!box)return;
+  var r=await sb.from('metas_fornecedor_bonus').select('*').order('marca');
+  if(r.error){box.innerHTML='<div class="msg">Erro: '+esc(r.error.message)+'</div>';return;}
+  var rows=r.data||[];
+  var html='<div class="fzrow fzh"><span>Marca</span><span>Critério</span><span>Ext.R$</span><span>Int.R$</span><span></span></div>';
+  html+=rows.map(function(f){return '<div class="fzrow" data-id="'+f.id+'">'
+    +'<input class="f" data-c="marca" value="'+esc(f.marca)+'" style="text-align:left" '+(canEdit?'':'disabled')+'>'
+    +'<select class="f" data-c="criterio" '+(canEdit?'':'disabled')+'><option value="FAT"'+(f.criterio==='FAT'?' selected':'')+'>Faturamento</option><option value="PESO"'+(f.criterio==='PESO'?' selected':'')+'>Peso</option></select>'
+    +'<input class="f num" data-c="valor_externo" value="'+esc(f.valor_externo)+'" inputmode="decimal" '+(canEdit?'':'disabled')+'>'
+    +'<input class="f num" data-c="valor_interno" value="'+esc(f.valor_interno)+'" inputmode="decimal" '+(canEdit?'':'disabled')+'>'
+    +(canEdit?'<button class="rm" onclick="delForn('+f.id+')">🗑</button>':'<span></span>')
+    +'</div>';}).join('');
+  if(!rows.length)html+='<div class="msg">Nenhum fornecedor ainda.</div>';
+  if(canEdit)html+='<div style="display:flex;gap:8px;margin-top:10px"><button class="btn sec" id="fzadd">+ adicionar fornecedor</button><button class="btn" id="fzsave">Salvar fornecedores</button></div>';
+  box.innerHTML=html;
+  if(canEdit){el('fzadd').onclick=addForn;el('fzsave').onclick=saveForn;}
+}
+window.delForn=async function(id){if(!confirm('Apagar esse fornecedor?'))return;var r=await sb.from('metas_fornecedor_bonus').delete().eq('id',id);if(r.error)toast('❌ '+esc(r.error.message));else{toast('✓ Apagado');loadForn();}};
+async function addForn(){var r=await sb.from('metas_fornecedor_bonus').insert({marca:'NOVA MARCA',criterio:'FAT',valor_externo:0,valor_interno:0});if(r.error)toast('❌ '+esc(r.error.message));else{toast('✓ Adicionado');loadForn();}}
+async function saveForn(){
+  var rows=document.querySelectorAll('#fzbox .fzrow[data-id]');var ok=0,err='';
+  for(var i=0;i<rows.length;i++){var row=rows[i];var id=+row.dataset.id;var p={};
+    row.querySelectorAll('[data-c]').forEach(function(inp){var c=inp.dataset.c;p[c]=(c==='marca'||c==='criterio')?inp.value:n(inp.value);});
+    var r=await sb.from('metas_fornecedor_bonus').update(p).eq('id',id);if(r.error)err=r.error.message;else ok++;}
+  toast(err?('❌ '+esc(err)):('✓ '+ok+' fornecedor(es) salvos'));
+}
+
+/* ===================== METAS (conectado — leitura) ===================== */
+async function renderMetas(){
+  saveBar('','');
+  var v=el('view');v.innerHTML='<div class="msg">Carregando metas…</div>';
+  var mr=await sb.from('metas_meses').select('*').order('mes',{ascending:false});
+  var vr=await sb.from('vendedores').select('codigo',{count:'exact',head:true});
+  if(mr.error){v.innerHTML='<div class="empty">Erro ao ler meses: '+esc(mr.error.message)+'</div>';return;}
+  var meses=mr.data||[];
+  if(!meses.length){
+    v.innerHTML='<div class="empty">✅ Conectado ao banco.<br><br>Ainda não há <b>meses cadastrados</b> nem vendedores. O próximo passo (próxima etapa) é <b>carregar o histórico Jan–Jul travado</b> e o cadastro de vendedores.</div>';
+    return;
+  }
+  v.innerHTML='<div class="grp"><div class="grph"><h3>Meses</h3></div><div class="grpb">'
+    +meses.map(function(m){return '<div class="fr"><div class="lab">'+esc(m.label||m.mes)+'</div><span class="gate">'+(m.status==='fechado'?'🔒 fechado':'✎ andamento')+'</span></div>';}).join('')
+    +'</div></div><div class="msg">Edição de metas por vendedor entra na próxima etapa.</div>';
+}
+
+/* ===================== CAMPANHAS (conectado — leitura) ===================== */
+async function renderCamp(){
+  saveBar('','');
+  var v=el('view');v.innerHTML='<div class="msg">Carregando campanhas…</div>';
+  var r=await sb.from('campanhas').select('*').order('criada_em',{ascending:false});
+  if(r.error){v.innerHTML='<div class="empty">Erro: '+esc(r.error.message)+'</div>';return;}
+  var cs=r.data||[];
+  if(!cs.length){v.innerHTML='<div class="empty">✅ Conectado ao banco.<br><br>Nenhuma campanha ainda. A criação de campanha (multi-critério, participantes, PDF e link do fornecedor) entra na próxima etapa.</div>';return;}
+  v.innerHTML='<div class="grp"><div class="grph"><h3>Campanhas</h3></div><div class="grpb">'
+    +cs.map(function(c){return '<div class="fr"><div class="lab">'+esc(c.nome||c.fornecedor||'campanha')+'<div class="d">'+esc(c.ini||'')+' → '+esc(c.fim||'')+' · '+esc(c.escopo)+'</div></div><span class="gate">'+(c.ativa?'ativa':'inativa')+'</span></div>';}).join('')
+    +'</div></div>';
+}
+
+function saveBar(right,msg){
+  var old=el('savebar');if(old)old.remove();
+  if(!right&&!msg)return;
+  var d=document.createElement('div');d.className='savebar';d.id='savebar';
+  d.innerHTML='<span class="m">'+(msg||'')+'</span>'+(right||'');
+  document.body.appendChild(d);
+}
+boot();
+</script></body></html>
