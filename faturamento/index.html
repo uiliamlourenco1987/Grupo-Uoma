@@ -863,7 +863,12 @@ function screenMinhaMeta(){setBar('');setW('wide');state.view='minhameta';mskin(
   var s=$('#mmsair');if(s)s.onclick=()=>sairApp();}
 
 /* ================= METAS DE VENDAS ================= */
-function mesVigente(){try{var ms=METAS.meses||{};var d=new Date();var ck=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');if(ms[ck]&&(ms[ck].vend||[]).length)return ck;var kd=Object.keys(ms).filter(function(k){return (ms[k].vend||[]).length;}).sort();if(kd.length)return kd[kd.length-1];if(ms[ck])return ck;var ks=Object.keys(ms).sort();return ks.length?ks[ks.length-1]:METAS.mesAtual;}catch(e){return METAS.mesAtual;}}
+function mesVigente(){try{var ms=METAS.meses||{};var d=new Date();var ck=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  if(ms[ck])return ck;                       // mês atual existe (mesmo vazio) -> SEMPRE cai nele
+  // mês atual ainda não existe: cria vazio, pra sempre abrir no mês certo (e aí você importa/puxa)
+  ms[ck]={label:mesLabelDe(ck),status:'andamento',diasUteis:0,diasTrab:0,vend:[]};METAS.meses=ms;
+  return ck;
+}catch(e){return METAS.mesAtual;}}
 function curMes(){return state.metaMes||mesVigente();}
 function mesObj(){return METAS.meses[curMes()];}
 /* ==== LOG DE ALTERA\u00c7\u00d5ES (quem mudou qual regra/meta, quando) ==== */
