@@ -69,6 +69,18 @@
   .clist .ci{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}
   .clist .ci:last-child{border-bottom:none}
   .clink{font-size:11.5px;word-break:break-all;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:4px 0}
+  .kgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}
+  .kbox{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:12px 13px}
+  .kbox .kl{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .kbox .kv{font-size:20px;font-weight:800;letter-spacing:-.02em;margin-top:3px;font-variant-numeric:tabular-nums}
+  .kbox .ks{font-size:11px;color:var(--muted);margin-top:1px}
+  .kbox .kv.gold{color:var(--gold)}
+  .tl{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .tl:last-child{border-bottom:none}
+  .tl .rk{width:20px;color:var(--muted);font-weight:700;font-size:11px;flex:none;text-align:right}
+  .tl .nm{flex:1;font-weight:600}.tl .nm .d{font-size:11px;color:var(--muted);font-weight:400}
+  .tl .vv{font-variant-numeric:tabular-nums;font-weight:800}
+  .tl .vv .u{font-size:10.5px;color:var(--muted);font-weight:600}
 </style></head><body>
 <div id="app"><div class="center"><div style="font-size:34px">⚙️</div><p class="msg">Carregando METAS NOVAS…</p></div></div>
 <div class="toast" id="toast"></div>
@@ -109,13 +121,14 @@ function shell(){
     +'<button data-t="regras">⚙️ Regras</button>'
     +'<button data-t="metas">📋 Metas</button>'
     +'<button data-t="camp">🏆 Campanhas</button>'
+    +'<button data-t="vend">👤 Vendedor</button>'
     +(canImport?'<button data-t="imp">📥 Importar</button>':'')+'</div>'
     +'<div class="wrap"><div class="pad" id="view"></div></div>';
   document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){TAB=b.dataset.t;paintTabs();render();};});
   paintTabs();render();
 }
 function paintTabs(){document.querySelectorAll('.tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.t===TAB);});}
-function render(){ if(TAB==='regras')return renderRegras(); if(TAB==='metas')return renderMetas(); if(TAB==='imp')return renderImp(); return renderCamp(); }
+function render(){ if(TAB==='regras')return renderRegras(); if(TAB==='metas')return renderMetas(); if(TAB==='imp')return renderImp(); if(TAB==='vend')return renderVend(); return renderCamp(); }
 
 /* ===================== REGRAS (ligado de verdade) ===================== */
 // Regras comuns aos dois setores (valores diferentes por linha/setor)
@@ -454,6 +467,84 @@ function shareBlock(c){
     +'<div style="font-size:12px;font-weight:700;color:var(--navy);margin-top:8px">👥 Colaboradores</div><div class="clink">'+esc(lc)+'</div>'
     +'<div class="msg" style="padding:8px 0 0">A página pública <b>campanha.html</b> (o que fornecedor/colaborador abrem) entra junto com o visual dos vendedores — a estrutura e os links já ficam prontos aqui.</div>';
 }
+
+/* ===================== VENDEDOR (visão da carteira, dados reais) ========= */
+var VMES=null, VCOD=null, _vlist=[], _vmeses=[];
+function money(x){return 'R$ '+brl(x);}
+async function renderVend(){
+  saveBar('','');
+  var v=el('view');
+  if(!_vlist.length){
+    v.innerHTML='<div class="msg">Carregando…</div>';
+    var d=await sb.from('desempenho').select('competencia,codigo,vendedor').order('competencia',{ascending:false}).order('vendedor');
+    if(d.error){v.innerHTML='<div class="empty">Erro: '+esc(d.error.message)+'</div>';return;}
+    var rows=d.data||[];
+    if(!rows.length){v.innerHTML='<div class="empty">✅ Conectado. Ainda não há dados importados.<br>Vá em <b>📥 Importar</b> e suba o <b>Desempenho</b> e o <b>Mix/Faturamento</b> do mês.</div>';return;}
+    _vmeses=[];rows.forEach(function(r){if(_vmeses.indexOf(r.competencia)<0)_vmeses.push(r.competencia);});
+    _vlist=rows;
+  }
+  if(!VMES)VMES=_vmeses[0];
+  var vends=_vlist.filter(function(r){return r.competencia===VMES;});
+  if(!VCOD||!vends.some(function(r){return r.codigo===VCOD;}))VCOD=vends.length?vends[0].codigo:null;
+
+  var head='<div style="display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px">'
+    +'<select class="f" id="vMes" style="width:auto">'+_vmeses.map(function(m){return '<option'+(m===VMES?' selected':'')+'>'+esc(m)+'</option>';}).join('')+'</select>'
+    +'<select class="f" id="vCod" style="width:auto">'+vends.map(function(r){return '<option value="'+esc(r.codigo)+'"'+(r.codigo===VCOD?' selected':'')+'>'+esc(r.vendedor)+' ('+esc(r.codigo)+')</option>';}).join('')+'</select></div>';
+  v.innerHTML=head+'<div id="vBody"><div class="msg">Carregando vendedor…</div></div>';
+  el('vMes').onchange=function(){VMES=this.value;VCOD=null;renderVend();};
+  el('vCod').onchange=function(){VCOD=this.value;paintVend();};
+  paintVend();
+}
+async function paintVend(){
+  var host=el('vBody');if(!host)return;host.innerHTML='<div class="msg">Carregando…</div>';
+  var de=await sb.from('desempenho').select('*').eq('competencia',VMES).eq('codigo',VCOD).maybeSingle();
+  var fv=await sb.from('fat_vendas').select('codcli,nomecli,codpro,descpro,marca,peso,vlrliquido').eq('competencia',VMES).eq('codvendedor',VCOD).limit(5000);
+  if(fv.error){host.innerHTML='<div class="empty">Erro: '+esc(fv.error.message)+'</div>';return;}
+  var D=de.data||{}; var linhas=fv.data||[];
+  // agregações da carteira dele
+  var totFat=0,totPeso=0, cli={}, pro={}, mar={};
+  linhas.forEach(function(l){
+    var vl=n(l.vlrliquido),pk=n(l.peso);totFat+=vl;totPeso+=pk;
+    var kc=l.codcli||'?';if(!cli[kc])cli[kc]={nome:l.nomecli||kc,v:0};cli[kc].v+=vl;
+    var kp=l.codpro||'?';if(!pro[kp])pro[kp]={nome:l.descpro||kp,v:0,q:0};pro[kp].v+=vl;
+    var km=l.marca||'—';if(!mar[km])mar[km]={v:0,p:0};mar[km].v+=vl;mar[km].p+=pk;
+  });
+  function top(obj,key,nmk){return Object.keys(obj).map(function(k){return obj[k];}).sort(function(a,b){return b[key]-a[key];}).slice(0,10);}
+  var topCli=top(cli,'v'), topPro=top(pro,'v');
+  var topMar=Object.keys(mar).map(function(k){return {marca:k,v:mar[k].v,p:mar[k].p,kg:mar[k].p>0?mar[k].v/mar[k].p:0};}).sort(function(a,b){return b.v-a.v;}).slice(0,10);
+  var kgGeral=totPeso>0?totFat/totPeso:0;
+  var nomeV=(D.vendedor)|| (linhas[0]&&linhas[0].vendedor) || VCOD;
+
+  var h='<div class="top" style="border-radius:14px;margin:0 0 14px"><div class="brand"><span>Minha carteira · '+esc(VMES)+'</span><span class="logo"><span class="ic">🍦</span>Loja do Sorveteiro</span></div>'
+    +'<h1 style="font-size:20px">'+esc(nomeV)+'</h1><div class="who">Código '+esc(VCOD)+'</div></div>';
+
+  // KPIs (do Desempenho oficial)
+  h+='<div class="kgrid">'
+    +kbox('Faturamento', money(D.vendas!=null?D.vendas:totFat), (D.venda_media!=null?('média '+money(D.venda_media)):''))
+    +kbox('Inadimplência', (n(D.inadimplencia)).toLocaleString('pt-BR')+'%', 'vencido '+money(D.vencidos)+' · trânsito '+money(D.transito))
+    +kbox('Carteira', (n(D.carteira_clientes))+' clientes', (n(D.positivacao))+' positivados · '+(n(D.pct_compraram))+'% compraram')
+    +kbox('Mix &amp; peso', (n(D.mix_produto))+' produtos', (n(D.peso)).toLocaleString('pt-BR')+' kg vendidos')
+    +'</div>';
+
+  h+='<div class="kgrid"><div class="kbox"><div class="kl">Valor do quilo (geral)</div><div class="kv gold">'+money(kgGeral)+'<span style="font-size:12px;color:var(--muted)">/kg</span></div><div class="ks">'+brl(totPeso)+' kg · '+money(totFat)+'</div></div>'
+    +'<div class="kbox"><div class="kl">Nº de vendas (linhas)</div><div class="kv">'+linhas.length+'</div><div class="ks">itens faturados no mês</div></div></div>';
+
+  if(!linhas.length){h+='<div class="empty">Sem linhas de Mix/Faturamento para este vendedor em '+esc(VMES)+'.<br>Importe o <b>Mix/Faturamento</b> do mês para ver top clientes/produtos e o quilo por marca.</div>';host.innerHTML=h;return;}
+
+  // Top clientes
+  h+='<div class="h">🏅 Top 10 clientes</div><div class="grp"><div class="grpb">'
+    +topCli.map(function(c,i){return '<div class="tl"><span class="rk">'+(i+1)+'</span><span class="nm">'+esc(c.nome)+'</span><span class="vv">'+money(c.v)+'</span></div>';}).join('')+'</div></div>';
+  // Top produtos
+  h+='<div class="h">📦 Top 10 produtos</div><div class="grp"><div class="grpb">'
+    +topPro.map(function(p,i){return '<div class="tl"><span class="rk">'+(i+1)+'</span><span class="nm">'+esc(p.nome)+'</span><span class="vv">'+money(p.v)+'</span></div>';}).join('')+'</div></div>';
+  // R$/kg por marca
+  h+='<div class="h">⚖️ Valor do quilo por marca</div><div class="grp"><div class="grpb">'
+    +topMar.map(function(m,i){return '<div class="tl"><span class="rk">'+(i+1)+'</span><span class="nm">'+esc(m.marca)+'<div class="d">'+brl(m.p)+' kg · '+money(m.v)+'</div></span><span class="vv gold" style="color:var(--gold)">'+money(m.kg)+' <span class="u">/kg</span></span></div>';}).join('')+'</div></div>';
+
+  h+='<div class="msg" style="margin-top:14px">As <b>metas do mês e o bônus</b> (Bloco 2) entram aqui quando a competência tiver metas lançadas e os códigos estiverem unificados. Esta tela já é a base da visão de cada vendedor.</div>';
+  host.innerHTML=h;
+}
+function kbox(l,v,s){return '<div class="kbox"><div class="kl">'+l+'</div><div class="kv">'+v+'</div>'+(s?'<div class="ks">'+s+'</div>':'')+'</div>';}
 
 /* ===================== IMPORTAR (planilhas → tabelas do RH) ============== */
 var IMPMES=null;
