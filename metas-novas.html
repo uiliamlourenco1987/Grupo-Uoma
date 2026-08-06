@@ -77,7 +77,7 @@
 var SB_URL="https://gpgycgkqkzedoyilrsmw.supabase.co";
 var SB_KEY="sb_publishable_PtttNHZXuxyuV224G5qhQw_ONYW8soj";
 var sb=window.supabase.createClient(SB_URL,SB_KEY);
-var ME={id:null,nome:'',perfil:''}, TAB='regras', SETOR='EXTERNO', canEdit=false;
+var ME={id:null,nome:'',perfil:''}, TAB='regras', SETOR='EXTERNO', canEdit=false, canImport=false;
 var el=function(id){return document.getElementById(id);};
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function toast(m){var t=el('toast');t.innerHTML=m;t.classList.add('on');clearTimeout(window._tt);window._tt=setTimeout(function(){t.classList.remove('on');},2600);}
@@ -92,6 +92,7 @@ async function boot(){
     try{var r=await sb.from('usuarios').select('nome,role,permissoes').eq('id',u.id).maybeSingle();
       if(r.data){ME.nome=r.data.nome||u.email;ME.perfil=(r.data.permissoes&&r.data.permissoes.perfil)||(r.data.role==='diretoria'?'diretoria':'');}}catch(e){}
     canEdit=(ME.perfil==='diretoria'||ME.perfil==='rh');
+    canImport=(['diretoria','rh','faturamento','supervisao'].indexOf(ME.perfil)>=0);
     shell();
   }catch(e){el('app').innerHTML='<div class="center"><p class="msg">Erro ao iniciar: '+esc(e.message||e)+'</p></div>';}
 }
@@ -107,13 +108,14 @@ function shell(){
     +'<div class="tabs">'
     +'<button data-t="regras">⚙️ Regras</button>'
     +'<button data-t="metas">📋 Metas</button>'
-    +'<button data-t="camp">🏆 Campanhas</button></div>'
+    +'<button data-t="camp">🏆 Campanhas</button>'
+    +(canImport?'<button data-t="imp">📥 Importar</button>':'')+'</div>'
     +'<div class="wrap"><div class="pad" id="view"></div></div>';
   document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){TAB=b.dataset.t;paintTabs();render();};});
   paintTabs();render();
 }
 function paintTabs(){document.querySelectorAll('.tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.t===TAB);});}
-function render(){ if(TAB==='regras')return renderRegras(); if(TAB==='metas')return renderMetas(); return renderCamp(); }
+function render(){ if(TAB==='regras')return renderRegras(); if(TAB==='metas')return renderMetas(); if(TAB==='imp')return renderImp(); return renderCamp(); }
 
 /* ===================== REGRAS (ligado de verdade) ===================== */
 // Regras comuns aos dois setores (valores diferentes por linha/setor)
@@ -452,6 +454,89 @@ function shareBlock(c){
     +'<div style="font-size:12px;font-weight:700;color:var(--navy);margin-top:8px">👥 Colaboradores</div><div class="clink">'+esc(lc)+'</div>'
     +'<div class="msg" style="padding:8px 0 0">A página pública <b>campanha.html</b> (o que fornecedor/colaborador abrem) entra junto com o visual dos vendedores — a estrutura e os links já ficam prontos aqui.</div>';
 }
+
+/* ===================== IMPORTAR (planilhas → tabelas do RH) ============== */
+var IMPMES=null;
+function pbr(v){v=String(v==null?'':v).trim().replace(/\./g,'').replace(',','.');var f=parseFloat(v);return isFinite(f)?f:0;}
+function toISO(dmy){var m=String(dmy||'').match(/(\d{2})\/(\d{2})\/(\d{4})/);return m?(m[3]+'-'+m[2]+'-'+m[1]):null;}
+function readSmart(file){return new Promise(function(res,rej){var r=new FileReader();r.onerror=function(){rej(new Error('leitura'));};
+  r.onload=function(){var buf=r.result;var t;try{t=new TextDecoder('utf-8',{fatal:true}).decode(buf);}catch(e){t=new TextDecoder('iso-8859-1').decode(buf);}res(t);};
+  r.readAsArrayBuffer(file);});}
+function parseCSV(txt){ // delimitador ; com aspas
+  var rows=[],row=[],cur='',q=false,i,c;txt=txt.replace(/\r/g,'');
+  for(i=0;i<txt.length;i++){c=txt[i];
+    if(q){ if(c==='"'){ if(txt[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else{ if(c==='"')q=true; else if(c===';'){row.push(cur);cur='';} else if(c==='\n'){row.push(cur);rows.push(row);row=[];cur='';} else cur+=c; }
+  }
+  if(cur.length||row.length){row.push(cur);rows.push(row);}
+  return rows.filter(function(r){return r.length>1||(r[0]&&r[0].trim());});
+}
+function hmap(header){var m={};header.forEach(function(h,i){m[h.trim().toUpperCase()]=i;});return m;}
+
+async function renderImp(){
+  saveBar('','');
+  var v=el('view');
+  if(!IMPMES){var d=new Date();IMPMES=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2);}
+  // status atual
+  var fc=await sb.from('fat_vendas').select('competencia',{count:'exact',head:true}).eq('competencia',IMPMES);
+  var dc=await sb.from('desempenho').select('competencia',{count:'exact',head:true}).eq('competencia',IMPMES);
+  var nf=(fc&&fc.count)||0, nd=(dc&&dc.count)||0;
+  v.innerHTML=''
+    +'<div class="grp"><div class="grph"><h3>📥 Importar planilhas</h3><span class="gate">'+(canImport?'🔓':'🔒')+'</span></div><div class="grpb">'
+    +'<div class="msg">Suba as duas planilhas do mês. Elas alimentam as tabelas do RH — daí saem mix, quilo, top produtos/clientes, carteira, inadimplência etc.</div>'
+    +'<div class="fr"><div class="lab">Competência (mês)</div><input class="f" id="impMes" value="'+esc(IMPMES)+'" placeholder="AAAA-MM" style="width:120px;text-align:left"></div>'
+    +'</div></div>'
+    +'<div class="grp"><div class="grph"><h3>1) Mix / Faturamento</h3><span class="gate">'+nf+' linhas em '+esc(IMPMES)+'</span></div><div class="grpb">'
+    +'<div class="msg">Relatório linha a linha (produto · cliente · marca · peso · valor). Reimportar o mesmo mês <b>substitui</b> o que já tinha.</div>'
+    +'<div class="uploader" onclick="el(\'fMix\').click()"><input type="file" id="fMix" accept=".csv,.txt" style="display:none" onchange="doImpMix(this.files[0])"><div class="msg" style="padding:0"><b>Toque para subir o Mix/Faturamento</b> (CSV)</div></div>'
+    +'<div id="impMixLog" class="msg"></div>'
+    +'</div></div>'
+    +'<div class="grp"><div class="grph"><h3>2) Desempenho</h3><span class="gate">'+nd+' vendedores em '+esc(IMPMES)+'</span></div><div class="grpb">'
+    +'<div class="msg">Relatório por vendedor (vendas · positivação · carteira · média · inadimplência). Reimportar <b>atualiza</b> cada vendedor.</div>'
+    +'<div class="uploader" onclick="el(\'fDes\').click()"><input type="file" id="fDes" accept=".csv,.txt" style="display:none" onchange="doImpDes(this.files[0])"><div class="msg" style="padding:0"><b>Toque para subir o Desempenho</b> (CSV)</div></div>'
+    +'<div id="impDesLog" class="msg"></div>'
+    +'</div></div>';
+  el('impMes').onchange=function(){IMPMES=this.value.trim();renderImp();};
+}
+window.doImpMix=async function(file){
+  if(!file)return;var log=el('impMixLog');log.innerHTML='Lendo arquivo…';
+  try{
+    var txt=await readSmart(file);var rows=parseCSV(txt);if(rows.length<2)throw new Error('vazio');
+    var H=hmap(rows[0]);var need=['CODVENDEDOR','MARCA','CODCLI','VLRLIQUIDO','PESO'];
+    for(var k=0;k<need.length;k++)if(H[need[k]]==null)throw new Error('coluna '+need[k]+' não encontrada — é o Mix/Faturamento certo?');
+    var recs=[];for(var i=1;i<rows.length;i++){var r=rows[i];if(!r||r.length<3||!(r[H.CODPRO]||r[H.CODVENDEDOR]))continue;
+      recs.push({competencia:IMPMES,data:toISO(r[H.DATA]),doc:(r[H.DOC]||'').trim(),empresa:(r[H.EMP]||'').trim(),
+        codpro:(r[H.CODPRO]||'').trim(),descpro:(r[H.DESCPRO]||'').trim(),embalagem:(r[H.EMBALAGEM]||'').trim(),
+        marca:(r[H.MARCA]||'').trim(),codcli:(r[H.CODCLI]||'').trim(),nomecli:(r[H.NOMECLI]||'').trim(),
+        codvendedor:(r[H.CODVENDEDOR]||'').trim(),vendedor:(r[H.VENDEDOR]||'').trim(),
+        quantidade:pbr(r[H.QUANTIDADE]),peso:pbr(r[H.PESO]),vlrliquido:pbr(r[H.VLRLIQUIDO]),tipooperacao:(r[H.TIPOOPERACAO]||'').trim()});
+    }
+    log.innerHTML='Substituindo '+esc(IMPMES)+' e gravando '+recs.length+' linhas…';
+    var del=await sb.from('fat_vendas').delete().eq('competencia',IMPMES);if(del.error)throw del.error;
+    for(var j=0;j<recs.length;j+=500){var ins=await sb.from('fat_vendas').insert(recs.slice(j,j+500));if(ins.error)throw ins.error;log.innerHTML='Gravando… '+Math.min(j+500,recs.length)+'/'+recs.length;}
+    log.innerHTML='✅ '+recs.length+' linhas importadas em '+esc(IMPMES)+'.';toast('✓ Mix importado');renderImp();
+  }catch(e){log.innerHTML='❌ '+esc(e.message||e);toast('❌ '+esc(e.message||e));}
+};
+window.doImpDes=async function(file){
+  if(!file)return;var log=el('impDesLog');log.innerHTML='Lendo arquivo…';
+  try{
+    var txt=await readSmart(file);var rows=parseCSV(txt);if(rows.length<2)throw new Error('vazio');
+    var H=hmap(rows[0]);if(H.CODIGO==null||H.VENDAS==null)throw new Error('não parece o Relatório de Desempenho');
+    var recs=[];for(var i=1;i<rows.length;i++){var r=rows[i];var cod=(r[H.CODIGO]||'').trim();if(!cod)continue;
+      recs.push({competencia:IMPMES,empresa:(r[H.EMPRESA]||'').trim(),codigo:cod,vendedor:(r[H.VENDEDOR]||'').trim(),
+        vendas:pbr(r[H.VENDAS]),custo:pbr(r[H.CUSTO]),lucro:pbr(r[H.LUCRO]),positivacao:pbr(r[H.POSITIVACAO]),
+        venda_media:pbr(r[H.VENDAMEDIA]),peso:pbr(r[H.PESO]),mix_produto:pbr(r[H.MIXPRODUTO]),
+        carteira_clientes:pbr(r[H.CARTEIRACLIENTES]),clientes_atendidos:pbr(r[H.CLIENTESATENDIDOS]),
+        qtd_devolucao:pbr(r[H.QTDDEVOLUCAO]),pct_compraram:pbr(r[H.POR_CLIENTECOMPRARAM]),
+        pct_nao_compraram:pbr(r[H.CLIENTESNAOCOMPRARAM]),clientes_novos:pbr(r[H.CLIENTESNOVOS]),
+        areceber:pbr(r[H.ARECEBER]),a_vencer:pbr(r[H.TOTALAVENCER]),vencidos:pbr(r[H.TOTALVENCIDOS]),
+        transito:pbr(r[H.TOTALTRANSITO]),inadimplencia:pbr(r[H.INADIMPLENCIA]),atualizado_em:new Date().toISOString()});
+    }
+    log.innerHTML='Gravando '+recs.length+' vendedores…';
+    var up=await sb.from('desempenho').upsert(recs,{onConflict:'competencia,codigo'});if(up.error)throw up.error;
+    log.innerHTML='✅ '+recs.length+' vendedores importados em '+esc(IMPMES)+'.';toast('✓ Desempenho importado');renderImp();
+  }catch(e){log.innerHTML='❌ '+esc(e.message||e);toast('❌ '+esc(e.message||e));}
+};
 
 function saveBar(right,msg){
   var old=el('savebar');if(old)old.remove();
