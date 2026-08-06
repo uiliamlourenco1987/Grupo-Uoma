@@ -1246,7 +1246,7 @@ function buildMetasNav(){metasNavCSS();var s='';
   var gest=_mni('mpag','💵 Pagamentos');if(metaRH())gest+=_mni('mrh','⚙️ Regras (RH)');if(metaEdit())gest+=_mni('mregras','📋 Regras')+_mni('mxexp','🖨️ Exportar (PDF)');if(metaDir())gest+=_mni('mlog','📝 Log de alterações');
   s+='<div class="mnavh">Gestão</div>'+gest;
   if(!metaFat())s+='<div style="font-size:11px;color:var(--mut);padding:10px">Somente leitura — planejamento é da diretoria.</div>';
-  s+='<input type="file" id="mimportF" accept=".csv,.txt" style="display:none"><input type="file" id="manoF" accept=".html,.htm" style="display:none"><input type="file" id="mhistF" accept=".csv,.txt" style="display:none"><input type="file" id="mdesempF" accept=".csv,.txt" style="display:none"><input type="file" id="mmarcaF" accept=".html,.htm" style="display:none"><input type="file" id="mprodF" accept=".html,.htm" style="display:none">';
+  s+='<input type="file" id="mimportF" accept=".csv,.txt" style="display:none"><input type="file" id="manoF" accept=".html,.htm" style="display:none"><input type="file" id="mhistF" accept=".csv,.txt" style="display:none"><input type="file" id="mdesempF" accept=".csv,.txt" style="display:none"><input type="file" id="mmarcaF" accept=".html,.htm" style="display:none"><input type="file" id="mprodF" accept=".csv,.txt" style="display:none">';
   return s;}
 function screenMetas(){setBar('');setW('wide');state.view='metas';mskin(true);syncSuperv();const m=mesObj();const dir=metaEdit();
   if(!m){$('#screen').innerHTML='<div class="wrap">'+whoBar()+'<div class="banner" style="margin-top:16px">📋 Sem metas neste mês ainda. Use <b>Importar metas (planilha)</b> para começar.</div></div>';wireWho();return;}
@@ -1338,17 +1338,84 @@ function parseProdVend(raw){const txt=String(raw).replace(/<[^>]+>/g,'\n');const
     const mp=s.match(/^(\d{6})\s+\S/);if(mp&&cur)per[cur].add(mp[1]);});
   return per;}
 // abre o seletor de arquivo do relat\u00f3rio de mix de qualquer tela (ex.: linha do supervisor no Planejar)
-function pickMixReport(){const inp=document.createElement('input');inp.type='file';inp.accept='.html,.htm';inp.onchange=e=>{if(e.target.files[0])importProdVend(e.target.files[0]);};inp.click();}
-function importProdVend(file){if(!file)return;const rd=new FileReader();const alias={'JOSE ADRIANO':'ADRIANO','ANDERSON SILVA':'ANDERSON'};
-  rd.onload=()=>{try{const per=parseProdVend(rd.result);const m=mesObj();let n=0;const teamSet={EXTERNO:new Set(),INTERNO:new Set()};
-    var supExt=(METAS_SUPERV.EXTERNO||'GENIVALDO');
-    var supKey=Object.keys(per).find(k=>{const kn=norm(alias[k.toUpperCase()]||k);return kn===norm(supExt)||kn.includes(norm(supExt))||norm(supExt).includes(kn);});
-    if(supKey)ensureExtraEntry('EXTERNO');
-    m.vend.forEach(v=>{v.mixVend=0;var mn=v.isExtra?supExt:v.nome;const key=Object.keys(per).find(k=>{const kn=norm(alias[k.toUpperCase()]||k);return kn===norm(mn)||kn.includes(norm(mn))||norm(mn).includes(kn);});
-      if(key){v.mixVend=per[key].size;n++;per[key].forEach(c=>teamSet[v.grupo].add(c));}});
-    if(!m.mixEquipe)m.mixEquipe={};['EXTERNO','INTERNO'].forEach(g=>{m.mixEquipe[g]=Object.assign(m.mixEquipe[g]||{obj:0,real:0},{real:teamSet[g].size});});
-    toast(n?('Mix atualizado: '+n+' vend. \u00b7 uni\u00e3o ext '+teamSet.EXTERNO.size+' / int '+teamSet.INTERNO.size+' \u2713'):'Nenhum vendedor bateu com o relat\u00f3rio');syncPushMetas();reRender();}catch(e){toast('Erro ao ler o relat\u00f3rio');}};
-  rd.readAsText(file,'iso-8859-1');}
+function pickMixReport(){const inp=document.createElement('input');inp.type='file';inp.accept='.csv,.txt';inp.onchange=e=>{if(e.target.files[0])importProdVend(e.target.files[0]);};inp.click();}
+/* ===== Relat\u00f3rio MIX (CSV item-a-item \u2014 NOVO formato do rob\u00f4) =====
+   Colunas: CODPRO;DATA;DOC;...;MARCA;CODVENDEDOR;VENDEDOR;QUANTIDADE;PESO;VLRLIQUIDO;...;IDENTIFICADOR;...
+   \u00c9 o mesmo arquivo que o rob\u00f4 processa. Este bot\u00e3o \u00e9 o PLANO B (rob\u00f4 cai \u2192 importa aqui na m\u00e3o).
+   Por vendedor: vendido = \u03a3 VLRLIQUIDO \u00b7 mix = CODPRO distintos. Casa por C\u00d3DIGO. Alimenta metas + \u00edndices. */
+function parseMixCSV(text){
+  text=String(text||'').replace(/^\ufeff/,'');
+  var lines=text.split(/\r?\n/);if(lines.length<2)return null;
+  var head=lines[0].split(';').map(function(h){return h.trim().replace(/^"|"$/g,'').toUpperCase();});
+  var idx={};head.forEach(function(h,i){if(idx[h]==null)idx[h]=i;});
+  if(idx.CODPRO==null||idx.VLRLIQUIDO==null||idx.VENDEDOR==null)return null;   // n\u00e3o \u00e9 o CSV de Mix
+  var rows=[];
+  for(var i=1;i<lines.length;i++){var ln=lines[i];if(!ln||!ln.trim())continue;
+    var c=ln.split(';');var dataRaw=(c[idx.DATA]!=null?c[idx.DATA]:'').trim();
+    var mm=dataRaw.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    rows.push({comp:mm?(mm[3]+'-'+mm[2]):'',
+      cod:(c[idx.CODVENDEDOR]!=null?c[idx.CODVENDEDOR]:'').trim(),
+      nome:(c[idx.VENDEDOR]!=null?c[idx.VENDEDOR]:'').replace(/^"|"$/g,'').trim(),
+      codpro:(c[idx.CODPRO]!=null?c[idx.CODPRO]:'').trim(),
+      doc:(c[idx.DOC]!=null?c[idx.DOC]:'').trim(),
+      qtd:_csvNum(c[idx.QUANTIDADE]),peso:_csvNum(c[idx.PESO]),valor:_csvNum(c[idx.VLRLIQUIDO])});}
+  return {rows:rows,idx:idx};
+}
+// grava indices_mensais de um m\u00eas a partir de um agregado PV (entradas com .nome/.fat/.peso/.qty/.doc/.prod/.dp)
+async function _gravarIndicesDe(comp,PV){
+  var NG={};Object.keys(METAS.meses||{}).forEach(function(k){((METAS.meses[k]||{}).vend||[]).forEach(function(v){var nn=norm(v.nome);if(nn&&v.grupo&&!NG[nn])NG[nn]=v.grupo;});});
+  var now=new Date().toISOString(),rows=[];
+  function fin(a){var notas=Object.keys(a.doc).length,sumd=0;Object.keys(a.dp).forEach(function(d){sumd+=Object.keys(a.dp[d]).length;});return {notas:notas,fat:a.fat,peso:a.peso,qty:a.qty,prod:Object.keys(a.prod).length,sumd:sumd,prodSet:a.prod};}
+  function mk(escopo,chave,o){return {competencia:comp,escopo:escopo,chave:chave,
+    faturamento:Math.round((o.fat||0)*100)/100,notas:o.notas||0,ticket_medio:o.notas>0?Math.round(o.fat/o.notas*100)/100:0,
+    mix_produtos:o.mix||0,mix_por_nota:o.notas>0?Math.round(o.sumd/o.notas*100)/100:0,itens_por_nota:o.notas>0?Math.round(o.qty/o.notas*100)/100:0,
+    posit_pct:0,clientes_atend:0,carteira:0,inad_pct:0,areceber:0,vencido:0,transito:0,
+    peso:Math.round((o.peso||0)*10)/10,atualizado_em:now};}
+  var team={EXTERNO:{notas:0,qty:0,peso:0,sumd:0,fat:0,prodSet:{}},INTERNO:{notas:0,qty:0,peso:0,sumd:0,fat:0,prodSet:{}}};
+  var ger={notas:0,qty:0,peso:0,sumd:0,fat:0,prodSet:{}};
+  Object.keys(PV).forEach(function(k){var a=PV[k];if(typeof ehSuperv==='function'&&ehSuperv(a.nome))return;var f=fin(a);var g=NG[norm(a.nome)]||'EXTERNO';
+    rows.push(mk('VENDEDOR',a.nome,{fat:f.fat,notas:f.notas,mix:f.prod,sumd:f.sumd,qty:f.qty,peso:f.peso}));
+    var t=team[g]||team.EXTERNO;t.notas+=f.notas;t.qty+=f.qty;t.peso+=f.peso;t.sumd+=f.sumd;t.fat+=f.fat;Object.keys(f.prodSet).forEach(function(c){t.prodSet[c]=1;});
+    ger.notas+=f.notas;ger.qty+=f.qty;ger.peso+=f.peso;ger.sumd+=f.sumd;ger.fat+=f.fat;Object.keys(f.prodSet).forEach(function(c){ger.prodSet[c]=1;});});
+  ['EXTERNO','INTERNO'].forEach(function(g){var t=team[g];rows.push(mk('EQUIPE',g,{fat:t.fat,notas:t.notas,mix:Object.keys(t.prodSet).length,sumd:t.sumd,qty:t.qty,peso:t.peso}));});
+  rows.push(mk('GERAL','',{fat:ger.fat,notas:ger.notas,mix:Object.keys(ger.prodSet).length,sumd:ger.sumd,qty:ger.qty,peso:ger.peso}));
+  await sbDel('indices_mensais','?competencia=eq.'+encodeURIComponent(comp));
+  for(var i=0;i<rows.length;i+=200){await sbUpsert('indices_mensais',rows.slice(i,i+200));}
+  return rows.length;
+}
+function importProdVend(file){if(!file)return;
+  if(typeof mesFechado==='function'&&mesFechado()){toast('M\u00eas fechado \u2014 reabra para importar.');return;}
+  const rd=new FileReader();
+  rd.onload=async function(){try{
+    var parsed=parseMixCSV(String(rd.result||''));
+    if(!parsed){toast('CSV de Mix n\u00e3o reconhecido (precisa das colunas CODPRO, DATA, CODVENDEDOR, VENDEDOR, VLRLIQUIDO).');return;}
+    var rows=parsed.rows;if(!rows.length){toast('CSV de Mix vazio.');return;}
+    // agrupa por compet\u00eancia (m\u00eas da nota) \u2192 por vendedor (C\u00d3DIGO)
+    var byComp={};
+    rows.forEach(function(r){if(!r.comp)return;var C=byComp[r.comp]||(byComp[r.comp]={});
+      var key=r.cod||('n:'+norm(r.nome));var a=C[key]||(C[key]={cod:r.cod,nome:r.nome,fat:0,peso:0,qty:0,doc:{},prod:{},dp:{}});
+      if(r.nome&&!a.nome)a.nome=r.nome;
+      a.fat+=r.valor;a.peso+=r.peso;a.qty+=r.qty;
+      if(r.codpro)a.prod[r.codpro]=1;
+      if(r.doc){a.doc[r.doc]=1;(a.dp[r.doc]||(a.dp[r.doc]={}));if(r.codpro)a.dp[r.doc][r.codpro]=1;}});
+    var comps=Object.keys(byComp).sort();var resumo=[],idxOk=0;
+    for(var ci=0;ci<comps.length;ci++){var comp=comps[ci];var PV=byComp[comp];
+      if(sbOn()){try{await _gravarIndicesDe(comp,PV);idxOk++;}catch(e){logEvent('erro','Mix \u00edndices '+comp+': '+((e&&e.message)||e));}}
+      var mm=(METAS.meses||{})[comp];var nmatch=0;
+      if(mm&&mm.vend&&mm.vend.length){var teamSet={EXTERNO:new Set(),INTERNO:new Set()};
+        Object.keys(PV).forEach(function(k){var a=PV[k];var v=metaMatch(a.nome,mm.vend);if(!v)return;
+          v.vendido=Math.round(a.fat*100)/100;v.mixVend=Object.keys(a.prod).length;
+          var pk=Math.round(a.peso*10)/10;if(pk>0)v.peso=pk;
+          if(teamSet[v.grupo])Object.keys(a.prod).forEach(function(c){teamSet[v.grupo].add(c);});nmatch++;});
+        if(nmatch>0){if(!mm.mixEquipe)mm.mixEquipe={};['EXTERNO','INTERNO'].forEach(function(g){mm.mixEquipe[g]=Object.assign(mm.mixEquipe[g]||{obj:0,real:0},{real:teamSet[g].size});});}
+        resumo.push(mesLabelDe(comp)+': '+nmatch+' vend.'+(nmatch?'':' (nomes n\u00e3o casaram)'));
+      }else{resumo.push(mesLabelDe(comp)+': s\u00f3 \u00edndices (sem metas nesse m\u00eas)');}
+    }
+    syncPushMetas();reRender();
+    notify('\ud83d\udce6 Mix importado \u2713<br><br>'+resumo.join('<br>')+'<br><br><span style="color:var(--mut);font-size:12px">Vendido (\u03a3 valor) e mix (produtos distintos) por vendedor vieram das notas. \u00cdndices gravados: '+idxOk+' m\u00eas(es) \u2014 o Painel geral l\u00ea daqui.</span>');
+    logEvent('aviso','Mix (CSV) importado: '+comps.join(', ')+' \u00b7 \u00edndices '+idxOk);
+  }catch(e){logEvent('erro','Import Mix: '+((e&&e.message)||e));toast('Erro ao ler o CSV de Mix: '+((e&&e.message)||e));}};
+  rd.readAsText(file,'utf-8');}
 function parseRecebidos(raw){const txt=String(raw).replace(/<[^>]+>/g,'\n');const per={};let cur=null;const money=/-?[\d.]*\d,\d{2}/g;
   txt.split(/\r?\n/).forEach(ln=>{const s=ln.trim();
     const mv=s.match(/^Vendedor:\s*(.*)$/i);if(mv){cur=mv[1].replace(/^\d+\s*-?\s*/,'').replace(/^-\s*/,'').trim();if(cur&&per[cur]==null)per[cur]=0;return;}
