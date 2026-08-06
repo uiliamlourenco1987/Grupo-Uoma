@@ -1169,8 +1169,10 @@ function importHistoricoPlanilha(text){
     if(!METAS.meses[mes]){replicarMes(baseKey,mes,0,{fat:true,mix:true,posit:true,marca:true});novos++;}
     var mm=METAS.meses[mes];if(!mm||!mm.vend){resumo.push(mes+': sem vendedores');return;}
     var n=0;
+    var seenV={};
     byMes[mes].forEach(function(r){
       var v=metaMatch(String(r[ci.nome]||''),mm.vend);if(!v)return;
+      if(seenV[v.nome])return;seenV[v.nome]=1;   // 1ª linha do vendedor no mês vence (ignora 2º bloco/duplicata)
       if(ci.of>=0)v.objFat=_csvNum(r[ci.of]);
       if(ci.vd>=0)v.vendido=_csvNum(r[ci.vd]);
       if(ci.om>=0)v.objMix=Math.round(_csvNum(r[ci.om]));
