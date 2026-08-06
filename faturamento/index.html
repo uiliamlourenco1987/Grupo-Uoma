@@ -1165,9 +1165,11 @@ function importHistoricoPlanilha(text){
   for(var i=1;i<rows.length;i++){var r=rows[i];if(!r)continue;var mes=String(r[ci.mes]||'').trim();var nome=String(r[ci.nome]||'').trim();if(!/^\d{4}-\d{2}$/.test(mes)||!nome)continue;(byMes[mes]||(byMes[mes]=[])).push(r);}
   if(!Object.keys(byMes).length){notify('Não achei linhas com Mês (AAAA-MM) + Vendedor.');return;}
   var resumo=[],totalMatch=0,novos=0;
+  // grupo (EXTERNO/INTERNO) de cada vendedor, aprendido de QUALQUER mês existente
+  var nameGrupo={};Object.keys(METAS.meses).forEach(function(k){((METAS.meses[k]||{}).vend||[]).forEach(function(v){var kn=norm(v.nome);if(kn&&v.grupo&&!nameGrupo[kn])nameGrupo[kn]=v.grupo;});});
   Object.keys(byMes).sort().forEach(function(mes){
     if(!METAS.meses[mes]||!((METAS.meses[mes].vend)||[]).length){replicarMes(baseKey,mes,0,{fat:true,mix:true,posit:true,marca:true});novos++;}
-    var mm=METAS.meses[mes];if(!mm||!mm.vend){resumo.push(mes+': sem vendedores');return;}
+    var mm=METAS.meses[mes];if(!mm){resumo.push(mes+': sem mês');return;}if(!mm.vend)mm.vend=[];
     var apply=function(){var n=0,seenV={};byMes[mes].forEach(function(r){
       var v=metaMatch(String(r[ci.nome]||''),mm.vend);if(!v)return;
       if(seenV[v.nome])return;seenV[v.nome]=1;   // 1ª linha do vendedor no mês vence (ignora duplicata)
@@ -1179,8 +1181,10 @@ function importHistoricoPlanilha(text){
       if(ci.cp>=0)v.positivados=Math.round(_csvNum(r[ci.cp]));
       n++;});return n;};
     var n=apply();
-    if(n===0&&byMes[mes].length){   // nenhum nome casou (mês pré-existente com lista diferente): repõe a estrutura padrão e tenta de novo
-      replicarMes(baseKey,mes,0,{fat:true,mix:true,posit:true,marca:true});mm=METAS.meses[mes];n=apply();
+    if(n===0&&byMes[mes].length){   // nenhum nome casou: reconstrói a lista de vendedores DESTE mês a partir do próprio CSV
+      var seen2={};mm.vend=[];
+      byMes[mes].forEach(function(r){var nm=String(r[ci.nome]||'').trim();var kn=norm(nm);if(!nm||seen2[kn])return;seen2[kn]=1;mm.vend.push(mv(nm,nameGrupo[kn]||'EXTERNO',0,0,0,0,0,0,0,0,0,0));});
+      n=apply();
     }
     totalMatch+=n;resumo.push('<b>'+esc(mesLabelDe(mes))+'</b>: '+n+' vendedor(es)');
   });
@@ -2301,14 +2305,15 @@ function editCampanha(id){setBar('');setW('wide');state.view='campedit';mskin(tr
     if(!METAS.campanhas)METAS.campanhas=[];const i=METAS.campanhas.findIndex(x=>x.id===nc.id);if(i>=0)METAS.campanhas[i]=nc;else METAS.campanhas.push(nc);
     logChange('Campanha',esc(nc.nome||'—'),i>=0?'editada':'—',i>=0?'atualizada':'criada');state.campEd=null;syncPushMetas();toast('Campanha salva ✓');screenCampanhas();});
 }
-function myCampHTML(v){const camps=METAS.campanhas||[];if(!camps.length||!v)return '';
+function campNoMes(c,mk){var a=String((c&&c.ini)||'').slice(0,7),b=String((c&&c.fim)||'').slice(0,7);if(!/^\d{4}-\d{2}$/.test(a)||!/^\d{4}-\d{2}$/.test(b))return true;return a<=mk&&mk<=b;}
+function myCampHTML(v){const camps=(METAS.campanhas||[]).filter(function(c){return campNoMes(c,curMes());});if(!camps.length||!v)return '';
   const items=[];
   camps.forEach(c=>{const crs=campCriterios(c);const multi=crs.length>1;
     crs.forEach((cr,ci)=>{const sc=subCamp(c,cr);const rk=(cr.premio&&cr.premio.rank)||'EQUIPE';let scope;if(rk==='EQUIPE')scope=v.grupo;else if(rk==='EXT'){if(v.grupo!=='EXTERNO')return;scope='EXTERNO';}else if(rk==='INT'){if(v.grupo!=='INTERNO')return;scope='INTERNO';}else scope='GERAL';const rows=campRank(sc,scope);const idx=rows.findIndex(r=>r.v===v);if(idx<0)return;const pos=idx+1;const prize=campPremioPos(sc,pos,rows[idx].val);
       const nome=esc(c.nome)+(multi?(' · '+campCrit({criterio:cr.criterio})):'');
       items.push(`<div class="mrow" style="margin:6px 0"><div class="lb"><b>🏆 ${nome}</b><span class="pc" style="color:#8a6d00">${pos}º ${scope==='GERAL'?'geral':'na equipe'}</span></div><div class="sub">${campFmt(sc,rows[idx].val)} · ${prize?('prêmio previsto '+brMoney(prize)):'sem prêmio nesta posição'}</div></div>`);});});
   return items.length?`<div style="border-top:1px dashed var(--line);margin-top:10px;padding-top:8px"><div style="font-size:11px;font-weight:800;color:#8a6d00;margin-bottom:4px">🏆 Campanhas</div>${items.join('')}</div>`:'';}
-function campPagamentosHTML(){const camps=METAS.campanhas||[];if(!camps.length)return '';
+function campPagamentosHTML(){const camps=(METAS.campanhas||[]).filter(function(c){return campNoMes(c,curMes());});if(!camps.length)return '';
   let out=`<div class="mgrouphd"><span class="mtag" style="background:#fff2c4;color:#8a6d00">🏆 PRÊMIOS DE CAMPANHA (pagos pelo fornecedor)</span><span class="tot">fora do bônus da empresa</span></div>`;let totalGeral=0;
   camps.forEach(c=>{const crs=campCriterios(c);const multi=crs.length>1;
     crs.forEach((cr,ci)=>{const sc=subCamp(c,cr);const p=cr.premio||{};const scopes=({EQUIPE:['EXTERNO','INTERNO'],GERAL:['GERAL'],EXT:['EXTERNO'],INT:['INTERNO']}[p.rank||'EQUIPE']);const win=[];
