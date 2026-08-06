@@ -498,17 +498,21 @@ async function renderVend(){
 async function paintVend(){
   var host=el('vBody');if(!host)return;host.innerHTML='<div class="msg">Carregando…</div>';
   var de=await sb.from('desempenho').select('*').eq('competencia',VMES).eq('codigo',VCOD).maybeSingle();
-  var fv=await sb.from('fat_vendas').select('codcli,nomecli,codpro,descpro,marca,peso,vlrliquido').eq('competencia',VMES).eq('codvendedor',VCOD).limit(5000);
+  var hist=await sb.from('desempenho').select('competencia,vendas').eq('codigo',VCOD);   // média mensal
+  var fv=await sb.from('fat_vendas').select('doc,codcli,nomecli,codpro,descpro,marca,peso,vlrliquido').eq('competencia',VMES).eq('codvendedor',VCOD).limit(20000);
   if(fv.error){host.innerHTML='<div class="empty">Erro: '+esc(fv.error.message)+'</div>';return;}
   var D=de.data||{}; var linhas=fv.data||[];
+  var hv=(hist.data||[]);var mediaMes=hv.length?hv.reduce(function(a,r){return a+n(r.vendas);},0)/hv.length:0;
   // agregações da carteira dele
-  var totFat=0,totPeso=0, cli={}, pro={}, mar={};
+  var totFat=0,totPeso=0, cli={}, pro={}, mar={}, docs={};
   linhas.forEach(function(l){
     var vl=n(l.vlrliquido),pk=n(l.peso);totFat+=vl;totPeso+=pk;
+    if(l.doc)docs[l.doc]=1;
     var kc=l.codcli||'?';if(!cli[kc])cli[kc]={nome:l.nomecli||kc,v:0};cli[kc].v+=vl;
     var kp=l.codpro||'?';if(!pro[kp])pro[kp]={nome:l.descpro||kp,v:0,q:0};pro[kp].v+=vl;
     var km=l.marca||'—';if(!mar[km])mar[km]={v:0,p:0};mar[km].v+=vl;mar[km].p+=pk;
   });
+  var nDocs=Object.keys(docs).length, nCli=Object.keys(cli).length, nMix=Object.keys(pro).length;
   function top(obj,key,nmk){return Object.keys(obj).map(function(k){return obj[k];}).sort(function(a,b){return b[key]-a[key];}).slice(0,10);}
   var topCli=top(cli,'v'), topPro=top(pro,'v');
   var topMar=Object.keys(mar).map(function(k){return {marca:k,v:mar[k].v,p:mar[k].p,kg:mar[k].p>0?mar[k].v/mar[k].p:0};}).sort(function(a,b){return b.v-a.v;}).slice(0,10);
@@ -518,16 +522,18 @@ async function paintVend(){
   var h='<div class="top" style="border-radius:14px;margin:0 0 14px"><div class="brand"><span>Minha carteira · '+esc(VMES)+'</span><span class="logo"><span class="ic">🍦</span>Loja do Sorveteiro</span></div>'
     +'<h1 style="font-size:20px">'+esc(nomeV)+'</h1><div class="who">Código '+esc(VCOD)+'</div></div>';
 
-  // KPIs (do Desempenho oficial)
-  h+='<div class="kgrid">'
-    +kbox('Faturamento', money(D.vendas!=null?D.vendas:totFat), (D.venda_media!=null?('média '+money(D.venda_media)):''))
-    +kbox('Inadimplência', (n(D.inadimplencia)).toLocaleString('pt-BR')+'%', 'vencido '+money(D.vencidos)+' · trânsito '+money(D.transito))
-    +kbox('Carteira', (n(D.carteira_clientes))+' clientes', (n(D.positivacao))+' positivados · '+(n(D.pct_compraram))+'% compraram')
-    +kbox('Mix &amp; peso', (n(D.mix_produto))+' produtos', (n(D.peso)).toLocaleString('pt-BR')+' kg vendidos')
+  // KPIs — visão de gerente da própria carteira
+  var fatShow=(D.vendas!=null&&n(D.vendas)>0)?n(D.vendas):totFat;
+  h+='<div class="h">📊 Minha carteira no mês</div><div class="kgrid">'
+    +kbox('Faturamento', money(fatShow), mediaMes>0?('média mensal '+money(mediaMes)):'')
+    +kbox('Ticket médio · pedido', nDocs?money(totFat/nDocs):'—', nDocs+' pedidos no mês')
+    +kbox('Ticket médio · cliente', nCli?money(totFat/nCli):'—', nCli+' clientes atendidos')
+    +kbox('Valor do quilo (geral)', '<span style="color:var(--gold)">'+money(kgGeral)+'</span><small style="font-size:12px;color:var(--muted)"> /kg</small>', brl(totPeso)+' kg vendidos')
+    +kbox('Inadimplência', (n(D.inadimplencia)).toLocaleString('pt-BR')+'%', 'vencido '+money(D.vencidos)+' · trânsito à parte')
+    +kbox('Mix &amp; carteira', (nMix||n(D.mix_produto))+' produtos', (n(D.carteira_clientes))+' clientes na carteira')
+    +kbox('Clientes novos', '<span style="color:var(--good)">+'+(n(D.clientes_novos))+'</span>', 'conquistados no mês')
+    +kbox('Não compraram', '<span style="color:var(--miss)">'+(n(D.pct_nao_compraram)).toLocaleString('pt-BR')+'%</span>', (n(D.positivacao))+' positivados · '+(n(D.pct_compraram))+'% compraram')
     +'</div>';
-
-  h+='<div class="kgrid"><div class="kbox"><div class="kl">Valor do quilo (geral)</div><div class="kv gold">'+money(kgGeral)+'<span style="font-size:12px;color:var(--muted)">/kg</span></div><div class="ks">'+brl(totPeso)+' kg · '+money(totFat)+'</div></div>'
-    +'<div class="kbox"><div class="kl">Nº de vendas (linhas)</div><div class="kv">'+linhas.length+'</div><div class="ks">itens faturados no mês</div></div></div>';
 
   if(!linhas.length){h+='<div class="empty">Sem linhas de Mix/Faturamento para este vendedor em '+esc(VMES)+'.<br>Importe o <b>Mix/Faturamento</b> do mês para ver top clientes/produtos e o quilo por marca.</div>';host.innerHTML=h;return;}
 
