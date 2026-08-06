@@ -1166,21 +1166,22 @@ function importHistoricoPlanilha(text){
   if(!Object.keys(byMes).length){notify('Não achei linhas com Mês (AAAA-MM) + Vendedor.');return;}
   var resumo=[],totalMatch=0,novos=0;
   Object.keys(byMes).sort().forEach(function(mes){
-    if(!METAS.meses[mes]){replicarMes(baseKey,mes,0,{fat:true,mix:true,posit:true,marca:true});novos++;}
+    if(!METAS.meses[mes]||!((METAS.meses[mes].vend)||[]).length){replicarMes(baseKey,mes,0,{fat:true,mix:true,posit:true,marca:true});novos++;}
     var mm=METAS.meses[mes];if(!mm||!mm.vend){resumo.push(mes+': sem vendedores');return;}
-    var n=0;
-    var seenV={};
-    byMes[mes].forEach(function(r){
+    var apply=function(){var n=0,seenV={};byMes[mes].forEach(function(r){
       var v=metaMatch(String(r[ci.nome]||''),mm.vend);if(!v)return;
-      if(seenV[v.nome])return;seenV[v.nome]=1;   // 1ª linha do vendedor no mês vence (ignora 2º bloco/duplicata)
+      if(seenV[v.nome])return;seenV[v.nome]=1;   // 1ª linha do vendedor no mês vence (ignora duplicata)
       if(ci.of>=0)v.objFat=_csvNum(r[ci.of]);
       if(ci.vd>=0)v.vendido=_csvNum(r[ci.vd]);
       if(ci.om>=0)v.objMix=Math.round(_csvNum(r[ci.om]));
       if(ci.mv>=0)v.mixVend=Math.round(_csvNum(r[ci.mv]));
       if(ci.ct>=0)v.carteira=Math.round(_csvNum(r[ci.ct]));
       if(ci.cp>=0)v.positivados=Math.round(_csvNum(r[ci.cp]));
-      n++;
-    });
+      n++;});return n;};
+    var n=apply();
+    if(n===0&&byMes[mes].length){   // nenhum nome casou (mês pré-existente com lista diferente): repõe a estrutura padrão e tenta de novo
+      replicarMes(baseKey,mes,0,{fat:true,mix:true,posit:true,marca:true});mm=METAS.meses[mes];n=apply();
+    }
     totalMatch+=n;resumo.push('<b>'+esc(mesLabelDe(mes))+'</b>: '+n+' vendedor(es)');
   });
   try{syncPushMetas();}catch(e){}
@@ -1228,7 +1229,7 @@ function buildMetasNav(){metasNavCSS();var s='';
   var mesG='';if(metaFat())mesG+=_mni('mnovo','➕ Novo mês');if(canEditMes())mesG+=_mni('mfechar','🔒 Fechar mês');if(mesFechado()&&metaDir())mesG+=_mni('mreabrir','🔓 Reabrir mês');
   if(mesG)s+='<div class="mnavh">Mês</div>'+mesG;
   if(metaFat())s+='<div class="mnavh">Planejamento</div>'+_mni('mplan','✏️ Planejar metas')+_mni('mano','🗓️ Metas do ano')+_mni('mhist','📅 Importar meses (planilha)')+_mni('mmodelo','⬇️ Baixar modelo')+_mni('mexport','⬇️ Baixar metas atuais');
-  if(canEditMes())s+='<div class="mnavh">Importar relatórios</div>'+_mni('mrobo','🤖 Puxar do robô')+_mni('mdesemp','📊 Relatório de Desempenho')+_mni('mprod','📦 Relatório Mix')+'<label class="mnavr">Data ref.: <input type="date" id="inadRef" value="'+esc(state.inadRef||todayISO())+'"></label>';
+  if(canEditMes())s+='<div class="mnavh">Importar relatórios</div>'+_mni('mrobo','🤖 Puxar do robô')+_mni('mdesemp','📊 Relatório de Desempenho')+_mni('mprod','📦 Relatório Mix');
   var pain='';if(metaFat())pain+=_mni('mindices','🧮 Gerar índices do mês')+_mni('mpgeral','📊 Painel geral');pain+=_mni('mpainel','📺 Painel de Metas (TV)');
   s+='<div class="mnavh">Índices & Painéis</div>'+pain;
   var gest=_mni('mpag','💵 Pagamentos');if(metaRH())gest+=_mni('mrh','⚙️ Regras (RH)');if(metaEdit())gest+=_mni('mregras','📋 Regras')+_mni('mxexp','🖨️ Exportar (PDF)');if(metaDir())gest+=_mni('mlog','📝 Log de alterações');
