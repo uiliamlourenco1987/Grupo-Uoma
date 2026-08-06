@@ -126,13 +126,14 @@ def main():
                 novos += 1
             elif "CODPRO" in head and "IDENTIFICADOR" in head and "MARCA" in head:
                 rows = parsers.parse_vendas(p)
-                from collections import Counter
-                meses = Counter(r["data"][:7] for r in rows if r.get("data"))
-                comp = meses.most_common(1)[0][0] if meses else COMP
-                payload = [dict(r, competencia=comp, arquivo=nome) for r in rows]
+                # competência POR LINHA (mês da data da nota) — assim um relatório de 12 meses
+                # distribui cada item no seu mês, em vez de jogar tudo num mês só.
+                payload = [dict(r, competencia=(r["data"][:7] if r.get("data") else COMP), arquivo=nome) for r in rows]
                 for i in range(0, len(payload), 500):
                     sb_upsert("robo_vendas", payload[i:i + 500], "identificador")
-                print(f"  ✓ Vendas '{nome}': {len(payload)} itens (competência {comp})")
+                from collections import Counter
+                meses = Counter(x["competencia"] for x in payload)
+                print(f"  ✓ Vendas '{nome}': {len(payload)} itens em {len(meses)} competência(s): {', '.join(sorted(meses))}")
                 novos += 1
             else:
                 print(f"  · ignorado (não reconheci o relatório): {nome}")
