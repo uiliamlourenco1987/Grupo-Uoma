@@ -9,7 +9,7 @@
 <title>Portal Grupo Uoma — Início (mural)</title>
 <script>
 /* auto-update: recarrega sozinho quando há versão nova (fim do ?v na mão) */
-(function(){try{var BUILD="9.71";window.__BUILD=BUILD;var K="uoma_reload";
+(function(){try{var BUILD="9.72";window.__BUILD=BUILD;var K="uoma_reload";
   fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var latest=(j&&j.v)?String(j.v):"";
     if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
@@ -639,6 +639,13 @@
       </div>
     </div>
   </div>
+
+  <div class="ovl" id="finOvl">
+    <div class="sheet">
+      <div class="oh"><h2>&#128181; Financeiro</h2><button class="oc" data-close="finOvl">&#10005;</button></div>
+      <div class="ob"><div id="finBody"></div></div>
+    </div>
+  </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   var SB_URL="https://gpgycgkqkzedoyilrsmw.supabase.co";
@@ -720,7 +727,7 @@
       {e:"📊",l:"Estoque",cat:"Operação",show:(A("estoque")>=1),go:function(){openEstoque();}},
       {e:"🛡️",l:"Avaliações",cat:"RH / Financeiro",show:(A("avaliacoes")>=1),go:function(){openAvaliacao();}},
       {e:"💰",l:"Folha",cat:"RH / Financeiro",show:(A("folha")>=1),go:function(){openFolha();}},
-      {e:"💵",l:"Financeiro",cat:"RH / Financeiro",show:(A("financeiro")>=1),go:function(){alert("O módulo \"Financeiro\" entra aqui em breve. 🚧");}},
+      {e:"💵",l:"Financeiro",cat:"RH / Financeiro",show:(A("financeiro")>=1),go:function(){openFinanceiro();}},
       {e:"👥",l:"Acessos",cat:"Sistema",show:(A("acessos")>=1),go:function(){openAcessos();}},
       {e:"🧾",l:"Logs",cat:"Sistema",show:(A("logs")>=1),go:function(){openFatScreen("erros");}},
       {e:"ℹ️",l:"Versão",cat:"Sistema",show:(A("versao")>=1),go:function(){openFatScreen("versao");}}
@@ -843,6 +850,7 @@
   var APRES={loja:{n:"Loja do Sorveteiro e Confeiteiro",d:"Loja de produtos de panifica\u00e7\u00e3o, sorveteria e confeitaria. H\u00e1 mais de 30 anos no Amap\u00e1."},padoquinha:{n:"Padoquinha",d:"Primeira ind\u00fastria de salgados ultracongelados do Amap\u00e1."},merenda:{n:"Merenda Certa",d:"Alimenta\u00e7\u00e3o e merenda com qualidade e responsabilidade para o dia a dia."}};
   function renderApres(empresas){var box=el("apresEmp");if(!box)return;var keys=(empresas&&empresas.indexOf&&empresas.indexOf("todas")>=0)?["loja","padoquinha","merenda"]:((empresas&&empresas.filter)?empresas.filter(function(k){return APRES[k];}):[]);if(keys.length===1){var a=APRES[keys[0]];box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}else if(keys.length>1){box.innerHTML="<div class=\"al\">As empresas</div>"+keys.map(function(k){var a=APRES[k];return "<div style=\"margin-top:9px\"><b style=\"font-size:13.5px\">"+esc(a.n)+"</b><p style=\"margin:2px 0 0\">"+esc(a.d)+"</p></div>";}).join("");}else{var a=APRES.loja;box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}}
   var VERSIONS=[
+    {v:"v9.72",d:"07/08",desc:"💵 Módulo Financeiro (fase 1): tela real no lugar do \"em breve\". Inadimplência & Cobrança ao vivo (vencido do grupo, inadimplência média e por vendedor, do banco RH) + 🏦 Extratos bancários por empresa (envio de arquivo por mês, com download). Contas a receber/a pagar/faturamento consolidado entram quando você mandar um exemplo dos relatórios. Rodar sql/financeiro_extratos.sql."},
     {v:"v9.71",d:"07/08",desc:"👤 Painel do COLABORADOR/Produção ligado: acompanha a própria avaliação e avalia os colegas (sem holerite). Fecha os painéis por perfil — só o Financeiro fica pra refação."},
     {v:"v9.70",d:"07/08",desc:"🛡️ Painel do RH ligado: atalhos pra Folha de pagamento e Avaliações (notas, ranking e regras) + avaliar colegas e o card de avaliação. Folha e Avaliações seguem funcionando como já estavam. Holerite saiu do painel do RH também. (Financeiro será refeito à parte.)"},
     {v:"v9.69",d:"07/08",desc:"🧾 Painel do FATURAMENTO/DEPÓSITO: status do mês (faturamento do grupo + quantos vendedores já têm Desempenho importado) e os botões das tarefas do dia (Importar, Faturamento, Separação, Metas, Campanhas, Estoque) — cada um aparece conforme a autoridade do perfil."},
@@ -1443,7 +1451,58 @@ async function renderDiretoriaHome(){var box=el("myPanels");if(!box)return;vhInj
   var dm=el("dirMetas");if(dm)dm.onclick=function(){openMetasNovas("metas");};
 }
 
-async function renderMyPanels(){var box=el("myPanels");if(!box)return;vhInjectCSS();var _pf=(ME&&ME.permissoes&&ME.permissoes.perfil)||"";var PERS={vendedor:renderVendedorHome,rh:renderRHHome,faturamento:renderFaturamentoHome,supervisao:renderSupervisorHome,colaborador:function(){return renderColaboradorHome("colaborador");},producao:function(){return renderColaboradorHome("producao");}};if(_pf==="vendedor"){return renderVendedorHome();}if(_pf==="supervisao"){return renderSupervisorHome();}if(_pf==="diretoria"||(ME&&ME.role==="diretoria")){return renderDiretoriaHome();}if(_pf==="faturamento"){return renderFaturamentoHome();}if(_pf==="rh"){return renderRHHome();}if(_pf==="colaborador"){return renderColaboradorHome("colaborador");}if(_pf==="producao"){return renderColaboradorHome("producao");}var perm=(ME&&ME.permissoes)||{};var dir=ME.role==="diretoria";var CARDS=[{k:"metas",e:"🎯",l:"Minhas metas",h:"seu objetivo e bônus do mês",fn:function(){openMetasNovas("metas");}},{k:"faturamento",e:"🧾",l:"Faturamento",h:"vendas, financeiro e ferramenta completa",fn:openFat},{k:"separacao",e:"📦",l:"Separação",h:"pedidos, status e conferência",fn:openSep},{k:"campanhas",e:"🏆",l:"Campanhas",h:"rankings e prêmios de fornecedor",fn:function(){openMetasNovas("camp");}},{k:"estoque",e:"📊",l:"Estoque",h:"inventário e contagem",fn:openEstoque},{k:"folha",e:"💰",l:"Folha",h:"holerites e pagamentos",fn:openFolha},{k:"rh",e:"🛡️",l:"Avaliações (RH)",h:"notas, ranking e regras",fn:openAvaliacao},{k:"acessos",e:"👥",l:"Acessos",h:"quem entra e o que cada um vê",fn:openAcessos,dir:true}];var mine=CARDS.filter(function(c){if(c.dir)return dir;return dir||perm[c.k];});if(!mine.length){box.innerHTML="";return;}var hasMetas=mine.some(function(c){return c.k==="metas";});box.innerHTML=""+avaliarBtnHTML()+"<div class=\"mp-hd\">Comece por aqui</div><div style=\"font-size:12px;color:var(--mut);margin:-4px 2px 10px\">Toque no que você precisa fazer agora.</div><div class=\"mp-grid\">"+mine.map(function(c){var big=(c.k==="metas")?" big":"";return "<div class=\"mp-card"+big+"\" data-open=\""+c.k+"\"><div class=\"mp-ic\">"+c.e+"</div><div class=\"mp-nm\">"+c.l+"</div><div class=\"mp-tz\" id=\"mp-tz-"+c.k+"\">"+esc(c.h)+"</div></div>";}).join("")+"</div>";box.querySelectorAll(".mp-card").forEach(function(cd){var c=mine.filter(function(x){return x.k===cd.dataset.open;})[0];cd.onclick=function(){if(c&&c.fn)c.fn();};});var hasFat=mine.some(function(c){return c.k==="faturamento";});var hasSep=mine.some(function(c){return c.k==="separacao";});
+function _finMes(){var d=new Date();return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2);}
+async function openFinanceiro(){var ov=el("finOvl");if(!ov)return;ov.classList.add("show");vhInjectCSS();var box=el("finBody");if(!box)return;box.innerHTML='<div style="text-align:center;color:var(--mut);padding:20px">Carregando…</div>';
+  function _num(x){return Number(x)||0;}
+  var VMES="",rows=[];try{var lm=await sb.from("desempenho").select("competencia").order("competencia",{ascending:false}).limit(1);if(lm.data&&lm.data[0])VMES=lm.data[0].competencia;if(VMES){var dr=await sb.from("desempenho").select("codigo,vendedor,inadimplencia,vencidos,vendas").eq("competencia",VMES);rows=dr.data||[];}}catch(e){}
+  var totVenc=0,inadArr=[];rows.forEach(function(r){totVenc+=_num(r.vencidos);if(_num(r.vendas)>0)inadArr.push(_num(r.inadimplencia));});
+  var inadAvg=inadArr.length?(inadArr.reduce(function(a,b){return a+b;},0)/inadArr.length):0;
+  var pf1=function(x){return (Math.round(x*10)/10).toString().replace(".",",");};
+  var rk=rows.slice().sort(function(a,b){return _num(b.vencidos)-_num(a.vencidos);});
+  var inadSec='<div class="vcard"><div class="vh">💰 Inadimplência &amp; Cobrança'+(VMES?(' · '+esc(VMES)):'')+'</div>'
+    +'<div class="vkpis"><div class="vkpi"><div class="vklbl">Vencido (grupo)</div><div class="vkval">'+brMoney(totVenc)+'</div></div><div class="vkpi"><div class="vklbl">Inadimplência média</div><div class="vkval">'+pf1(inadAvg)+'%</div></div></div>'
+    +(rk.length?('<div class="fdlbl">Por vendedor</div>'+rk.map(function(r){return '<div class="vmini"><span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(r.vendedor||r.codigo)+'</span><span style="text-align:right">'+brMoney(_num(r.vencidos))+'</span><b style="width:52px;text-align:right">'+pf1(_num(r.inadimplencia))+'%</b></div>';}).join("")):'<div class="vmut">Sem Desempenho importado ainda.</div>')
+    +'</div>';
+  var EMPS=[["loja","Loja do Sorveteiro"],["padoquinha","Padoquinha"],["merenda","Merenda Certa"]];
+  var extSec='<div class="vcard"><div class="vh">🏦 Extratos bancários</div>'
+    +'<div class="vmut" style="margin-bottom:8px">Guarde o extrato de cada empresa por mês (PDF, CSV, OFX, imagem).</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'
+    +'<select id="exEmp" style="flex:1;min-width:120px;padding:8px;border:1.5px solid var(--line);border-radius:8px;font-family:inherit">'+EMPS.map(function(e){return '<option value="'+e[0]+'">'+e[1]+'</option>';}).join("")+'</select>'
+    +'<input id="exMes" type="month" value="'+_finMes()+'" style="padding:8px;border:1.5px solid var(--line);border-radius:8px;font-family:inherit">'
+    +'</div>'
+    +'<input id="exBanco" placeholder="Banco (ex.: Bradesco) — opcional" style="width:100%;padding:8px;border:1.5px solid var(--line);border-radius:8px;margin-bottom:8px;font-family:inherit">'
+    +'<input id="exFile" type="file" accept=".pdf,.csv,.ofx,.xls,.xlsx,.txt,image/*" style="width:100%;margin-bottom:8px">'
+    +'<button class="vbtn" id="exUp" style="margin-bottom:6px">⬆️ Enviar extrato</button>'
+    +'<div id="exMsg" style="font-size:12px;margin-bottom:8px"></div>'
+    +'<div id="exList"><div class="vmut">Carregando enviados…</div></div>'
+    +'</div>';
+  var soon='<div class="vcard"><div class="vh">🧾 Contas a receber · a pagar · Faturamento consolidado</div><div class="vmut" style="padding:2px 2px">Essas telas leem <b>relatórios novos</b> do ERP. Me manda um exemplo de cada (contas a receber/títulos, contas a pagar e faturamento) que eu ligo o importador aqui — igual fizemos com o Desempenho.</div></div>';
+  box.innerHTML=inadSec+extSec+soon;
+  var up=el("exUp");if(up)up.onclick=_finUpload;
+  _finListExtratos();
+}
+async function _finUpload(){var msg=el("exMsg");var f=el("exFile");var file=f&&f.files&&f.files[0];if(!file){msg.style.color="#B42318";msg.textContent="Escolha o arquivo do extrato.";return;}var emp=el("exEmp").value,mes=el("exMes").value,banco=(el("exBanco").value||"").trim();if(!mes){msg.style.color="#B42318";msg.textContent="Escolha o mês.";return;}var btn=el("exUp");btn.disabled=true;var t=btn.textContent;btn.textContent="Enviando…";msg.style.color="var(--mut)";msg.textContent="";
+  try{var safe=file.name.replace(/[^a-zA-Z0-9._-]+/g,"_");var path=emp+"/"+mes+"/"+Date.now()+"_"+safe;
+    var upr=await sb.storage.from("extratos").upload(path,file,{upsert:false});
+    if(upr.error)throw upr.error;
+    var ins=await sb.from("extratos").insert({empresa:emp,competencia:mes,banco:banco,arquivo_path:path,arquivo_nome:file.name});
+    if(ins.error)throw ins.error;
+    msg.style.color="#146c37";msg.textContent="Extrato enviado ✓";f.value="";_finListExtratos();
+  }catch(e){msg.style.color="#B42318";msg.textContent="Não consegui: "+((e&&e.message)||e)+" — rodou o SQL sql/financeiro_extratos.sql?";}
+  btn.disabled=false;btn.textContent=t;
+}
+async function _finListExtratos(){var box=el("exList");if(!box)return;var EMPN={loja:"Loja",padoquinha:"Padoquinha",merenda:"Merenda"};
+  try{var r=await sb.from("extratos").select("*").order("competencia",{ascending:false}).order("criado_em",{ascending:false});if(r.error)throw r.error;var rows=r.data||[];if(!rows.length){box.innerHTML='<div class="vmut">Nenhum extrato enviado ainda.</div>';return;}
+    box.innerHTML='<div class="fdlbl">Enviados</div>'+rows.map(function(x){return '<div class="vmini"><span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(x.competencia)+' · '+esc(EMPN[x.empresa]||x.empresa)+(x.banco?(' · '+esc(x.banco)):'')+'</span><a href="#" data-path="'+esc(x.arquivo_path)+'" class="exdl" style="font-size:12px;color:var(--gold,#C9A227);font-weight:800">baixar</a></div>';}).join("");
+    box.querySelectorAll(".exdl").forEach(function(a){a.onclick=async function(e){e.preventDefault();try{var su=await sb.storage.from("extratos").createSignedUrl(a.dataset.path,3600);if(su.data&&su.data.signedUrl)window.open(su.data.signedUrl,"_blank");else alert("Não consegui gerar o link.");}catch(err){alert("Erro: "+((err&&err.message)||err));}};});
+  }catch(e){box.innerHTML='<div class="vmut">Não consegui listar os extratos (rodou o SQL?).</div>';}
+}
+async function renderFinanceiroHome(){var box=el("myPanels");if(!box)return;vhInjectCSS();var av=await fetchAval();var nome=(ME&&ME.nome)||"";var prim=String(nome).trim().split(/\s+/)[0]||nome;
+  box.innerHTML='<div class="mp-hd">Financeiro</div><div class="vtop">💵 Olá, <b>'+esc(prim)+'</b></div><div class="fdlbl">Ferramentas</div><button class="vbtn" id="finOpenBtn">💵 Abrir Financeiro</button>'+avaliarBtnHTML()+avalCardHTML(av);
+  var b=el("finOpenBtn");if(b)b.onclick=openFinanceiro;
+}
+
+async function renderMyPanels(){var box=el("myPanels");if(!box)return;vhInjectCSS();var _pf=(ME&&ME.permissoes&&ME.permissoes.perfil)||"";var PERS={vendedor:renderVendedorHome,rh:renderRHHome,faturamento:renderFaturamentoHome,supervisao:renderSupervisorHome,colaborador:function(){return renderColaboradorHome("colaborador");},producao:function(){return renderColaboradorHome("producao");}};if(_pf==="vendedor"){return renderVendedorHome();}if(_pf==="supervisao"){return renderSupervisorHome();}if(_pf==="diretoria"||(ME&&ME.role==="diretoria")){return renderDiretoriaHome();}if(_pf==="faturamento"){return renderFaturamentoHome();}if(_pf==="rh"){return renderRHHome();}if(_pf==="colaborador"){return renderColaboradorHome("colaborador");}if(_pf==="producao"){return renderColaboradorHome("producao");}if(_pf==="financeiro"){return renderFinanceiroHome();}var perm=(ME&&ME.permissoes)||{};var dir=ME.role==="diretoria";var CARDS=[{k:"metas",e:"🎯",l:"Minhas metas",h:"seu objetivo e bônus do mês",fn:function(){openMetasNovas("metas");}},{k:"faturamento",e:"🧾",l:"Faturamento",h:"vendas, financeiro e ferramenta completa",fn:openFat},{k:"separacao",e:"📦",l:"Separação",h:"pedidos, status e conferência",fn:openSep},{k:"campanhas",e:"🏆",l:"Campanhas",h:"rankings e prêmios de fornecedor",fn:function(){openMetasNovas("camp");}},{k:"estoque",e:"📊",l:"Estoque",h:"inventário e contagem",fn:openEstoque},{k:"folha",e:"💰",l:"Folha",h:"holerites e pagamentos",fn:openFolha},{k:"rh",e:"🛡️",l:"Avaliações (RH)",h:"notas, ranking e regras",fn:openAvaliacao},{k:"acessos",e:"👥",l:"Acessos",h:"quem entra e o que cada um vê",fn:openAcessos,dir:true}];var mine=CARDS.filter(function(c){if(c.dir)return dir;return dir||perm[c.k];});if(!mine.length){box.innerHTML="";return;}var hasMetas=mine.some(function(c){return c.k==="metas";});box.innerHTML=""+avaliarBtnHTML()+"<div class=\"mp-hd\">Comece por aqui</div><div style=\"font-size:12px;color:var(--mut);margin:-4px 2px 10px\">Toque no que você precisa fazer agora.</div><div class=\"mp-grid\">"+mine.map(function(c){var big=(c.k==="metas")?" big":"";return "<div class=\"mp-card"+big+"\" data-open=\""+c.k+"\"><div class=\"mp-ic\">"+c.e+"</div><div class=\"mp-nm\">"+c.l+"</div><div class=\"mp-tz\" id=\"mp-tz-"+c.k+"\">"+esc(c.h)+"</div></div>";}).join("")+"</div>";box.querySelectorAll(".mp-card").forEach(function(cd){var c=mine.filter(function(x){return x.k===cd.dataset.open;})[0];cd.onclick=function(){if(c&&c.fn)c.fn();};});var hasFat=mine.some(function(c){return c.k==="faturamento";});var hasSep=mine.some(function(c){return c.k==="separacao";});
   if(hasMetas||hasFat){try{await ensureFAT();
     if(hasMetas){var v=myVend();var tz=el("mp-tz-metas");var card=box.querySelector(".mp-card[data-open=metas]");if(tz){if(v){var pct=v.objFat>0?Math.round(v.vendido/v.objFat*100):0;var hit=pct>=100;tz.innerHTML="<div style=\"font-size:12px;opacity:.9\">Sua meta de "+esc((mesObj().label||"").split(" / ")[0]||"")+"</div><div style=\"font-family:var(--serif);font-size:22px;font-weight:700;margin-top:2px\">"+brMoney(v.vendido||0)+" <span style=\"font-size:13px;opacity:.85\">/ "+brMoney(v.objFat||0)+"</span></div><div class=\"mp-bar\"><span class=\""+(hit?"hit":"")+"\" style=\"width:"+Math.min(100,pct)+"%\"></span></div><div style=\"font-size:12px\"><b>"+pct+"%</b> da meta · toque para ver detalhes →</div>";}else{if(card)card.classList.remove("big");tz.textContent="ver metas do time →";}}}
     if(hasFat){try{var m2=mesObj();var vd=(m2.vend||[]).filter(function(x){return !x.semTotal;});var oT=0,vT=0;vd.forEach(function(x){oT+=x.objFat||0;vT+=x.vendido||0;});var fp=oT>0?Math.round(vT/oT*100):0;var ft=el("mp-tz-faturamento");if(ft&&oT>0){ft.innerHTML="<b style=\"font-size:15px;color:var(--navy)\">"+fp+"%</b> da meta do mês · <span style=\"color:var(--mut)\">"+brMoney(vT)+"</span> →";}}catch(e){}}
