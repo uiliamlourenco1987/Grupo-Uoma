@@ -278,7 +278,7 @@ var MARCAS=["ADIMIX","ADINOR","AGROPALMA","ALBANO","ALBAPLAST","ALISPEC","ANGEL"
 var INDS=['Faturamento','Peso','Mix (produtos)','Positivação','Itens'];
 var CICON={'Faturamento':'💰','Peso':'⚖️','Mix (produtos)':'📦','Positivação':'🎯','Itens':'🔢'};
 var MODOS=[['CRESCIMENTO','Crescimento'],['META','% da meta'],['VALOR','Valor (o maior)']];
-function modosFor(ind){return ind==='Faturamento'?MODOS:MODOS.filter(function(m){return m[0]!=='VALOR';});}
+function modosFor(ind){return MODOS;}   // todos os modos p/ todo critério — regra editável na config, sem trava fixa
 function modoLbl(v){var f=MODOS.filter(function(m){return m[0]===v;})[0];return f?f[1]:v;}
 var CV='list', CEDIT=null, CIMGS=[], CCRITS=[], CBASE={}, _cvend=[];
 var origin=location.origin, cpath=location.pathname.replace(/[^\/]*$/,'');

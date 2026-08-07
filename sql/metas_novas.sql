@@ -165,7 +165,8 @@ create table if not exists public.campanha_criterios(
   premio1 numeric default 0, premio2 numeric default 0, premio3 numeric default 0,
   ordem   int default 0
 );
--- 'VALOR' (o maior) só faz sentido no Faturamento — validado na aplicação.
+-- modo é escolhido livremente por critério na configuração da campanha
+-- (CRESCIMENTO / META / VALOR-"o maior") — sem trava fixa por indicador.
 
 -- quem participa da campanha
 create table if not exists public.campanha_participantes(
