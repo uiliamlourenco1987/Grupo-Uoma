@@ -248,8 +248,8 @@ async function renderMetas(){
     +'<div class="seg" style="margin:0"><button id="mgE" onclick="mSetor(\'EXTERNO\')">Externa</button><button id="mgI" onclick="mSetor(\'INTERNO\')">Interna</button></div>'
     +'<span class="gate" style="margin-left:auto">'+(fechado?'🔒 mês fechado (histórico)':'✎ em andamento')+'</span></div>';
 
-  var lista=_mmVend.filter(function(vd){return vd.setor===SETOR;});
-  if(!lista.length)html+='<div class="empty">Nenhum vendedor '+esc(SETOR.toLowerCase())+'.</div>';
+  var lista=_mmVend.filter(function(vd){return vd.setor===SETOR && vd.tem_meta!==false;});
+  if(!lista.length)html+='<div class="empty">Nenhum vendedor '+esc(SETOR.toLowerCase())+' com meta.</div>';
   lista.forEach(function(vd){
     var r=_mmRows[vd.codigo]||{};
     var inadp=pct(r.vencido,r.areceber);

@@ -33,6 +33,8 @@ create table if not exists public.vendedores(
   nome          text not null,
   setor         text not null default 'EXTERNO' check (setor in ('EXTERNO','INTERNO')),
   is_supervisor boolean not null default false,
+  tem_meta      boolean not null default true,    -- entra em meta/ranking/tela do vendedor
+  soma_setor    text,                             -- 'EXTERNO'|'INTERNO'|NULL(só diretoria)
   usuario_id    uuid,                             -- link opcional p/ usuarios(id) do RH
   ativo         boolean not null default true,
   criado_em     timestamptz default now()
