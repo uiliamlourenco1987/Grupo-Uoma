@@ -9,7 +9,7 @@
 <title>Portal Grupo Uoma — Início (mural)</title>
 <script>
 /* auto-update: recarrega sozinho quando há versão nova (fim do ?v na mão) */
-(function(){try{var BUILD="9.59";window.__BUILD=BUILD;var K="uoma_reload";
+(function(){try{var BUILD="9.60";window.__BUILD=BUILD;var K="uoma_reload";
   fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var latest=(j&&j.v)?String(j.v):"";
     if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
@@ -46,6 +46,9 @@
   .nav a .i{font-size:17px;width:22px;text-align:center}
   .nav a:hover{background:rgba(255,255,255,.06)}
   .nav a.on{background:linear-gradient(120deg,rgba(196,151,46,.22),rgba(196,151,46,.08));color:#fff;box-shadow:inset 3px 0 0 var(--gold)}
+  .nav .navcat{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:#8ea0b8;font-weight:700;padding:13px 11px 5px}
+  .nav a.navsub{padding-left:34px;font-size:12.5px;font-weight:600;opacity:.88}
+  .nav a.navsub .i{font-size:14px;width:18px}
   .side .sair{margin-top:auto;padding-top:12px}
   .side .sair a{color:#aeb8c8;font-size:12.5px}
   /* ===== TOPBAR (mobile) ===== */
@@ -583,6 +586,17 @@
       </div>
     </div>
   </div>
+  <div class="ovl" id="mnOvl">
+    <div class="sheet fatsheet">
+      <div class="oh"><h2>&#127919; Metas &amp; Campanhas</h2><button class="oc" data-close="mnOvl">&#10005;</button></div>
+      <div class="ob">
+        <div id="mnColetor" style="display:none">
+          <button class="link" id="mnBack">&#8592; Voltar ao portal</button>
+          <iframe id="mnFrame" title="Metas novas" src="about:blank"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   var SB_URL="https://gpgycgkqkzedoyilrsmw.supabase.co";
@@ -620,28 +634,37 @@
     var P=(ME&&ME.permissoes)||{};var FA=P.fat_app||{};var PF=P.perfil||"";var dir=role==="diretoria";
     var fam=!!(FA.metas&&FA.metas!=="nao");
     var ITEMS=[
-      {e:"🎯",l:"Minha meta",show:(!dir&&!!FA.vend&&PF==="vendedor"),go:function(){openFatScreen("vend");}},
-      {e:"🎯",l:"Metas",show:(dir||fam||P.metas==="editar"),go:function(){openFatScreen("metas");}},
-      {e:"🏆",l:"Campanhas",show:(dir||fam),go:function(){openFatScreen("campanhas");}},
-      {e:"📊",l:"Painel geral",show:(dir||fam),go:function(){openFatScreen("painelgeral");}},
-      {e:"📦",l:"Separação",show:(dir||!!FA.sepAcomp),go:function(){openFatScreen("admin");}},
-      {e:"📦",l:"Separação — Depósito",show:(!dir&&!!FA.sepDep),go:function(){openFatScreen("sep");}},
-      {e:"📦",l:"Separação — Loja",show:(!dir&&!!FA.sepLoja),go:function(){openFatScreen("loja");}},
-      {e:"📺",l:"Painel (TV)",show:(dir||!!FA.painel),go:function(){openFatScreen("painel");}},
-      {e:"📊",l:"Painel de vendas (TV)",show:(dir||!!FA.painel),go:function(){openFatScreen("painelmetas");}},
-      {e:"📊",l:"Estoque",show:(dir||!!P.estoque),go:function(){openEstoque();}},
-      {e:"💵",l:"Financeiro",show:(dir||!!P.financeiro),go:function(){alert("O módulo \"Financeiro\" entra aqui em breve. 🚧");}},
-      {e:"🛡️",l:"Avaliações (RH)",show:(dir||PF==="rh"||!!P.rh),go:function(){openAvaliacao();}},
-      {e:"💰",l:"Folha",show:(dir||PF==="rh"||!!P.folha),go:function(){openFolha();}},
-      {e:"👥",l:"Acessos",show:(dir||PF==="rh"),go:function(){openAcessos();}},
-      {e:"🧾",l:"Logs",show:dir,go:function(){openFatScreen("erros");}},
-      {e:"ℹ️",l:"Versão",show:dir,go:function(){openFatScreen("versao");}}
+      // Vendas
+      {e:"🎯",l:"Minha meta",cat:"Vendas",show:(!dir&&!!FA.vend&&PF==="vendedor"),go:function(){openFatScreen("vend");}},
+      {e:"🎯",l:"Metas",cat:"Vendas",show:(dir||fam||P.metas==="editar"||PF==="supervisao"),go:function(){openMetasNovas("metas");}},
+      {e:"⚙️",l:"Regras",cat:"Vendas",sub:true,show:(dir||PF==="rh"),go:function(){openMetasNovas("regras");}},
+      {e:"📥",l:"Importar",cat:"Vendas",sub:true,show:(dir||fam||PF==="faturamento"||PF==="supervisao"),go:function(){openMetasNovas("imp");}},
+      {e:"🏆",l:"Campanhas",cat:"Vendas",show:(dir||fam),go:function(){openMetasNovas("camp");}},
+      {e:"🧾",l:"Faturamento",cat:"Vendas",show:(dir||!!P.faturamento),go:function(){openFatScreen("");}},
+      {e:"📊",l:"Painel geral",cat:"Vendas",show:(dir||fam),go:function(){openFatScreen("painelgeral");}},
+      {e:"📊",l:"Painel de vendas (TV)",cat:"Vendas",show:(dir||!!FA.painel),go:function(){openFatScreen("painelmetas");}},
+      // Operação
+      {e:"📦",l:"Separação",cat:"Operação",show:(dir||!!FA.sepAcomp),go:function(){openFatScreen("admin");}},
+      {e:"📦",l:"Separação — Depósito",cat:"Operação",show:(!dir&&!!FA.sepDep),go:function(){openFatScreen("sep");}},
+      {e:"📦",l:"Separação — Loja",cat:"Operação",show:(!dir&&!!FA.sepLoja),go:function(){openFatScreen("loja");}},
+      {e:"📺",l:"Painel (TV)",cat:"Operação",show:(dir||!!FA.painel),go:function(){openFatScreen("painel");}},
+      {e:"📊",l:"Estoque",cat:"Operação",show:(dir||!!P.estoque),go:function(){openEstoque();}},
+      // RH
+      {e:"🛡️",l:"Avaliações",cat:"RH",show:(dir||PF==="rh"||!!P.rh),go:function(){openAvaliacao();}},
+      {e:"💰",l:"Folha",cat:"RH",show:(dir||PF==="rh"||!!P.folha),go:function(){openFolha();}},
+      {e:"👥",l:"Acessos",cat:"RH",show:(dir||PF==="rh"),go:function(){openAcessos();}},
+      // Financeiro
+      {e:"💵",l:"Financeiro",cat:"Financeiro",show:(dir||!!P.financeiro),go:function(){alert("O módulo \"Financeiro\" entra aqui em breve. 🚧");}},
+      // Sistema
+      {e:"🧾",l:"Logs",cat:"Sistema",show:dir,go:function(){openFatScreen("erros");}},
+      {e:"ℹ️",l:"Versão",cat:"Sistema",show:dir,go:function(){openFatScreen("versao");}}
     ];
     var html="<a class=\"on\"><span class=\"i\">🏠</span> Início</a>";html+="<a data-act=\"fale\"><span class=\"i\">💬</span> Fale com a diretoria</a>";html+="<a data-act=\"solucoes\"><span class=\"i\">💡</span> Soluções</a>";if(dir)html+="<a data-act=\"inbox\" id=\"navInbox\"><span class=\"i\">🚨</span> Erro Zero</a>";
-    ITEMS.forEach(function(it,ix){if(it.show)html+="<a data-i=\""+ix+"\"><span class=\"i\">"+it.e+"</span> "+it.l+"</a>";});
+    var lastCat="";
+    ITEMS.forEach(function(it,ix){if(!it.show)return;if(it.cat!==lastCat){html+="<div class=\"navcat\">"+it.cat+"</div>";lastCat=it.cat;}html+="<a data-i=\""+ix+"\" class=\""+(it.sub?"navsub":"")+"\"><span class=\"i\">"+it.e+"</span> "+it.l+"</a>";});
     el("nav").innerHTML=html;
     el("nav").querySelectorAll("a").forEach(function(a){a.onclick=function(){
-      var side=el("side"),bd=el("backdrop");side.classList.remove("open");bd.classList.remove("show");
+      var side=el("side"),bd=el("backdrop");side.classList.remove("open");if(bd)bd.classList.remove("show");
       if(a.dataset.act==="fale"){openMsg();return;}if(a.dataset.act==="solucoes"){openSolucoes();return;}if(a.dataset.act==="inbox"){openInbox();return;}
       if(a.dataset.i!==undefined&&a.dataset.i!==""){var it=ITEMS[+a.dataset.i];el("nav").querySelectorAll("a").forEach(function(x){x.classList.remove("on");});a.classList.add("on");if(it&&it.go)it.go();return;}
       el("nav").querySelectorAll("a").forEach(function(x){x.classList.remove("on");});a.classList.add("on");
@@ -742,6 +765,7 @@
   var APRES={loja:{n:"Loja do Sorveteiro e Confeiteiro",d:"Loja de produtos de panifica\u00e7\u00e3o, sorveteria e confeitaria. H\u00e1 mais de 30 anos no Amap\u00e1."},padoquinha:{n:"Padoquinha",d:"Primeira ind\u00fastria de salgados ultracongelados do Amap\u00e1."},merenda:{n:"Merenda Certa",d:"Alimenta\u00e7\u00e3o e merenda com qualidade e responsabilidade para o dia a dia."}};
   function renderApres(empresas){var box=el("apresEmp");if(!box)return;var keys=(empresas&&empresas.indexOf&&empresas.indexOf("todas")>=0)?["loja","padoquinha","merenda"]:((empresas&&empresas.filter)?empresas.filter(function(k){return APRES[k];}):[]);if(keys.length===1){var a=APRES[keys[0]];box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}else if(keys.length>1){box.innerHTML="<div class=\"al\">As empresas</div>"+keys.map(function(k){var a=APRES[k];return "<div style=\"margin-top:9px\"><b style=\"font-size:13.5px\">"+esc(a.n)+"</b><p style=\"margin:2px 0 0\">"+esc(a.d)+"</p></div>";}).join("");}else{var a=APRES.loja;box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}}
   var VERSIONS=[
+    {v:"v9.60",d:"07/08",desc:"🎯 Menu lateral reorganizado por categorias (Vendas · Operação · RH · Financeiro). METAS NOVAS entrou no portal: Metas (com Regras e Importar dentro) e Campanhas abrem o app novo embutido, já logado. Na tela do vendedor: seletor Mês/Média nos Top 10 clientes/produtos e a média de faturamento agora usa de janeiro ao mês atual (descontando meses de férias). Logo da Loja do Sorveteiro no METAS NOVAS."},
     {v:"v9.59",d:"06/08",desc:"📦 Botão 'Relatório Mix' atualizado pro FORMATO NOVO (CSV item a item do robô). Agora, ao importar na mão, o app calcula por vendedor: vendido (Σ do valor das notas), mix (produtos distintos) e nº de notas — casando por CÓDIGO do vendedor (acaba o 'não bate com os vendedores'), alimenta as metas E grava os índices do mês (Painel geral). É o plano B do robô: robô cai, você importa aqui. Desempenho segue como está."},
     {v:"v9.58",d:"06/08",desc:"📥 Painel geral: novo botão 'Gerar mês do robô' — monta os índices de QUALQUER mês (2025, meses antigos fechados) direto das vendas do robô, mesmo sem metas cadastradas. Escolhe o mês e gera; faturamento, ticket, nº de notas, mix e peso vêm das notas (positivação/inadimplência ficam em branco quando o mês não tem metas). Assim dá pra montar o histórico completo."},
     {v:"v9.57",d:"06/08",desc:"👥 Controle de Acessos ganhou uma BARRA DE PESQUISA (por nome ou e-mail) e FILTROS por cargo e por empresa, com contador de quantas pessoas aparecem. Fica no topo da lista e filtra na hora — bem mais rápido de achar alguém quando a lista cresce."},
@@ -1442,7 +1466,8 @@ function sepOpenTool(){openFatApp("sepFrame","sepBoard","sepColetor","admin");}
     if(id==="fatOvl"){var f=el("fatFrame");if(f)f.src="about:blank";if(el("fatColetor")){el("fatColetor").style.display="none";el("fatColetor").classList.remove("appfull");}if(el("fatBoard"))el("fatBoard").style.display="block";}
     if(id==="sepOvl"){var g=el("sepFrame");if(g)g.src="about:blank";if(el("sepColetor")){el("sepColetor").style.display="none";el("sepColetor").classList.remove("appfull");}if(el("sepBoard"))el("sepBoard").style.display="block";}
     if(id==="avOvl"){var h=el("avFrame");if(h)h.src="about:blank";if(el("avColetor")){el("avColetor").style.display="none";el("avColetor").classList.remove("appfull");}}
-    if(id==="folhaOvl"){var hf=el("folhaFrame");if(hf)hf.src="about:blank";if(el("folhaColetor")){el("folhaColetor").style.display="none";el("folhaColetor").classList.remove("appfull");}}});})();
+    if(id==="folhaOvl"){var hf=el("folhaFrame");if(hf)hf.src="about:blank";if(el("folhaColetor")){el("folhaColetor").style.display="none";el("folhaColetor").classList.remove("appfull");}}
+    if(id==="mnOvl"){var mf=el("mnFrame");if(mf)mf.src="about:blank";if(el("mnColetor")){el("mnColetor").style.display="none";el("mnColetor").classList.remove("appfull");}}});})();
 function openAvaliacao(){var ov=el("avOvl");if(!ov)return;ov.classList.add("show");var fr=el("avFrame");if(fr)fr.src="avaliacao/index.html?v="+(window.__BUILD||"");var c=el("avColetor");if(c){c.style.display="block";c.classList.add("appfull");}}
 function _avNorm(s){return String(s||"").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().replace(/\s+/g," ");}
 function driveAvalColab(fr,nome){if(!nome)return;var target=_avNorm(nome);var start=Date.now();
@@ -1466,6 +1491,8 @@ function openAvaliarColab(){var ov=el("avOvl");if(!ov)return;ov.classList.add("s
   document.addEventListener("click",function(e){var t=e.target;if(t&&t.closest&&t.closest("#btnAvaliar"))openAvaliarColab();});})();
 function openFolha(){var ov=el("folhaOvl");if(!ov)return;ov.classList.add("show");var fr=el("folhaFrame");if(fr)fr.src="folha/index.html?v="+(window.__BUILD||"");var c=el("folhaColetor");if(c){c.style.display="block";c.classList.add("appfull");}}
 (function(){var bk=el("folhaBack");if(bk)bk.onclick=function(){var fr=el("folhaFrame");if(fr)fr.src="about:blank";var c=el("folhaColetor");if(c){c.style.display="none";c.classList.remove("appfull");}var ov=el("folhaOvl");if(ov)ov.classList.remove("show");};})();
+function openMetasNovas(tab){var ov=el("mnOvl");if(!ov)return;ov.classList.add("show");var fr=el("mnFrame");if(fr)fr.src="metas-novas.html?embed=1&tab="+(tab||"metas")+"&v="+(window.__BUILD||"");var c=el("mnColetor");if(c){c.style.display="block";c.classList.add("appfull");}}
+(function(){var bk=el("mnBack");if(bk)bk.onclick=function(){var fr=el("mnFrame");if(fr)fr.src="about:blank";var c=el("mnColetor");if(c){c.style.display="none";c.classList.remove("appfull");}var ov=el("mnOvl");if(ov)ov.classList.remove("show");};})();
 
 /* ---------- Separação (lista + status + romaneio) ---------- */
 var SEP=(function(){
