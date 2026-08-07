@@ -37,8 +37,7 @@ insert into public.vendedores(codigo,nome,setor,is_supervisor,tem_meta,soma_seto
   ('001','Balcao',        'INTERNO',false,false,'INTERNO',true),   -- sem meta; soma na interna
   ('012','Empresa',       'INTERNO',false,false,null    ,true),   -- só diretoria
   ('005','Uiliam',        'INTERNO',false,false,null    ,true),   -- venda William/empresa; só diretoria
-  ('002','Telemarketing', 'INTERNO',false,false,null    ,true),   -- confirmar
-  ('009','Vitoria',       'INTERNO',false,false,null    ,true),   -- confirmar
+  ('002','Telemarketing', 'INTERNO',false,false,'INTERNO',false), -- vai vender depois: dorme (inativo); quando ligar soma na interna
   ('010','Inativos e Inadimplentes','INTERNO',false,false,null,true),
   ('999','Vda Sem Financeiro',      'INTERNO',false,false,null,true)
 on conflict (codigo) do update set
@@ -81,6 +80,9 @@ update public.metas_fornecedor_alvo set codigo='001' where codigo='BALCAO';
 delete from public.vendedores
  where codigo in ('ADRIANO','CRISTIANO','DENILSON','GENIVALDO','GABRIELA','HERNANDES',
                   'SUZANA','MARCIO','ANDERSON','RENAN','MAURICIO','DELIVERY','EMPRESA','BALCAO');
+
+-- Vitória (009) não é vendedora — remover se já tiver sido cadastrada
+delete from public.vendedores where codigo='009';
 
 -- Conferência:
 --   select codigo,nome,setor,is_supervisor,tem_meta,soma_setor from public.vendedores order by codigo;
