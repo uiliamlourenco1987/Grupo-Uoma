@@ -9,7 +9,7 @@
 <title>Portal Grupo Uoma — Início (mural)</title>
 <script>
 /* auto-update: recarrega sozinho quando há versão nova (fim do ?v na mão) */
-(function(){try{var BUILD="9.61";window.__BUILD=BUILD;var K="uoma_reload";
+(function(){try{var BUILD="9.62";window.__BUILD=BUILD;var K="uoma_reload";
   fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var latest=(j&&j.v)?String(j.v):"";
     if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
@@ -640,10 +640,10 @@
       {e:"⚙️",l:"Regras",cat:"Vendas",sub:true,show:(dir||PF==="rh"),go:function(){openMetasNovas("regras");}},
       {e:"📥",l:"Importar",cat:"Vendas",sub:true,show:(dir||fam||PF==="faturamento"||PF==="supervisao"),go:function(){openMetasNovas("imp");}},
       {e:"🏆",l:"Campanhas",cat:"Vendas",show:(dir||fam),go:function(){openMetasNovas("camp");}},
-      {e:"🧾",l:"Faturamento",cat:"Vendas",show:(dir||!!P.faturamento),go:function(){openFatScreen("");}},
       {e:"📊",l:"Painel geral",cat:"Vendas",show:(dir||fam),go:function(){openFatScreen("painelgeral");}},
       {e:"📊",l:"Painel de vendas (TV)",cat:"Vendas",show:(dir||!!FA.painel),go:function(){openFatScreen("painelmetas");}},
       // Operação
+      {e:"🧾",l:"Faturamento",cat:"Operação",show:(dir||!!P.faturamento),go:function(){openFatScreen("");}},
       {e:"📦",l:"Separação",cat:"Operação",show:(dir||!!FA.sepAcomp),go:function(){openFatScreen("admin");}},
       {e:"📦",l:"Separação — Depósito",cat:"Operação",show:(!dir&&!!FA.sepDep),go:function(){openFatScreen("sep");}},
       {e:"📦",l:"Separação — Loja",cat:"Operação",show:(!dir&&!!FA.sepLoja),go:function(){openFatScreen("loja");}},
