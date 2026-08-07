@@ -9,7 +9,7 @@
 <title>Portal Grupo Uoma — Início (mural)</title>
 <script>
 /* auto-update: recarrega sozinho quando há versão nova (fim do ?v na mão) */
-(function(){try{var BUILD="9.60";window.__BUILD=BUILD;var K="uoma_reload";
+(function(){try{var BUILD="9.61";window.__BUILD=BUILD;var K="uoma_reload";
   fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var latest=(j&&j.v)?String(j.v):"";
     if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
@@ -765,6 +765,7 @@
   var APRES={loja:{n:"Loja do Sorveteiro e Confeiteiro",d:"Loja de produtos de panifica\u00e7\u00e3o, sorveteria e confeitaria. H\u00e1 mais de 30 anos no Amap\u00e1."},padoquinha:{n:"Padoquinha",d:"Primeira ind\u00fastria de salgados ultracongelados do Amap\u00e1."},merenda:{n:"Merenda Certa",d:"Alimenta\u00e7\u00e3o e merenda com qualidade e responsabilidade para o dia a dia."}};
   function renderApres(empresas){var box=el("apresEmp");if(!box)return;var keys=(empresas&&empresas.indexOf&&empresas.indexOf("todas")>=0)?["loja","padoquinha","merenda"]:((empresas&&empresas.filter)?empresas.filter(function(k){return APRES[k];}):[]);if(keys.length===1){var a=APRES[keys[0]];box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}else if(keys.length>1){box.innerHTML="<div class=\"al\">As empresas</div>"+keys.map(function(k){var a=APRES[k];return "<div style=\"margin-top:9px\"><b style=\"font-size:13.5px\">"+esc(a.n)+"</b><p style=\"margin:2px 0 0\">"+esc(a.d)+"</p></div>";}).join("");}else{var a=APRES.loja;box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}}
   var VERSIONS=[
+    {v:"v9.61",d:"07/08",desc:"📋 Metas do mês: o realizado agora vem do Desempenho importado (acaba o \"tudo zerado\"). 🏆 Campanha: o \"mínimo para participar\" virou por critério (cada critério tem o seu piso, dentro do card)."},
     {v:"v9.60",d:"07/08",desc:"🎯 Menu lateral reorganizado por categorias (Vendas · Operação · RH · Financeiro). METAS NOVAS entrou no portal: Metas (com Regras e Importar dentro) e Campanhas abrem o app novo embutido, já logado. Na tela do vendedor: seletor Mês/Média nos Top 10 clientes/produtos e a média de faturamento agora usa de janeiro ao mês atual (descontando meses de férias). Logo da Loja do Sorveteiro no METAS NOVAS."},
     {v:"v9.59",d:"06/08",desc:"📦 Botão 'Relatório Mix' atualizado pro FORMATO NOVO (CSV item a item do robô). Agora, ao importar na mão, o app calcula por vendedor: vendido (Σ do valor das notas), mix (produtos distintos) e nº de notas — casando por CÓDIGO do vendedor (acaba o 'não bate com os vendedores'), alimenta as metas E grava os índices do mês (Painel geral). É o plano B do robô: robô cai, você importa aqui. Desempenho segue como está."},
     {v:"v9.58",d:"06/08",desc:"📥 Painel geral: novo botão 'Gerar mês do robô' — monta os índices de QUALQUER mês (2025, meses antigos fechados) direto das vendas do robô, mesmo sem metas cadastradas. Escolhe o mês e gera; faturamento, ticket, nº de notas, mix e peso vêm das notas (positivação/inadimplência ficam em branco quando o mês não tem metas). Assim dá pra montar o histórico completo."},

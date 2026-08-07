@@ -221,7 +221,7 @@ async function saveForn(){
 }
 
 /* ===================== METAS (conectado — histórico travado) ===================== */
-var MES=null, _mmVend=[], _mmRows={}, _mmMes=[];
+var MES=null, _mmVend=[], _mmRows={}, _mmMes=[], _deRows={};
 function brl(x){return (n(x)).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0});}
 function pct(a,b){b=n(b);return b>0?Math.round(n(a)/b*100):0;}
 async function renderMetas(){
@@ -244,6 +244,9 @@ async function renderMetas(){
   var rr=await sb.from('metas_mensais').select('*').eq('mes',MES);
   if(rr.error){v_.innerHTML='<div class="empty">Erro: '+esc(rr.error.message)+'</div>';return;}
   _mmRows={};(rr.data||[]).forEach(function(r){_mmRows[r.codigo]=r;});
+  // realizado do mês vem do Desempenho importado (fecha o "tudo zerado")
+  var dr=await sb.from('desempenho').select('codigo,vendas,mix_produto,positivacao,areceber,vencidos,transito').eq('competencia',MES);
+  _deRows={};(dr.data||[]).forEach(function(d){_deRows[d.codigo]=d;});
   var mo=_mmMes.filter(function(m){return m.mes===MES;})[0]||{};
   var fechado=(mo.status==='fechado');
 
@@ -255,14 +258,21 @@ async function renderMetas(){
   var lista=_mmVend.filter(function(vd){return vd.setor===SETOR && vd.tem_meta!==false;});
   if(!lista.length)html+='<div class="empty">Nenhum vendedor '+esc(SETOR.toLowerCase())+' com meta.</div>';
   lista.forEach(function(vd){
-    var r=_mmRows[vd.codigo]||{};
-    var inadp=pct(r.vencido,r.areceber);
+    var r=_mmRows[vd.codigo]||{}, d=_deRows[vd.codigo]||{};
+    // realizado: Desempenho do mês tem prioridade; senão o gravado (histórico)
+    var vendido=n(d.vendas)||n(r.vendido);
+    var mixv=n(d.mix_produto)||n(r.mix_vend);
+    var posit=(d.positivacao!=null)?n(d.positivacao):n(r.positivados);
+    var areceber=n(d.areceber)||n(r.areceber);
+    var vencido=n(d.vencidos)||n(r.vencido);
+    var transito=(d.transito!=null)?n(d.transito):n(r.transito);
+    var inadp=pct(vencido,areceber);
     html+='<div class="grp"><div class="grph"><h3>'+esc(vd.nome)+(vd.is_supervisor?' · supervisor':'')+'</h3>'
       +'<span class="gate">'+(fechado?'travado':'editável')+'</span></div><div class="grpb">'
-      +metaRow('Faturamento','R$ '+brl(r.vendido)+' / '+brl(r.obj_fat), pct(r.vendido,r.obj_fat), r.part_fat)
-      +metaRow('Mix (produtos)', (n(r.mix_vend))+' / '+(n(r.obj_mix)), pct(r.mix_vend,r.obj_mix), r.part_mix)
-      +metaRow('Positivação', (n(r.positivados))+(SETOR==='EXTERNO'?(' / '+(n(r.carteira))+' clientes'):' vendas'), SETOR==='EXTERNO'?pct(r.positivados,r.carteira):null, r.part_posit)
-      +metaRow('Inadimplência', inadp+'% (venc. '+brl(r.vencido)+' / a receber '+brl(r.areceber)+')', null, r.part_inad)
+      +metaRow('Faturamento','R$ '+brl(vendido)+' / '+brl(r.obj_fat), pct(vendido,r.obj_fat), r.part_fat)
+      +metaRow('Mix (produtos)', (mixv)+' / '+(n(r.obj_mix)), pct(mixv,r.obj_mix), r.part_mix)
+      +metaRow('Positivação', (posit)+(SETOR==='EXTERNO'?(' / '+(n(r.carteira))+' clientes'):' vendas'), SETOR==='EXTERNO'?pct(posit,r.carteira):null, r.part_posit)
+      +metaRow('Inadimplência', inadp+'% (venc. '+brl(vencido)+' / a receber '+brl(areceber)+' · trânsito '+brl(transito)+')', null, r.part_inad)
       +'</div></div>';
   });
   v_.innerHTML=html;
@@ -314,7 +324,7 @@ async function ensureCVend(){
   var mm=await sb.from('metas_mensais').select('mes,codigo,obj_fat,obj_mix,carteira,positivados').order('mes',{ascending:false});
   CBASE={};(mm.data||[]).forEach(function(r){ if(!CBASE[r.codigo])CBASE[r.codigo]={'Faturamento':n(r.obj_fat),'Mix (produtos)':n(r.obj_mix),'Positivação':n(r.carteira)||n(r.positivados)}; });
 }
-function campNew(){CEDIT=null;CIMGS=[];CCRITS=[{ind:'Faturamento',modo:'CRESCIMENTO',p:[500,300,150]}];window._cpart=null;CV='form';renderCamp();}
+function campNew(){CEDIT=null;CIMGS=[];CCRITS=[{ind:'Faturamento',modo:'CRESCIMENTO',p:[500,300,150],min:0}];window._cpart=null;CV='form';renderCamp();}
 async function campOpen(id){
   await ensureCVend();
   var v=el('view');v.innerHTML='<div class="msg">Carregando campanha…</div>';
@@ -325,8 +335,8 @@ async function campOpen(id){
   var pr=await sb.from('campanha_participantes').select('*').eq('campanha_id',id);
   var mr=await sb.from('campanha_metas').select('*');
   CEDIT=c; CIMGS=(c.imagens||[]).slice();
-  CCRITS=(kr.data||[]).map(function(k){return {id:k.id,ind:k.indicador,modo:k.modo,p:[n(k.premio1),n(k.premio2),n(k.premio3)]};});
-  if(!CCRITS.length)CCRITS=[{ind:'Faturamento',modo:'CRESCIMENTO',p:[0,0,0]}];
+  CCRITS=(kr.data||[]).map(function(k){return {id:k.id,ind:k.indicador,modo:k.modo,p:[n(k.premio1),n(k.premio2),n(k.premio3)],min:n(k.minimo)};});
+  if(!CCRITS.length)CCRITS=[{ind:'Faturamento',modo:'CRESCIMENTO',p:[0,0,0],min:0}];
   window._cpart={};(pr.data||[]).forEach(function(p){window._cpart[p.codigo]=p.participa;});
   window._cmeta={};(mr.data||[]).forEach(function(m){window._cmeta[m.criterio_id+'_'+m.codigo]=n(m.meta);});
   CV='form';renderCamp();
@@ -347,7 +357,6 @@ async function campForm(){
       +'<div class="fr"><div class="lab">Início</div><input class="f" id="c_ini" type="date" value="'+esc(c.ini||'')+'" style="width:150px;text-align:left"></div>'
       +'<div class="fr"><div class="lab">Fim</div><input class="f" id="c_fim" type="date" value="'+esc(c.fim||'')+'" style="width:150px;text-align:left"></div>'
       +'<div class="fr"><div class="lab">Quem participa<div class="d">escopo do ranking</div></div><select class="f" id="c_escopo" onchange="cScope(this.value)"><option value="TODOS"'+(scope==='TODOS'?' selected':'')+'>Todos (grupo)</option><option value="EXTERNO"'+(scope==='EXTERNO'?' selected':'')+'>Equipe Externa</option><option value="INTERNO"'+(scope==='INTERNO'?' selected':'')+'>Equipe Interna</option></select></div>'
-      +'<div class="fr"><div class="lab">Mínimo p/ participar<div class="d">piso no critério (sobre o valor)</div></div><input class="f num" id="c_min" value="'+esc(n(c.minimo))+'" inputmode="decimal"></div>'
       +'<div class="fr" style="background:var(--gold-soft);border-radius:10px;padding:10px"><div class="lab">🧑‍💼 Supervisor — valor separado<div class="d">fora do ranking</div></div><input class="f num" id="c_sup" value="'+esc(n(c.sup_valor))+'" inputmode="decimal"></div>'
       // imagens
       +'<div class="subhead">📷 Imagens da campanha</div>'
@@ -384,9 +393,11 @@ function cRenderCrits(){
     return '<div class="critcard"><div class="ch"><select class="f" onchange="cSetInd('+i+',this.value)">'+INDS.map(function(x){return '<option'+(x===c.ind?' selected':'')+'>'+x+'</option>';}).join('')+'</select>'
       +'<select class="f" onchange="cSetModo('+i+',this.value)">'+ms.map(function(m){return '<option value="'+m[0]+'"'+(m[0]===c.modo?' selected':'')+'>'+m[1]+'</option>';}).join('')+'</select>'
       +(CCRITS.length>1?'<button class="rm" onclick="cDelCrit('+i+')">✕</button>':'')+'</div>'
-      +'<div class="podio"><span class="pp">🥇<input class="f" value="'+n(c.p[0])+'" oninput="cSetP('+i+',0,this.value)"></span><span class="pp">🥈<input class="f" value="'+n(c.p[1])+'" oninput="cSetP('+i+',1,this.value)"></span><span class="pp">🥉<input class="f" value="'+n(c.p[2])+'" oninput="cSetP('+i+',2,this.value)"></span></div></div>';
+      +'<div class="podio"><span class="pp">🥇<input class="f" value="'+n(c.p[0])+'" oninput="cSetP('+i+',0,this.value)"></span><span class="pp">🥈<input class="f" value="'+n(c.p[1])+'" oninput="cSetP('+i+',1,this.value)"></span><span class="pp">🥉<input class="f" value="'+n(c.p[2])+'" oninput="cSetP('+i+',2,this.value)"></span></div>'
+      +'<div style="display:flex;align-items:center;gap:7px;margin-top:9px;font-size:12px;color:var(--muted)">Mínimo p/ participar<input class="f num" value="'+n(c.min)+'" oninput="cSetMin('+i+',this.value)" style="width:96px" inputmode="decimal"><span style="font-size:10.5px">piso neste critério</span></div></div>';
   }).join('');
 }
+window.cSetMin=function(i,v){CCRITS[i].min=n(v);};
 function cMetaCrits(){var o=[];CCRITS.forEach(function(c,i){if(c.modo==='META')o.push({i:i,ind:c.ind});});return o;}
 function cPartMap(){ // preserva marcações atuais do DOM
   var m=window._cpart||{};
@@ -413,7 +424,7 @@ function cRenderParts(){
 window.cSetInd=function(i,v){CCRITS[i].ind=v;if(modosFor(v).map(function(m){return m[0];}).indexOf(CCRITS[i].modo)<0)CCRITS[i].modo='CRESCIMENTO';cRenderCrits();cRenderParts();};
 window.cSetModo=function(i,v){CCRITS[i].modo=v;cRenderParts();};
 window.cSetP=function(i,k,v){CCRITS[i].p[k]=n(v);};
-window.cAddCrit=function(){cPartMap();CCRITS.push({ind:'Positivação',modo:'META',p:[150,100,50]});cRenderCrits();cRenderParts();};
+window.cAddCrit=function(){cPartMap();CCRITS.push({ind:'Positivação',modo:'META',p:[150,100,50],min:0});cRenderCrits();cRenderParts();};
 window.cDelCrit=function(i){cPartMap();CCRITS.splice(i,1);cRenderCrits();cRenderParts();};
 window.cImgs=function(files){var a=[].slice.call(files||[]);var l=a.length;if(!l)return;a.forEach(function(f){var rd=new FileReader();rd.onload=function(){CIMGS.push(rd.result);l--;if(l<=0)cRenderThumbs();};rd.readAsDataURL(f);});el('c_img').value='';};
 function cRenderThumbs(){var t=el('c_thumbs');if(!t)return;t.innerHTML=CIMGS.map(function(s,i){return '<div class="thumb"><img src="'+s+'"><button class="del" onclick="event.stopPropagation();cDelImg('+i+')">✕</button></div>';}).join('');}
@@ -424,7 +435,7 @@ async function campSave(){
   cPartMap();
   var parent={nome:el('c_nome').value||el('c_forn').value||'Campanha', fornecedor:el('c_forn').value||null,
     marcas:el('c_marca').value?[el('c_marca').value]:[], ini:el('c_ini').value||null, fim:el('c_fim').value||null,
-    escopo:cScopeVal(), minimo:n(el('c_min').value), sup_valor:n(el('c_sup').value), imagens:CIMGS, ativa:true};
+    escopo:cScopeVal(), minimo:0, sup_valor:n(el('c_sup').value), imagens:CIMGS, ativa:true};
   // colher metas do DOM por (critIdx, codigo)
   var metaByIdx={};document.querySelectorAll('#c_parts [data-meta]').forEach(function(inp){metaByIdx[inp.dataset.meta]=n(inp.value);});
   var pm=window._cpart||{};
@@ -444,7 +455,7 @@ async function campSave(){
     if(partCods.length){var pins=await sb.from('campanha_participantes').insert(partCods.map(function(cd){return {campanha_id:cid,codigo:cd,participa:true};}));if(pins.error)throw pins.error;}
     // criterios (+ metas por critério META)
     for(var i=0;i<CCRITS.length;i++){var c=CCRITS[i];
-      var ci=await sb.from('campanha_criterios').insert({campanha_id:cid,indicador:c.ind,modo:c.modo,premio1:n(c.p[0]),premio2:n(c.p[1]),premio3:n(c.p[2]),ordem:i}).select('id').single();
+      var ci=await sb.from('campanha_criterios').insert({campanha_id:cid,indicador:c.ind,modo:c.modo,premio1:n(c.p[0]),premio2:n(c.p[1]),premio3:n(c.p[2]),minimo:n(c.min),ordem:i}).select('id').single();
       if(ci.error)throw ci.error;
       if(c.modo==='META'){var rows=partCods.map(function(cd){return {criterio_id:ci.data.id,codigo:cd,meta:(metaByIdx[i+'_'+cd]||0)};});
         if(rows.length){var mi=await sb.from('campanha_metas').insert(rows);if(mi.error)throw mi.error;}}

@@ -163,6 +163,7 @@ create table if not exists public.campanha_criterios(
   indicador text not null,                         -- Faturamento/Peso/Mix/Positivacao/Itens
   modo      text not null default 'CRESCIMENTO' check (modo in ('CRESCIMENTO','META','VALOR')),
   premio1 numeric default 0, premio2 numeric default 0, premio3 numeric default 0,
+  minimo  numeric default 0,                        -- piso p/ participar, por critério
   ordem   int default 0
 );
 -- modo é escolhido livremente por critério na configuração da campanha
