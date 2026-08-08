@@ -103,9 +103,10 @@ async function boot(){
     if(!u){return gateLogin();}
     ME.id=u.id;
     try{var r=await sb.from('usuarios').select('nome,role,permissoes').eq('id',u.id).maybeSingle();
-      if(r.data){ME.nome=r.data.nome||u.email;ME.perfil=(r.data.permissoes&&r.data.permissoes.perfil)||(r.data.role==='diretoria'?'diretoria':'');}}catch(e){}
+      if(r.data){ME.nome=r.data.nome||u.email;ME.perfil=(r.data.permissoes&&r.data.permissoes.perfil)||(r.data.role==='diretoria'?'diretoria':'');ME.codvend=(r.data.permissoes&&r.data.permissoes.codvend)||'';}}catch(e){}
     canEdit=(ME.perfil==='diretoria'||ME.perfil==='rh');
     canImport=(['diretoria','rh','faturamento','supervisao'].indexOf(ME.perfil)>=0);
+    LOCKVEND=(!canEdit&&ME.perfil==='vendedor'&&ME.codvend)?ME.codvend:'';
     var q=new URLSearchParams(location.search);
     EMBED=(q.get('embed')==='1');
     var tp=q.get('tab');if(tp){var mp={metas:'metas',regras:'regras',camp:'camp',campanhas:'camp',imp:'imp',importar:'imp',vend:'vend'};if(mp[tp])TAB=mp[tp];}
@@ -484,7 +485,7 @@ function shareBlock(c){
 }
 
 /* ===================== VENDEDOR (visão da carteira, dados reais) ========= */
-var VMES=null, VCOD=null, _vlist=[], _vmeses=[];
+var VMES=null, VCOD=null, _vlist=[], _vmeses=[], LOCKVEND='';
 function money(x){return 'R$ '+brl(x);}
 async function renderVend(){
   saveBar('','');
@@ -500,14 +501,14 @@ async function renderVend(){
   }
   if(!VMES)VMES=_vmeses[0];
   var vends=_vlist.filter(function(r){return r.competencia===VMES;});
-  if(!VCOD||!vends.some(function(r){return r.codigo===VCOD;}))VCOD=vends.length?vends[0].codigo:null;
+  if(LOCKVEND){VCOD=LOCKVEND;}else if(!VCOD||!vends.some(function(r){return r.codigo===VCOD;}))VCOD=vends.length?vends[0].codigo:null;
 
   var head='<div style="display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px">'
     +'<select class="f" id="vMes" style="width:auto">'+_vmeses.map(function(m){return '<option'+(m===VMES?' selected':'')+'>'+esc(m)+'</option>';}).join('')+'</select>'
-    +'<select class="f" id="vCod" style="width:auto">'+vends.map(function(r){return '<option value="'+esc(r.codigo)+'"'+(r.codigo===VCOD?' selected':'')+'>'+esc(r.vendedor)+' ('+esc(r.codigo)+')</option>';}).join('')+'</select></div>';
+    +(LOCKVEND?('<div class="f" style="width:auto;display:flex;align-items:center">Código '+esc(LOCKVEND)+'</div>'):('<select class="f" id="vCod" style="width:auto">'+vends.map(function(r){return '<option value="'+esc(r.codigo)+'"'+(r.codigo===VCOD?' selected':'')+'>'+esc(r.vendedor)+' ('+esc(r.codigo)+')</option>';}).join('')+'</select>'))+'</div>';
   v.innerHTML=head+'<div id="vBody"><div class="msg">Carregando vendedor…</div></div>';
   el('vMes').onchange=function(){VMES=this.value;VCOD=null;renderVend();};
-  el('vCod').onchange=function(){VCOD=this.value;paintVend();};
+  var _vc=el('vCod');if(_vc)_vc.onchange=function(){VCOD=this.value;paintVend();};
   paintVend();
 }
 async function paintVend(){
