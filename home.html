@@ -9,7 +9,7 @@
 <title>Portal Grupo Uoma — Início (mural)</title>
 <script>
 /* auto-update: recarrega sozinho quando há versão nova (fim do ?v na mão) */
-(function(){try{var BUILD="9.74";window.__BUILD=BUILD;var K="uoma_reload";
+(function(){try{var BUILD="9.75";window.__BUILD=BUILD;var K="uoma_reload";
   fetch("ver.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
     var latest=(j&&j.v)?String(j.v):"";
     if(!latest||latest===BUILD){try{sessionStorage.removeItem(K);}catch(e){}return;}
@@ -421,17 +421,17 @@
   </div>
 </div>
   <style>
-  #acPerfis{--pk:#17140F;--pc:#211D16;--pi:#F0EBE0;--pm:#9C9484;--pln:#3A342A;
-    --l0:#2C2820;--l0t:#8A8274;--l1:#1E3140;--l1t:#7FB2D6;--l2:#1D3527;--l2t:#68C08E;--l3:#3A2F14;--l3t:#D6A94A;--l4:#2E2038;--l4t:#C089DE;
+  #acPerfis{--pk:#0C1A30;--pc:#13294B;--pi:#EAF1FB;--pm:#93A7C4;--pln:#24406E;
+    --l0:#1A2A44;--l0t:#8090AC;--l1:#1B3355;--l1t:#8FBCE6;--l2:#16375F;--l2t:#4E9BE8;--l3:#3A3016;--l3t:#E0B85A;--l4:#4A3A12;--l4t:#F7D26B;
     background:var(--pk);color:var(--pi);border-radius:14px;padding:14px}
   #acPerfis .pf-legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:13px}
   #acPerfis .pf-legend span{border:1px solid var(--pln);border-radius:999px;padding:4px 9px;font-weight:700;font-size:11px;color:var(--pm)}
   #acPerfis .pcard{background:var(--pc);border:1px solid var(--pln);border-radius:13px;margin-bottom:11px;overflow:hidden}
   #acPerfis .phead{display:flex;align-items:center;gap:11px;padding:12px 13px;cursor:pointer}
-  #acPerfis .pemoji{width:36px;height:36px;border-radius:9px;background:#2A2416;display:grid;place-items:center;font-size:18px;flex:none}
+  #acPerfis .pemoji{width:36px;height:36px;border-radius:9px;background:#17335C;display:grid;place-items:center;font-size:18px;flex:none}
   #acPerfis .pnm{font-weight:800;font-size:14.5px;color:var(--pi)}
   #acPerfis .psl{font-size:11px;color:var(--pm)}
-  #acPerfis .pcount{margin-left:auto;font-size:11px;font-weight:800;color:#D6A94A;background:#2A2416;border-radius:999px;padding:4px 10px;white-space:nowrap}
+  #acPerfis .pcount{margin-left:auto;font-size:11px;font-weight:800;color:#E0B85A;background:#17335C;border-radius:999px;padding:4px 10px;white-space:nowrap}
   #acPerfis .pbody{display:none;border-top:1px solid var(--pln);padding:4px 13px 14px}
   #acPerfis .pcard.open .pbody{display:block}
   #acPerfis .area{font-size:10.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--pm);margin:14px 0 6px}
@@ -449,7 +449,7 @@
   #acPerfis .ps.on[data-v="3"]{background:var(--l3);color:var(--l3t);border-color:var(--l3t)}
   #acPerfis .ps.on[data-v="4"]{background:var(--l4);color:var(--l4t);border-color:var(--l4t)}
   #acPerfis .pf-btn{border:0;border-radius:8px;padding:9px 15px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit}
-  #acPerfis .pf-save{background:#D6A94A;color:#231A06}
+  #acPerfis .pf-save{background:#E0B85A;color:#231A06}
   #acPerfis .pf-dup{background:transparent;border:1.5px solid var(--pln);color:var(--pi)}
   #acPerfis .pf-del{background:#3A1D1A;color:#F0A89F;border:1.5px solid #6B3029}
   #acPerfis .pf-add{background:var(--pc);border:1.5px dashed var(--pln);border-radius:13px;padding:14px;margin-top:4px}
@@ -843,6 +843,7 @@
   var APRES={loja:{n:"Loja do Sorveteiro e Confeiteiro",d:"Loja de produtos de panifica\u00e7\u00e3o, sorveteria e confeitaria. H\u00e1 mais de 30 anos no Amap\u00e1."},padoquinha:{n:"Padoquinha",d:"Primeira ind\u00fastria de salgados ultracongelados do Amap\u00e1."},merenda:{n:"Merenda Certa",d:"Alimenta\u00e7\u00e3o e merenda com qualidade e responsabilidade para o dia a dia."}};
   function renderApres(empresas){var box=el("apresEmp");if(!box)return;var keys=(empresas&&empresas.indexOf&&empresas.indexOf("todas")>=0)?["loja","padoquinha","merenda"]:((empresas&&empresas.filter)?empresas.filter(function(k){return APRES[k];}):[]);if(keys.length===1){var a=APRES[keys[0]];box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}else if(keys.length>1){box.innerHTML="<div class=\"al\">As empresas</div>"+keys.map(function(k){var a=APRES[k];return "<div style=\"margin-top:9px\"><b style=\"font-size:13.5px\">"+esc(a.n)+"</b><p style=\"margin:2px 0 0\">"+esc(a.d)+"</p></div>";}).join("");}else{var a=APRES.loja;box.innerHTML="<div class=\"al\">Sua empresa</div><h3>"+esc(a.n)+"</h3><p>"+esc(a.d)+"</p>";}}
   var VERSIONS=[
+    {v:"v9.75",d:"08/08",desc:"🎨 Painel de Perfis & Autoridade nas cores da Uoma (azul e dourado): fundo navy, níveis do azul claro ao dourado. Mesma organização, agora com a identidade do grupo."},
     {v:"v9.74",d:"08/08",desc:"🧹 Módulo Financeiro removido (será refeito): tiramos Contas a Receber, Extratos e a tela do Financeiro. O item Financeiro no menu volta a avisar que está em refação. Vai voltar com baixa automática pelos relatórios (sem baixa manual)."},
     {v:"v9.73",d:"08/08",desc:"🧾 Financeiro · Contas a Receber ligado: importa a planilha-modelo de títulos (Empresa · Cliente · Documento · Vencimento · Valor · Status · Data pagamento · Vendedor), calcula sozinho A receber / Vencido / Recebido no mês, filtra por empresa e status, e o Vencido é automático pela data (você só marca Pago). Botão baixar modelo. Rodar sql/financeiro_titulos.sql."},
     {v:"v9.72",d:"07/08",desc:"💵 Módulo Financeiro (fase 1): tela real no lugar do \"em breve\". Inadimplência & Cobrança ao vivo (vencido do grupo, inadimplência média e por vendedor, do banco RH) + 🏦 Extratos bancários por empresa (envio de arquivo por mês, com download). Contas a receber/a pagar/faturamento consolidado entram quando você mandar um exemplo dos relatórios. Rodar sql/financeiro_extratos.sql."},
