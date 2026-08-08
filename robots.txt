@@ -1,4 +1,3 @@
+# Painel interno do Grupo Uoma — não indexar (uso restrito, login).
 User-agent: *
-Allow: /
-
-Sitemap: https://painel.grupouoma.com.br/sitemap.xml
+Disallow: /
